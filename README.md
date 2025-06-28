@@ -1,6 +1,6 @@
 # 4-Player Neon Pong
 
-A retro-style Pong game featuring 4 players, neon visual effects, power-ups, and obstacles. Built with Python and Pygame.
+A retro-style Pong game featuring 4 players, neon visual effects, Nintendo Switch controller support, and a scalable architecture. Built with Python and Pygame.
 
 ## 🎮 Game Features
 
@@ -13,12 +13,18 @@ A retro-style Pong game featuring 4 players, neon visual effects, power-ups, and
 
 ## 🕹️ Controls
 
-- **Player 1 (Left, Blue)**: W/S keys
-- **Player 2 (Right, Pink)**: Arrow Up/Down keys (AI by default)
-- **Player 3 (Top, Green)**: J/L keys (AI by default)
-- **Player 4 (Bottom, Yellow)**: Numpad 4/6 keys (AI by default)
+### Player 1 (Left, Blue) - Human Player
+- **Nintendo Switch Controller**: Left analog stick or D-pad for movement
+- **Keyboard Fallback**: W (up) / S (down)
+- **Pause**: START button or P/SPACE key
 
-### Special Keys
+### AI Players
+- **Player 2 (Right, Pink)**: AI controlled
+- **Player 3 (Top, Green)**: AI controlled  
+- **Player 4 (Bottom, Yellow)**: AI controlled
+
+### Game Controls
+- **Pause Menu**: Navigate with analog stick/arrow keys, confirm with A/ENTER, cancel with B/ESC
 - **R**: Reset game
 - **ESC**: Quit game
 
@@ -43,21 +49,29 @@ python main.py
 ## 🏗️ Project Structure
 
 ```
-pong_game/
-├── main.py              # Entry point and game initialization
-├── game.py              # Main Game class and game loop
+superPong/
+├── main.py                           # Entry point
+├── game.py                           # Main game coordination (227 lines)
 ├── entities/
-│   ├── paddle.py        # Paddle class with movement logic
-│   ├── ball.py          # Ball physics and collision detection
-│   ├── powerup.py       # Power-up system (planned)
-│   └── obstacle.py      # Obstacle entities (planned)
+│   ├── paddle.py                     # Paddle movement and collision
+│   ├── ball.py                       # Ball physics and bouncing
+│   ├── obstacle.py                   # Obstacle entities (future)
+│   └── powerup.py                    # Power-up entities (future)
 ├── systems/
-│   ├── renderer.py      # All rendering logic with neon effects
-│   ├── input_handler.py # Input management system
-│   └── ai.py           # AI player logic
-└── utils/
-    ├── constants.py     # Game constants and color definitions
-    └── math_utils.py    # Vector math and collision helpers
+│   ├── game_state_manager.py         # Game state transitions
+│   ├── menu_system.py                # Menu navigation and callbacks
+│   ├── aiming_system.py              # Aiming mode and ball launching
+│   ├── collision_system.py           # Collision detection and handling
+│   ├── player_manager.py             # Lives, elimination, AI coordination
+│   ├── renderer.py                   # Neon visual effects
+│   ├── input_handler.py              # Keyboard and controller input
+│   ├── ai.py                         # AI player logic
+│   └── particle_system.py            # Visual effect particles
+├── utils/
+│   ├── constants.py                  # Game configuration
+│   └── math_utils.py                 # Vector math utilities
+└── tests/
+    └── controller_button_tester.py   # Controller testing utility
 ```
 
 ## 🎯 Current Status
@@ -65,24 +79,32 @@ pong_game/
 ### ✅ Phase 1 Complete: Core Foundation
 - 4-player paddle setup with proper positioning
 - Ball physics with realistic collision detection
-- Input handling for human players
+- Nintendo Switch USB controller support with hot-plug detection
+- Dual input system (controller + keyboard)
 - AI opponents with different difficulty levels
-- Basic scoring system
-- Neon visual effects and rendering
+- Lives system with player elimination
+- Aiming mode for ball launching after life loss
+- Pause menu with navigation (Resume/Restart/Quit)
+- Basic neon visual effects and rendering
 - Game loop with 60 FPS performance
+- **Refactored Architecture**: Reduced main game file from 514 to 227 lines
 
-### 🚧 Phase 2 Planned: Enhanced Visuals
-- Improved particle effects
-- Better glow and lighting effects
-- Animated backgrounds
-- Enhanced UI elements
+### ✅ Phase 2 Complete: Visual Polish
+- **Enhanced particle effects**: Ball impact bursts, wall sparks, elimination effects, victory celebrations
+- **Advanced glow system**: Multi-layer glow effects for paddles, balls, boundaries, and UI text
+- **Animated neon grid background**: Pulsing grid with moving animations and intersection highlights
+- **Improved ball trails**: Variable-size trails with proper alpha blending and glow effects
+- **Dynamic screen shake**: Responsive screen shake for different impact types and intensities
+- **Enhanced UI effects**: Glowing pause menu with pulsing selection indicators and smooth transitions
+- **Visual feedback system**: Color-coded effects based on player interactions and game state
 
-### 🚧 Phase 3 Planned: Power-ups System
+### 🚧 Phase 3 Next: Power-ups System
 - Paddle size modifiers (grow/shrink)
-- Multi-ball power-up
-- Speed boost/slow effects
+- Multi-ball power-up with chaos effects
+- Speed boost/slow effects for dynamic gameplay
+- Visual pickup effects with neon styling
 - Timed power-up duration system
-- Visual pickup effects
+- Strategic spawn locations
 
 ### 🚧 Phase 4 Planned: Obstacles & Polish
 - Bouncy obstacles in center area
@@ -93,10 +115,12 @@ pong_game/
 ## 🎨 Technical Details
 
 ### Architecture
-- **Component-based design**: Clean separation of concerns
-- **Entity system**: Modular game objects
-- **Event-driven input**: Responsive controls
+- **Component-based design**: Clean separation of concerns with specialized systems
+- **Entity system**: Modular game objects (Paddle, Ball, PowerUp, Obstacle)
+- **System managers**: GameState, Menu, Aiming, Collision, Player management
+- **Event-driven input**: Responsive controls with controller and keyboard support
 - **Vector-based physics**: Smooth movement and collisions
+- **Scalable design**: Easy to add new features and systems
 
 ### Performance
 - Optimized for 60 FPS gameplay
@@ -115,23 +139,27 @@ pong_game/
 The AI players use a simple but effective tracking system:
 - **Target tracking**: AI paddles follow the ball position
 - **Reaction delays**: Configurable delays make AI beatable
-- **Difficulty scaling**: Different precision levels per AI player
+- **Difficulty scaling**: Different precision levels per AI player (0.6-0.7)
 - **Movement smoothing**: Natural-feeling paddle movement
+- **Aiming intelligence**: AI automatically aims with smooth angle transitions
 
 ## 🔧 Configuration
 
 Key settings can be modified in `utils/constants.py`:
-- Screen dimensions
+- Screen dimensions (850x850)
 - Paddle sizes and speeds
 - Ball physics parameters
-- Color scheme
+- Color scheme (neon theme)
 - AI difficulty levels
+- Controller settings (deadzone, sensitivity)
+- Nintendo Switch controller button mappings
 
 ## 🐛 Known Issues
 
 - Ball can occasionally get stuck in corners (rare)
-- AI players don't account for power-ups yet
+- AI players don't account for power-ups or obstacles yet
 - No sound effects implemented
+- Visual polish could be enhanced with more dramatic effects
 
 ## 🤝 Contributing
 

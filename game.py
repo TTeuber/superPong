@@ -8,6 +8,8 @@ from systems.menu_system import MenuSystem
 from systems.aiming_system import AimingSystem
 from systems.collision_system import CollisionSystem
 from systems.player_manager import PlayerManager
+from systems.start_screen_system import StartScreenSystem
+from systems.game_over_system import GameOverSystem
 from utils.constants import *
 
 class Game:
@@ -27,6 +29,8 @@ class Game:
         self.aiming_system = AimingSystem()
         self.collision_system = CollisionSystem()
         self.player_manager = PlayerManager()
+        self.start_screen_system = StartScreenSystem()
+        self.game_over_system = GameOverSystem()
         
         # Initialize game entities
         self.ball = Ball(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
@@ -34,7 +38,20 @@ class Game:
         # Set up menu callbacks
         self.menu_system.set_callbacks(
             on_resume=self.resume_game,
-            on_restart=self.reset_game,
+            on_restart=self.restart_game,
+            on_quit=self.quit_game
+        )
+        
+        # Set up start screen callbacks
+        self.start_screen_system.set_callbacks(
+            on_play=self.start_game,
+            on_settings=self.show_settings
+        )
+        
+        # Set up game over callbacks
+        self.game_over_system.set_callbacks(
+            on_restart=self.restart_game,
+            on_main_menu=self.return_to_main_menu,
             on_quit=self.quit_game
         )
         
@@ -55,6 +72,55 @@ class Game:
         """Quit the game"""
         self.running = False
         print("Quitting game")
+        
+    def start_game(self):
+        """Start the main game from start screen"""
+        # Reset game entities without resetting state manager
+        self.player_manager.reset()
+        self.ball.reset_position()
+        self.particle_system.clear()
+        self.aiming_system.reset()
+        self.menu_system.reset_menu()
+        self.pause_key_pressed = False
+        
+        # Now enter the game state
+        self.state_manager.enter_game()
+        print("Starting game")
+        
+    def show_settings(self):
+        """Show settings screen (placeholder)"""
+        print("Settings - Coming Soon!")
+        
+    def restart_game(self):
+        """Restart the game from game over screen"""
+        # Reset game entities without resetting state manager
+        self.player_manager.reset()
+        self.ball.reset_position()
+        self.particle_system.clear()
+        self.aiming_system.reset()
+        self.menu_system.reset_menu()
+        self.game_over_system.reset()
+        self.pause_key_pressed = False
+        
+        # Enter game state
+        self.state_manager.enter_game()
+        print("Restarting game")
+        
+    def return_to_main_menu(self):
+        """Return to the start screen from game over"""
+        # Reset all systems
+        self.player_manager.reset()
+        self.ball.reset_position()
+        self.particle_system.clear()
+        self.aiming_system.reset()
+        self.menu_system.reset_menu()
+        self.game_over_system.reset()
+        self.start_screen_system.reset()
+        self.pause_key_pressed = False
+        
+        # Enter start screen state
+        self.state_manager.enter_start_screen()
+        print("Returning to main menu")
 
     def handle_events(self):
         """Handle pygame events"""
@@ -71,27 +137,39 @@ class Game:
         # Update input handler
         self.input_handler.handle_events(events)
         
-        # Handle pause input (single-press detection)
-        if self.input_handler.is_pause_pressed():
-            if not self.pause_key_pressed:  # Only trigger on initial press
-                if not self.state_manager.is_paused():
-                    self.state_manager.toggle_pause()
-                    self.menu_system.reset_menu()
-                else:
-                    # If already paused, quick resume with pause button
-                    self.resume_game()
-                self.pause_key_pressed = True
+        # Handle input based on current state
+        if self.state_manager.is_start_screen():
+            # Handle start screen input
+            self.start_screen_system.handle_start_menu_input(self.input_handler)
+        elif self.state_manager.is_game_over():
+            # Handle game over input
+            self.game_over_system.handle_game_over_input(self.input_handler)
         else:
-            self.pause_key_pressed = False
-            
-        # Handle pause menu navigation (only when paused)
-        if self.state_manager.is_paused():
-            self.menu_system.handle_pause_menu_input(self.input_handler)
+            # Handle pause input (single-press detection) - only during gameplay
+            if self.input_handler.is_pause_pressed():
+                if not self.pause_key_pressed:  # Only trigger on initial press
+                    if not self.state_manager.is_paused():
+                        self.state_manager.toggle_pause()
+                        self.menu_system.reset_menu()
+                    else:
+                        # If already paused, quick resume with pause button
+                        self.resume_game()
+                    self.pause_key_pressed = True
+            else:
+                self.pause_key_pressed = False
+                
+            # Handle pause menu navigation (only when paused)
+            if self.state_manager.is_paused():
+                self.menu_system.handle_pause_menu_input(self.input_handler)
 
 
     def update(self):
         """Update game state based on current mode"""
-        if self.state_manager.is_playing():
+        if self.state_manager.is_start_screen():
+            self.update_start_screen()
+        elif self.state_manager.is_game_over():
+            self.update_game_over()
+        elif self.state_manager.is_playing():
             self.update_playing_mode()
         elif self.state_manager.is_aiming():
             self.update_aiming_mode()
@@ -99,8 +177,17 @@ class Game:
             # Don't update game logic when paused, only particle system
             pass
         
-        # Always update particle system
-        self.particle_system.update()
+        # Always update particle system (except on start screen and game over)
+        if not self.state_manager.is_start_screen() and not self.state_manager.is_game_over():
+            self.particle_system.update()
+    
+    def update_start_screen(self):
+        """Update start screen demo game"""
+        self.start_screen_system.update_demo_game()
+    
+    def update_game_over(self):
+        """Update game over screen effects"""
+        self.game_over_system.update()
     
     def update_playing_mode(self):
         """Update game during normal play"""
@@ -178,13 +265,20 @@ class Game:
         
         print(winner_info['message'])
         
+        # Set winner information for game over system
+        self.game_over_system.set_winner_info(
+            winner_info['winner'],
+            winner_info['lives_remaining'],
+            winner_info['message']
+        )
+        
         if winner_info['winner'] >= 0:
             # Add victory celebration
             self.particle_system.add_victory_celebration(
                 SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, PLAYER_COLORS[winner_info['winner']])
         
-        # Reset the game after a brief moment
-        self.reset_game()
+        # Enter game over state instead of resetting immediately
+        self.state_manager.enter_game_over()
 
     def reset_game(self):
         """Reset the game to initial state"""
@@ -201,19 +295,26 @@ class Game:
 
     def render(self):
         """Render the game"""
-        # Get data from systems
-        paddles = self.player_manager.get_paddles()
-        lives = self.player_manager.get_lives()
-        alive_players = self.player_manager.get_alive_players()
-        game_state = self.state_manager.get_current_state()
-        aiming_player = self.aiming_system.get_aiming_player()
-        aiming_angle = self.aiming_system.get_aiming_angle()
-        aiming_timer = self.aiming_system.get_aiming_timer()
-        pause_menu_selected = self.menu_system.get_selected_option()
-        
-        self.renderer.render_frame(paddles, self.ball, lives, alive_players, 
-                                 self.particle_system, game_state, aiming_player, 
-                                 aiming_angle, aiming_timer, pause_menu_selected)
+        if self.state_manager.is_start_screen():
+            # Render start screen
+            self.renderer.render_start_screen(self.start_screen_system)
+        elif self.state_manager.is_game_over():
+            # Render game over screen
+            self.renderer.render_game_over_screen(self.game_over_system)
+        else:
+            # Get data from systems
+            paddles = self.player_manager.get_paddles()
+            lives = self.player_manager.get_lives()
+            alive_players = self.player_manager.get_alive_players()
+            game_state = self.state_manager.get_current_state()
+            aiming_player = self.aiming_system.get_aiming_player()
+            aiming_angle = self.aiming_system.get_aiming_angle()
+            aiming_timer = self.aiming_system.get_aiming_timer()
+            pause_menu_selected = self.menu_system.get_selected_option()
+            
+            self.renderer.render_frame(paddles, self.ball, lives, alive_players, 
+                                     self.particle_system, game_state, aiming_player, 
+                                     aiming_angle, aiming_timer, pause_menu_selected)
         pygame.display.flip()
 
     def run(self):

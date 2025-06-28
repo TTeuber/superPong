@@ -7,9 +7,9 @@ class PlayerManager:
     
     def __init__(self):
         # Game state - lives system
-        self.lives = [5, 5, 5, 5]  # Each player starts with 5 lives
+        self.lives = [STARTING_LIVES, STARTING_LIVES, STARTING_LIVES, STARTING_LIVES]  # Each player starts with configured lives
         self.alive_players = [True, True, True, True]  # Track which players are still alive
-        self.starting_lives = 5
+        self.starting_lives = STARTING_LIVES
         
         # Initialize paddles and AI
         self.paddles = []
@@ -142,7 +142,7 @@ class PlayerManager:
                 
     def reset(self):
         """Reset player manager to initial state"""
-        self.lives = [5, 5, 5, 5]
+        self.lives = [STARTING_LIVES, STARTING_LIVES, STARTING_LIVES, STARTING_LIVES]
         self.alive_players = [True, True, True, True]
         
         # Reset paddle positions

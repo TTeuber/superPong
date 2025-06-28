@@ -1,4 +1,5 @@
 import pygame
+import math
 from utils.constants import *
 
 class GameRenderer:
@@ -17,6 +18,17 @@ class GameRenderer:
         self.font_large = pygame.font.Font(None, 48)
         self.font_medium = pygame.font.Font(None, 32)
         self.font_small = pygame.font.Font(None, 24)
+        
+        # Load retro font for start screen
+        try:
+            self.font_retro_large = pygame.font.Font("assets/PressStart2P-Regular.ttf", 48)
+            self.font_retro_medium = pygame.font.Font("assets/PressStart2P-Regular.ttf", 24)
+            self.font_retro_small = pygame.font.Font("assets/PressStart2P-Regular.ttf", 16)
+        except:
+            # Fallback to default fonts if retro font fails to load
+            self.font_retro_large = self.font_large
+            self.font_retro_medium = self.font_medium
+            self.font_retro_small = self.font_small
 
     def render_frame(self, paddles, ball, lives, alive_players, particle_system=None, 
                    game_state="playing", aiming_player=-1, aiming_angle=0, aiming_timer=0, pause_menu_selected=0):
@@ -463,6 +475,284 @@ class GameRenderer:
             "Use ↑/↓ or Analog Stick to navigate",
             "Press A or ENTER to confirm",
             "Press B or ESC to cancel • START/P to quick resume"
+        ]
+        
+        for i, instruction in enumerate(instructions):
+            text_surface = self.font_small.render(instruction, True, (150, 150, 150))
+            text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, instruction_y + i * 20))
+            self.screen.blit(text_surface, text_rect)
+            
+    def render_start_screen(self, start_screen_system):
+        """Render the start screen with title, demo game, and menu"""
+        self.frame_count += 1
+        
+        # Clear screen with black background
+        self.screen.fill(BLACK)
+        
+        # Draw subtle background grid
+        self.draw_background_grid()
+        
+        # Get demo game state
+        demo_state = start_screen_system.get_demo_game_state()
+        
+        # Draw title "SUPER PONG" at top
+        title_y = 100
+        title_text = "SUPER PONG"
+        
+        # Create multiple glow layers for dramatic effect
+        glow_colors = [
+            (NEON_BLUE[0] // 4, NEON_BLUE[1] // 4, NEON_BLUE[2] // 4),  # Dim blue glow
+            (NEON_PINK[0] // 3, NEON_PINK[1] // 3, NEON_PINK[2] // 3),  # Dim pink glow
+        ]
+        
+        # Draw multiple glow layers
+        for i, glow_color in enumerate(glow_colors):
+            glow_size = 8 + i * 4
+            glow_surface = pygame.Surface((SCREEN_WIDTH, 80), pygame.SRCALPHA)
+            glow_text = self.font_retro_large.render(title_text, True, glow_color)
+            glow_rect = glow_text.get_rect(center=(SCREEN_WIDTH // 2, 40))
+            glow_surface.blit(glow_text, glow_rect)
+            self.screen.blit(glow_surface, (0, title_y - 40))
+        
+        # Draw main title text
+        title_surface = self.font_retro_large.render(title_text, True, WHITE)
+        title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, title_y))
+        self.screen.blit(title_surface, title_rect)
+        
+        # Draw AI demo game in center area
+        demo_area_y = 200
+        demo_area_height = 350
+        
+        # Create demo area boundaries
+        demo_rect = pygame.Rect(100, demo_area_y, SCREEN_WIDTH - 200, demo_area_height)
+        pygame.draw.rect(self.screen, (20, 20, 20), demo_rect)
+        pygame.draw.rect(self.screen, NEON_BLUE, demo_rect, 2)
+        
+        # Scale and position demo game elements
+        demo_scale = 0.7
+        demo_offset_x = 150
+        demo_offset_y = demo_area_y + 50
+        
+        # Draw demo paddles
+        for paddle in demo_state['paddles']:
+            scaled_rect = pygame.Rect(
+                demo_offset_x + paddle.x * demo_scale,
+                demo_offset_y + paddle.y * demo_scale,
+                paddle.width * demo_scale,
+                paddle.height * demo_scale
+            )
+            
+            # Draw paddle glow
+            glow_surface = pygame.Surface((scaled_rect.width + 20, scaled_rect.height + 20), pygame.SRCALPHA)
+            glow_color = (*paddle.color, 60)
+            pygame.draw.rect(glow_surface, glow_color, 
+                           (10, 10, scaled_rect.width, scaled_rect.height))
+            self.screen.blit(glow_surface, (scaled_rect.x - 10, scaled_rect.y - 10))
+            
+            # Draw main paddle
+            pygame.draw.rect(self.screen, paddle.color, scaled_rect)
+        
+        # Draw demo ball
+        ball = demo_state['ball']
+        scaled_ball_x = demo_offset_x + ball.x * demo_scale
+        scaled_ball_y = demo_offset_y + ball.y * demo_scale
+        scaled_ball_size = ball.size * demo_scale
+        
+        # Draw ball glow
+        glow_radius = int(scaled_ball_size * 2)
+        glow_surface = pygame.Surface((glow_radius * 2, glow_radius * 2), pygame.SRCALPHA)
+        pygame.draw.circle(glow_surface, (*WHITE, 40), (glow_radius, glow_radius), glow_radius)
+        self.screen.blit(glow_surface, (scaled_ball_x - glow_radius, scaled_ball_y - glow_radius))
+        
+        # Draw main ball
+        pygame.draw.circle(self.screen, WHITE, 
+                         (int(scaled_ball_x), int(scaled_ball_y)), int(scaled_ball_size))
+        
+        # Draw menu options at bottom
+        menu_y = 600
+        selected_option = start_screen_system.get_selected_option()
+        
+        for i, option in enumerate(START_MENU_OPTIONS):
+            is_selected = (i == selected_option)
+            
+            # Create text surface
+            if is_selected:
+                text_surface = self.font_retro_medium.render(option, True, NEON_YELLOW)
+            else:
+                text_surface = self.font_retro_medium.render(option, True, WHITE)
+            
+            text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, menu_y + i * 60))
+            
+            # Draw glow for selected option
+            if is_selected:
+                # Pulsing glow effect
+                pulse = abs(math.sin(self.frame_count * 0.1)) * 0.5 + 0.5
+                glow_alpha = int(80 + pulse * 40)
+                
+                glow_size = 20
+                glow_surface = pygame.Surface((text_rect.width + glow_size * 2, 
+                                             text_rect.height + glow_size * 2), pygame.SRCALPHA)
+                glow_color = (*NEON_YELLOW, glow_alpha)
+                glow_text = self.font_retro_medium.render(option, True, glow_color)
+                glow_text_rect = glow_text.get_rect(center=(glow_surface.get_width() // 2, 
+                                                          glow_surface.get_height() // 2))
+                glow_surface.blit(glow_text, glow_text_rect)
+                self.screen.blit(glow_surface, (text_rect.x - glow_size, text_rect.y - glow_size))
+            
+            # Draw main text
+            self.screen.blit(text_surface, text_rect)
+        
+        # Draw instructions at bottom
+        instruction_y = 720
+        instructions = [
+            "Use ↑/↓ or Analog Stick to navigate",
+            "Press A or ENTER to select"
+        ]
+        
+        for i, instruction in enumerate(instructions):
+            text_surface = self.font_small.render(instruction, True, (150, 150, 150))
+            text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, instruction_y + i * 20))
+            self.screen.blit(text_surface, text_rect)
+            
+    def render_game_over_screen(self, game_over_system):
+        """Render the game over screen with winner announcement and menu"""
+        self.frame_count += 1
+        
+        # Clear screen with black background
+        self.screen.fill(BLACK)
+        
+        # Draw subtle background grid
+        self.draw_background_grid()
+        
+        # Get winner information
+        winner_info = game_over_system.get_winner_info()
+        winner_id = winner_info['winner_id']
+        winner_message = winner_info['winner_message']
+        celebration_timer = winner_info['celebration_timer']
+        max_celebration_time = winner_info['max_celebration_time']
+        
+        # Draw "GAME OVER" title
+        game_over_y = 120
+        game_over_text = "GAME OVER"
+        
+        # Create pulsing effect for title
+        pulse = abs(math.sin(self.frame_count * 0.08)) * 0.3 + 0.7
+        title_glow_alpha = int(60 * pulse)
+        
+        # Draw multiple glow layers for title
+        glow_colors = [
+            (NEON_PURPLE[0] // 4, NEON_PURPLE[1] // 4, NEON_PURPLE[2] // 4),
+            (NEON_ORANGE[0] // 3, NEON_ORANGE[1] // 3, NEON_ORANGE[2] // 3),
+        ]
+        
+        for i, glow_color in enumerate(glow_colors):
+            glow_size = 8 + i * 4
+            glow_surface = pygame.Surface((SCREEN_WIDTH, 80), pygame.SRCALPHA)
+            glow_text = self.font_retro_large.render(game_over_text, True, (*glow_color, title_glow_alpha))
+            glow_rect = glow_text.get_rect(center=(SCREEN_WIDTH // 2, 40))
+            glow_surface.blit(glow_text, glow_rect)
+            self.screen.blit(glow_surface, (0, game_over_y - 40))
+        
+        # Draw main title text
+        title_surface = self.font_retro_large.render(game_over_text, True, WHITE)
+        title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, game_over_y))
+        self.screen.blit(title_surface, title_rect)
+        
+        # Draw winner announcement
+        winner_y = 240
+        if winner_id >= 0:
+            # Get winner color
+            winner_color = PLAYER_COLORS[winner_id]
+            
+            # Winner text with player color
+            winner_text = f"PLAYER {winner_id + 1} WINS!"
+            
+            # Celebration effect - more intense early on
+            celebration_intensity = celebration_timer / max_celebration_time
+            celebration_glow_alpha = int(100 + celebration_intensity * 100)
+            
+            # Draw winner glow
+            glow_size = 15
+            glow_surface = pygame.Surface((SCREEN_WIDTH, 100), pygame.SRCALPHA)
+            glow_text = self.font_retro_medium.render(winner_text, True, (*winner_color, celebration_glow_alpha))
+            glow_rect = glow_text.get_rect(center=(SCREEN_WIDTH // 2, 50))
+            glow_surface.blit(glow_text, glow_rect)
+            self.screen.blit(glow_surface, (0, winner_y - 50))
+            
+            # Draw main winner text
+            winner_surface = self.font_retro_medium.render(winner_text, True, winner_color)
+            winner_rect = winner_surface.get_rect(center=(SCREEN_WIDTH // 2, winner_y))
+            self.screen.blit(winner_surface, winner_rect)
+            
+            # Draw lives remaining info
+            lives_y = winner_y + 60
+            lives_text = f"Lives Remaining: {winner_info['winner_lives']}"
+            lives_surface = self.font_small.render(lives_text, True, (200, 200, 200))
+            lives_rect = lives_surface.get_rect(center=(SCREEN_WIDTH // 2, lives_y))
+            self.screen.blit(lives_surface, lives_rect)
+        else:
+            # Draw tie/no winner message
+            no_winner_text = "ALL PLAYERS ELIMINATED!"
+            no_winner_surface = self.font_retro_medium.render(no_winner_text, True, NEON_PURPLE)
+            no_winner_rect = no_winner_surface.get_rect(center=(SCREEN_WIDTH // 2, winner_y))
+            self.screen.blit(no_winner_surface, no_winner_rect)
+        
+        # Draw celebration particles area (visual placeholder)
+        if celebration_timer > 0:
+            particle_area = pygame.Rect(200, 320, SCREEN_WIDTH - 400, 150)
+            particle_alpha = int(celebration_intensity * 30)
+            particle_surface = pygame.Surface((particle_area.width, particle_area.height), pygame.SRCALPHA)
+            
+            # Draw some simple celebration "sparks"
+            import random
+            for _ in range(int(20 * celebration_intensity)):
+                x = random.randint(0, particle_area.width)
+                y = random.randint(0, particle_area.height)
+                color = random.choice(PLAYER_COLORS)
+                size = random.randint(2, 5)
+                pygame.draw.circle(particle_surface, (*color, particle_alpha), (x, y), size)
+            
+            self.screen.blit(particle_surface, particle_area.topleft)
+        
+        # Draw menu options at bottom
+        menu_y = 550
+        selected_option = game_over_system.get_selected_option()
+        
+        for i, option in enumerate(GAME_OVER_MENU_OPTIONS):
+            is_selected = (i == selected_option)
+            
+            # Create text surface
+            if is_selected:
+                text_surface = self.font_retro_medium.render(option, True, NEON_YELLOW)
+            else:
+                text_surface = self.font_retro_medium.render(option, True, WHITE)
+            
+            text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, menu_y + i * 60))
+            
+            # Draw glow for selected option
+            if is_selected:
+                # Pulsing glow effect
+                pulse = abs(math.sin(self.frame_count * 0.1)) * 0.5 + 0.5
+                glow_alpha = int(80 + pulse * 40)
+                
+                glow_size = 20
+                glow_surface = pygame.Surface((text_rect.width + glow_size * 2, 
+                                             text_rect.height + glow_size * 2), pygame.SRCALPHA)
+                glow_color = (*NEON_YELLOW, glow_alpha)
+                glow_text = self.font_retro_medium.render(option, True, glow_color)
+                glow_text_rect = glow_text.get_rect(center=(glow_surface.get_width() // 2, 
+                                                          glow_surface.get_height() // 2))
+                glow_surface.blit(glow_text, glow_text_rect)
+                self.screen.blit(glow_surface, (text_rect.x - glow_size, text_rect.y - glow_size))
+            
+            # Draw main text
+            self.screen.blit(text_surface, text_rect)
+        
+        # Draw instructions at bottom
+        instruction_y = 760
+        instructions = [
+            "Use ↑/↓ or Analog Stick to navigate",
+            "Press A or ENTER to select"
         ]
         
         for i, instruction in enumerate(instructions):

@@ -36,13 +36,18 @@ BOUNDARY_THICKNESS = 10
 # Player positions
 PLAYER_COLORS = [NEON_BLUE, NEON_PINK, NEON_GREEN, NEON_YELLOW]
 
+# Game settings
+STARTING_LIVES = 1  # Number of lives each player starts with
+
 # Paddle margins from edges
 PADDLE_MARGIN = 50
 
 # Game states
+GAME_STATE_START_SCREEN = "start_screen"
 GAME_STATE_PLAYING = "playing"
 GAME_STATE_AIMING = "aiming"
 GAME_STATE_PAUSED = "paused"
+GAME_STATE_GAME_OVER = "game_over"
 
 # Aiming system
 AIMING_TIME = 90  # 3 seconds at 60 FPS
@@ -53,6 +58,17 @@ PAUSE_MENU_OPTIONS = ["Resume", "Restart", "Quit"]
 PAUSE_MENU_RESUME = 0
 PAUSE_MENU_RESTART = 1
 PAUSE_MENU_QUIT = 2
+
+# Start screen menu
+START_MENU_OPTIONS = ["Play", "Settings"]
+START_MENU_PLAY = 0
+START_MENU_SETTINGS = 1
+
+# Game over menu
+GAME_OVER_MENU_OPTIONS = ["Restart", "Main Menu", "Quit"]
+GAME_OVER_RESTART = 0
+GAME_OVER_MAIN_MENU = 1
+GAME_OVER_QUIT = 2
 
 # Controller settings
 CONTROLLER_DEADZONE = 0.15  # Dead zone for analog sticks (0.0-1.0)
