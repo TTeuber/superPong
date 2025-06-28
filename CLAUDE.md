@@ -83,30 +83,52 @@ We're building "the coolest Pong game ever" with these key features:
 ## 🏗️ Architecture Details
 
 ### Design Pattern
-The project uses a **component-based architecture** with clear separation:
+The project uses a **component-based architecture** with clear separation and single responsibility:
 - **Entities**: Game objects (Paddle, Ball, PowerUp, Obstacle)
-- **Systems**: Game logic (Renderer, InputHandler, AI)
+- **Systems**: Specialized game logic managers (State, Menu, Aiming, Collision, Player, Renderer, Input, AI, Particles)
 - **Utils**: Shared utilities (Constants, Math)
 
-### Key Classes and Responsibilities
+### Refactored Architecture (December 2024)
+The codebase was refactored to improve scalability and maintainability:
+- **Reduced game.py from 514 lines to 227 lines** (>50% reduction)
+- **Extracted specialized systems** for better separation of concerns
+- **Improved testability** with isolated system responsibilities
+- **Enhanced scalability** for adding new features
+
+### Core Systems and Responsibilities
 
 **Game Class** (`game.py`):
-- Main game loop and state management
-- Entity coordination and updates
-- Event handling and game flow
-- Scoring and win condition logic
+- Main game loop coordination (227 lines)
+- System orchestration and callbacks
+- High-level game flow management
+- Event handling and input coordination
 
-**Paddle Class** (`entities/paddle.py`):
-- Position and movement logic
-- Vertical (left/right) vs horizontal (top/bottom) orientation
-- Collision rectangle management
-- Player input integration
+**GameStateManager** (`systems/game_state_manager.py`):
+- Game state transitions (Playing, Aiming, Paused)
+- State validation and management
+- Pause/resume functionality
 
-**Ball Class** (`entities/ball.py`):
-- Physics simulation with velocity vectors
-- Wall and paddle collision detection
-- Realistic bouncing with spin effects based on hit position
-- Trail effect system for visual appeal
+**MenuSystem** (`systems/menu_system.py`):
+- Pause menu navigation and selection
+- Menu input handling with callback system
+- Extensible for future menu systems
+
+**AimingSystem** (`systems/aiming_system.py`):
+- Player aiming mode coordination
+- Angle calculations for all player positions
+- AI auto-aiming with smooth animations
+- Ball launching with physics integration
+
+**CollisionSystem** (`systems/collision_system.py`):
+- Ball-paddle collision detection
+- Ball-boundary collision handling
+- Collision response coordination with effects
+
+**PlayerManager** (`systems/player_manager.py`):
+- Lives tracking and player elimination
+- Paddle initialization and management
+- AI player coordination
+- Game over detection and winner determination
 
 **GameRenderer Class** (`systems/renderer.py`):
 - All visual rendering with neon effects
@@ -115,14 +137,18 @@ The project uses a **component-based architecture** with clear separation:
 - Score display and UI elements
 
 **InputHandler Class** (`systems/input_handler.py`):
-- Keyboard input processing
-- Player control mapping
-- Event handling integration
+- Keyboard and controller input processing
+- Nintendo Switch controller support
+- Player control mapping and coordination
 
 **AIPlayer Class** (`systems/ai.py`):
 - Ball tracking logic with configurable difficulty
 - Reaction delays to make AI beatable
 - Movement decision making
+
+**Entities:**
+- **Paddle Class** (`entities/paddle.py`): Position, movement, collision rectangles
+- **Ball Class** (`entities/ball.py`): Physics simulation, collision detection, trail effects
 
 ### Technical Decisions Made
 
@@ -200,10 +226,37 @@ NEON_ORANGE = (255, 165, 0)    # For obstacles
 - Power-up collection uses simple rect overlap
 
 ### File Organization
-- Keep entities in `entities/` folder
-- Keep systems in `systems/` folder
-- Keep utilities in `utils/` folder
-- Main game logic in root level files
+```
+superPong/
+├── main.py                           # Entry point
+├── game.py                           # Main game coordination (227 lines)
+├── entities/
+│   ├── paddle.py                     # Paddle movement and collision
+│   ├── ball.py                       # Ball physics and bouncing
+│   ├── obstacle.py                   # Obstacle entities (future)
+│   └── powerup.py                    # Power-up entities (future)
+├── systems/
+│   ├── game_state_manager.py         # Game state transitions
+│   ├── menu_system.py                # Menu navigation and callbacks
+│   ├── aiming_system.py              # Aiming mode and ball launching
+│   ├── collision_system.py           # Collision detection and handling
+│   ├── player_manager.py             # Lives, elimination, AI coordination
+│   ├── renderer.py                   # Neon visual effects
+│   ├── input_handler.py              # Keyboard and controller input
+│   ├── ai.py                         # AI player logic
+│   └── particle_system.py            # Visual effect particles
+├── utils/
+│   ├── constants.py                  # Game configuration
+│   └── math_utils.py                 # Vector math utilities
+└── tests/
+    └── controller_button_tester.py   # Controller testing utility
+```
+
+**Organization Principles:**
+- **Single Responsibility**: Each file handles one specific concern
+- **Clear Dependencies**: Systems depend on entities and utils, not each other
+- **Extensible Design**: Easy to add new systems or entities
+- **Testable Architecture**: Isolated systems for unit testing
 
 ## 🐛 Known Issues to Address
 
