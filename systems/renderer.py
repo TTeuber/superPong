@@ -19,7 +19,7 @@ class GameRenderer:
         self.font_small = pygame.font.Font(None, 24)
 
     def render_frame(self, paddles, ball, lives, alive_players, particle_system=None, 
-                   game_state="playing", aiming_player=-1, aiming_angle=0, aiming_timer=0):
+                   game_state="playing", aiming_player=-1, aiming_angle=0, aiming_timer=0, pause_menu_selected=0):
         """Render a complete game frame with screen shake"""
         self.frame_count += 1
         
@@ -60,6 +60,10 @@ class GameRenderer:
         # Draw aiming system if in aiming mode
         if game_state == GAME_STATE_AIMING and aiming_player >= 0:
             self.draw_aiming_system(ball, aiming_player, aiming_angle, aiming_timer)
+        
+        # Draw pause overlay if paused
+        if game_state == GAME_STATE_PAUSED:
+            self.draw_pause_overlay(pause_menu_selected)
         
         # Draw controls info
         self.draw_controls_info(alive_players)
@@ -373,3 +377,95 @@ class GameRenderer:
                 x_pos = 20 + x_offset * 150
                 self.screen.blit(text, (x_pos, y_offset))
                 x_offset += 1
+
+    def draw_pause_overlay(self, selected_option=0):
+        """Draw navigable pause menu overlay with selection highlighting"""
+        import math
+        
+        # Create semi-transparent overlay
+        overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 180))  # Semi-transparent black
+        self.screen.blit(overlay, (0, 0))
+        
+        # Calculate pulsing effect for selected option
+        pulse = (math.sin(self.frame_count * 0.2) + 1) * 0.5  # 0 to 1
+        selected_glow_intensity = 0.8 + pulse * 0.2
+        
+        # Main PAUSED text
+        pause_text = "PAUSED"
+        text_surface = self.font_large.render(pause_text, True, NEON_YELLOW)
+        text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 100))
+        
+        # Glow effect for pause text
+        glow_size = 15
+        glow_alpha = 80
+        for i in range(3):
+            glow_surface = pygame.Surface((text_rect.width + glow_size * 2, text_rect.height + glow_size * 2), pygame.SRCALPHA)
+            glow_color = (*NEON_YELLOW, glow_alpha // (i + 1))
+            glow_text = self.font_large.render(pause_text, True, glow_color)
+            glow_text_rect = glow_text.get_rect(center=(glow_surface.get_width() // 2, glow_surface.get_height() // 2))
+            glow_surface.blit(glow_text, glow_text_rect)
+            self.screen.blit(glow_surface, (text_rect.x - glow_size, text_rect.y - glow_size))
+        
+        # Main pause text on top
+        self.screen.blit(text_surface, text_rect)
+        
+        # Draw menu options
+        menu_start_y = SCREEN_HEIGHT // 2 - 20
+        option_spacing = 50
+        
+        for i, option_text in enumerate(PAUSE_MENU_OPTIONS):
+            y_pos = menu_start_y + i * option_spacing
+            
+            # Determine colors based on selection
+            if i == selected_option:
+                # Selected option - bright with pulsing glow
+                text_color = NEON_GREEN
+                glow_color = NEON_GREEN
+                glow_intensity = selected_glow_intensity
+                font_to_use = self.font_large
+                
+                # Draw selection arrow
+                arrow_text = "►"
+                arrow_surface = self.font_large.render(arrow_text, True, NEON_GREEN)
+                arrow_rect = arrow_surface.get_rect(center=(SCREEN_WIDTH // 2 - 120, y_pos))
+                self.screen.blit(arrow_surface, arrow_rect)
+                
+            else:
+                # Unselected option - dimmed
+                text_color = NEON_BLUE
+                glow_color = NEON_BLUE
+                glow_intensity = 0.3
+                font_to_use = self.font_medium
+            
+            # Create text surface
+            text_surface = font_to_use.render(option_text, True, text_color)
+            text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, y_pos))
+            
+            # Draw glow effect for selected option
+            if i == selected_option:
+                glow_size = int(20 * glow_intensity)
+                glow_alpha = int(120 * glow_intensity)
+                for j in range(3):
+                    glow_surface = pygame.Surface((text_rect.width + glow_size * 2, text_rect.height + glow_size * 2), pygame.SRCALPHA)
+                    current_glow_color = (*glow_color, glow_alpha // (j + 1))
+                    glow_text = font_to_use.render(option_text, True, current_glow_color)
+                    glow_text_rect = glow_text.get_rect(center=(glow_surface.get_width() // 2, glow_surface.get_height() // 2))
+                    glow_surface.blit(glow_text, glow_text_rect)
+                    self.screen.blit(glow_surface, (text_rect.x - glow_size, text_rect.y - glow_size))
+            
+            # Draw main text
+            self.screen.blit(text_surface, text_rect)
+        
+        # Instructions at bottom
+        instruction_y = SCREEN_HEIGHT // 2 + 130
+        instructions = [
+            "Use ↑/↓ or Analog Stick to navigate",
+            "Press A or ENTER to confirm",
+            "Press B or ESC to cancel • START/P to quick resume"
+        ]
+        
+        for i, instruction in enumerate(instructions):
+            text_surface = self.font_small.render(instruction, True, (150, 150, 150))
+            text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, instruction_y + i * 20))
+            self.screen.blit(text_surface, text_rect)

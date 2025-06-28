@@ -106,6 +106,80 @@ class InputHandler:
             
         return movement
 
+    def is_pause_pressed(self):
+        """Check if pause button/key is pressed (single press detection)"""
+        # Check keyboard pause (P key or SPACE)
+        keyboard_pause = pygame.K_p in self.keys_pressed or pygame.K_SPACE in self.keys_pressed
+        
+        # Check controller pause buttons
+        controller_pause = False
+        if self.controller_connected:
+            start_button = SWITCH_CONTROLLER_MAPPINGS.get('start_button', 9)
+            select_button = SWITCH_CONTROLLER_MAPPINGS.get('select_button', 8)
+            
+            controller_pause = (
+                (start_button in self.controller_buttons and self.controller_buttons[start_button]) or
+                (select_button in self.controller_buttons and self.controller_buttons[select_button])
+            )
+        
+        return keyboard_pause or controller_pause
+
+    def get_menu_navigation(self):
+        """Get menu navigation direction (-1 for up, 1 for down, 0 for none)"""
+        # Check keyboard input
+        if pygame.K_UP in self.keys_pressed or pygame.K_w in self.keys_pressed:
+            return -1
+        elif pygame.K_DOWN in self.keys_pressed or pygame.K_s in self.keys_pressed:
+            return 1
+        
+        # Check controller input
+        if self.controller_connected:
+            # Check left analog stick
+            left_stick_y_axis = SWITCH_CONTROLLER_MAPPINGS.get('left_stick_y', 1)
+            if left_stick_y_axis in self.controller_axes:
+                stick_y = self.controller_axes[left_stick_y_axis]
+                if stick_y < -CONTROLLER_DEADZONE:
+                    return -1
+                elif stick_y > CONTROLLER_DEADZONE:
+                    return 1
+            
+            # Check D-pad
+            dpad_up = SWITCH_CONTROLLER_MAPPINGS.get('dpad_up', 12)
+            dpad_down = SWITCH_CONTROLLER_MAPPINGS.get('dpad_down', 13)
+            
+            if dpad_up in self.controller_buttons and self.controller_buttons[dpad_up]:
+                return -1
+            elif dpad_down in self.controller_buttons and self.controller_buttons[dpad_down]:
+                return 1
+        
+        return 0
+
+    def is_menu_confirm_pressed(self):
+        """Check if menu confirmation button/key is pressed"""
+        # Check keyboard input
+        keyboard_confirm = pygame.K_RETURN in self.keys_pressed or pygame.K_SPACE in self.keys_pressed
+        
+        # Check controller input
+        controller_confirm = False
+        if self.controller_connected:
+            a_button = SWITCH_CONTROLLER_MAPPINGS.get('a_button', 0)
+            controller_confirm = a_button in self.controller_buttons and self.controller_buttons[a_button]
+        
+        return keyboard_confirm or controller_confirm
+
+    def is_menu_cancel_pressed(self):
+        """Check if menu cancel/back button is pressed (B button or ESC)"""
+        # Check keyboard input
+        keyboard_cancel = pygame.K_ESCAPE in self.keys_pressed
+        
+        # Check controller input
+        controller_cancel = False
+        if self.controller_connected:
+            b_button = SWITCH_CONTROLLER_MAPPINGS.get('b_button', 1)
+            controller_cancel = b_button in self.controller_buttons and self.controller_buttons[b_button]
+        
+        return keyboard_cancel or controller_cancel
+
     def handle_events(self, events):
         """Process pygame events"""
         for event in events:

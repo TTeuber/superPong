@@ -31,7 +31,7 @@ def main():
     print("  Player 2 (Right, Pink): AI")
     print("  Player 3 (Top, Green): AI") 
     print("  Player 4 (Bottom, Yellow): AI")
-    print("  Press R to reset, ESC to quit")
+    print("  Press P/SPACE/START to pause (navigate with controller/keys)")
     print()
 
     try:

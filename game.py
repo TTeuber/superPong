@@ -44,9 +44,19 @@ class Game:
         
         # Game state management
         self.game_state = GAME_STATE_PLAYING
+        self.previous_game_state = GAME_STATE_PLAYING  # Store state before pause
         self.aiming_player = -1  # Which player is currently aiming (-1 = none)
         self.aiming_timer = 0    # Timer for aiming phase
         self.aiming_angle = 0    # Current aiming angle
+        
+        # Pause input handling
+        self.pause_key_pressed = False  # Track pause key state for single-press detection
+        
+        # Pause menu state
+        self.pause_menu_selected = PAUSE_MENU_RESUME  # Currently selected menu option
+        self.menu_nav_pressed = False  # Track menu navigation input for single-press detection
+        self.menu_confirm_pressed = False  # Track confirmation input for single-press detection
+        self.menu_cancel_pressed = False  # Track cancel input for single-press detection
         
         # AI aiming animation
         self.ai_target_angle = 0  # Target angle for AI
@@ -91,6 +101,78 @@ class Game:
 
         # Update input handler
         self.input_handler.handle_events(events)
+        
+        # Handle pause input (single-press detection)
+        if self.input_handler.is_pause_pressed():
+            if not self.pause_key_pressed:  # Only trigger on initial press
+                if self.game_state != GAME_STATE_PAUSED:
+                    self.toggle_pause()
+                else:
+                    # If already paused, quick resume with pause button
+                    self.execute_menu_action(PAUSE_MENU_RESUME)
+                self.pause_key_pressed = True
+        else:
+            self.pause_key_pressed = False
+            
+        # Handle pause menu navigation (only when paused)
+        if self.game_state == GAME_STATE_PAUSED:
+            self.handle_pause_menu_input()
+
+    def handle_pause_menu_input(self):
+        """Handle input for pause menu navigation"""
+        # Check for menu navigation (up/down)
+        nav_direction = self.input_handler.get_menu_navigation()
+        if nav_direction != 0:
+            if not self.menu_nav_pressed:  # Only trigger on initial press
+                self.pause_menu_selected = (self.pause_menu_selected + nav_direction) % len(PAUSE_MENU_OPTIONS)
+                self.menu_nav_pressed = True
+        else:
+            self.menu_nav_pressed = False
+            
+        # Check for confirmation input
+        if self.input_handler.is_menu_confirm_pressed():
+            if not self.menu_confirm_pressed:  # Only trigger on initial press
+                self.execute_menu_action(self.pause_menu_selected)
+                self.menu_confirm_pressed = True
+        else:
+            self.menu_confirm_pressed = False
+            
+        # Check for cancel input (B button or ESC)
+        if self.input_handler.is_menu_cancel_pressed():
+            if not self.menu_cancel_pressed:  # Only trigger on initial press
+                # B button or ESC cancels pause menu (same as Resume)
+                self.execute_menu_action(PAUSE_MENU_RESUME)
+                self.menu_cancel_pressed = True
+        else:
+            self.menu_cancel_pressed = False
+
+    def execute_menu_action(self, action):
+        """Execute the selected menu action"""
+        if action == PAUSE_MENU_RESUME:
+            # Resume game
+            self.game_state = self.previous_game_state
+            print("Game resumed")
+        elif action == PAUSE_MENU_RESTART:
+            # Restart game
+            self.reset_game()
+            print("Game restarted")
+        elif action == PAUSE_MENU_QUIT:
+            # Quit game
+            self.running = False
+            print("Quitting game")
+
+    def toggle_pause(self):
+        """Toggle pause state"""
+        if self.game_state == GAME_STATE_PAUSED:
+            # Unpause - return to previous state
+            self.game_state = self.previous_game_state
+            print("Game resumed")
+        else:
+            # Pause - store current state and switch to paused
+            self.previous_game_state = self.game_state
+            self.game_state = GAME_STATE_PAUSED
+            self.pause_menu_selected = PAUSE_MENU_RESUME  # Reset menu selection
+            print("Game paused")
 
     def update(self):
         """Update game state based on current mode"""
@@ -98,6 +180,9 @@ class Game:
             self.update_playing_mode()
         elif self.game_state == GAME_STATE_AIMING:
             self.update_aiming_mode()
+        elif self.game_state == GAME_STATE_PAUSED:
+            # Don't update game logic when paused, only particle system
+            pass
         
         # Always update particle system
         self.particle_system.update()
@@ -390,10 +475,16 @@ class Game:
         
         # Reset game state
         self.game_state = GAME_STATE_PLAYING
+        self.previous_game_state = GAME_STATE_PLAYING
         self.aiming_player = -1
         self.aiming_timer = 0
         self.aiming_angle = 0
         self.ai_aiming_started = False
+        self.pause_key_pressed = False
+        self.pause_menu_selected = PAUSE_MENU_RESUME
+        self.menu_nav_pressed = False
+        self.menu_confirm_pressed = False
+        self.menu_cancel_pressed = False
 
         # Reset paddle positions
         self.init_paddles()
@@ -409,7 +500,7 @@ class Game:
         """Render the game"""
         self.renderer.render_frame(self.paddles, self.ball, self.lives, self.alive_players, 
                                  self.particle_system, self.game_state, self.aiming_player, 
-                                 self.aiming_angle, self.aiming_timer)
+                                 self.aiming_angle, self.aiming_timer, self.pause_menu_selected)
         pygame.display.flip()
 
     def run(self):
