@@ -93,6 +93,7 @@ class Game:
         
     def restart_game(self):
         """Restart the game from game over screen"""
+        print("Restarting game...")
         # Reset game entities without resetting state manager
         self.player_manager.reset()
         self.ball.reset_position()
@@ -104,10 +105,10 @@ class Game:
         
         # Enter game state
         self.state_manager.enter_game()
-        print("Restarting game")
         
     def return_to_main_menu(self):
         """Return to the start screen from game over"""
+        print("Returning to main menu...")
         # Reset all systems
         self.player_manager.reset()
         self.ball.reset_position()
@@ -118,9 +119,12 @@ class Game:
         self.start_screen_system.reset()
         self.pause_key_pressed = False
         
+        # CRITICAL: Reset input handler to prevent input leakage
+        # This prevents the Enter press from game over menu being processed again on start screen
+        self.input_handler.reset_input_states()
+        
         # Enter start screen state
         self.state_manager.enter_start_screen()
-        print("Returning to main menu")
 
     def handle_events(self):
         """Handle pygame events"""

@@ -251,3 +251,13 @@ class InputHandler:
     def is_key_pressed(self, key):
         """Check if a specific key is currently pressed"""
         return key in self.keys_pressed
+    
+    def reset_input_states(self):
+        """Reset input states to prevent input leakage between game states"""
+        # Clear keyboard states
+        self.keys_pressed.clear()
+        
+        # Clear controller button states
+        if self.controller_connected:
+            self.controller_buttons.clear()
+            self.controller_axes.clear()

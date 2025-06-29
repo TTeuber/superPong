@@ -56,8 +56,10 @@ class GameOverSystem:
         nav_direction = input_handler.get_menu_navigation()
         if nav_direction != 0:
             if not self.menu_nav_pressed:
+                old_selection = self.game_over_menu_selected
                 # Navigate menu
                 self.game_over_menu_selected = (self.game_over_menu_selected + nav_direction) % len(GAME_OVER_MENU_OPTIONS)
+                print(f"Game Over Menu: {GAME_OVER_MENU_OPTIONS[old_selection]} -> {GAME_OVER_MENU_OPTIONS[self.game_over_menu_selected]}")
                 self.menu_nav_pressed = True
         else:
             self.menu_nav_pressed = False
@@ -65,6 +67,7 @@ class GameOverSystem:
         # Check for confirmation input
         if input_handler.is_menu_confirm_pressed():
             if not self.menu_confirm_pressed:
+                print(f"Game Over: Selected '{GAME_OVER_MENU_OPTIONS[self.game_over_menu_selected]}'")
                 self.execute_menu_action(self.game_over_menu_selected)
                 self.menu_confirm_pressed = True
         else:
