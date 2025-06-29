@@ -52,6 +52,10 @@ class GameStateManager:
         """Enter start screen mode"""
         self.current_state = GAME_STATE_START_SCREEN
         
+    def enter_settings(self):
+        """Enter settings screen mode"""
+        self.current_state = GAME_STATE_SETTINGS
+        
     def enter_game(self):
         """Enter game from start screen"""
         self.current_state = GAME_STATE_PLAYING
@@ -63,6 +67,10 @@ class GameStateManager:
     def is_start_screen(self):
         """Check if currently on start screen"""
         return self.current_state == GAME_STATE_START_SCREEN
+        
+    def is_settings(self):
+        """Check if currently on settings screen"""
+        return self.current_state == GAME_STATE_SETTINGS
         
     def is_game_over(self):
         """Check if currently on game over screen"""

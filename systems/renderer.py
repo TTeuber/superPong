@@ -759,3 +759,135 @@ class GameRenderer:
             text_surface = self.font_small.render(instruction, True, (150, 150, 150))
             text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, instruction_y + i * 20))
             self.screen.blit(text_surface, text_rect)
+
+    def render_settings_screen(self, settings_screen_system):
+        """Render the settings screen with options and current values"""
+        self.frame_count += 1
+        
+        # Clear screen with black background
+        self.screen.fill(BLACK)
+        
+        # Draw subtle background grid
+        self.draw_background_grid()
+        
+        # Draw "SETTINGS" title at top
+        title_y = 120
+        title_text = "SETTINGS"
+        
+        # Create multiple glow layers for title
+        glow_colors = [
+            (NEON_GREEN[0] // 4, NEON_GREEN[1] // 4, NEON_GREEN[2] // 4),  # Dim green glow
+            (NEON_PURPLE[0] // 3, NEON_PURPLE[1] // 3, NEON_PURPLE[2] // 3),  # Dim purple glow
+        ]
+        
+        # Draw multiple glow layers for title
+        for i, glow_color in enumerate(glow_colors):
+            glow_size = 8 + i * 4
+            glow_surface = pygame.Surface((SCREEN_WIDTH, 80), pygame.SRCALPHA)
+            glow_text = self.font_retro_large.render(title_text, True, glow_color)
+            glow_rect = glow_text.get_rect(center=(SCREEN_WIDTH // 2, 40))
+            glow_surface.blit(glow_text, glow_rect)
+            self.screen.blit(glow_surface, (0, title_y - 40))
+        
+        # Draw main title text
+        title_surface = self.font_retro_large.render(title_text, True, WHITE)
+        title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, title_y))
+        self.screen.blit(title_surface, title_rect)
+        
+        # Draw settings options
+        menu_start_y = 280
+        menu_spacing = 80
+        selected_option = settings_screen_system.get_selected_option()
+        
+        for i, option in enumerate(SETTINGS_MENU_OPTIONS):
+            is_selected = (i == selected_option)
+            current_y = menu_start_y + i * menu_spacing
+            
+            # Get current value for this setting
+            current_value = settings_screen_system.get_current_value(i)
+            
+            # Create option text
+            option_text = option
+            if is_selected:
+                option_surface = self.font_retro_medium.render(option_text, True, NEON_YELLOW)
+            else:
+                option_surface = self.font_retro_medium.render(option_text, True, WHITE)
+            
+            # Position option text on the left
+            option_rect = option_surface.get_rect()
+            option_rect.right = SCREEN_WIDTH // 2 - 50
+            option_rect.centery = current_y
+            
+            # Create value text (except for Back option)
+            if i != SETTINGS_MENU_BACK:
+                if is_selected:
+                    value_surface = self.font_retro_medium.render(current_value, True, NEON_CYAN)
+                else:
+                    value_surface = self.font_retro_medium.render(current_value, True, (200, 200, 200))
+                
+                # Position value text on the right
+                value_rect = value_surface.get_rect()
+                value_rect.left = SCREEN_WIDTH // 2 + 50
+                value_rect.centery = current_y
+            
+            # Draw glow for selected option
+            if is_selected:
+                # Pulsing glow effect
+                pulse = abs(math.sin(self.frame_count * 0.1)) * 0.5 + 0.5
+                glow_alpha = int(80 + pulse * 40)
+                
+                # Create glow for the entire row
+                row_width = SCREEN_WIDTH - 200
+                row_height = 50
+                glow_surface = pygame.Surface((row_width, row_height), pygame.SRCALPHA)
+                
+                # Draw background glow
+                glow_color = (*NEON_YELLOW, int(glow_alpha * 0.3))
+                pygame.draw.rect(glow_surface, glow_color, 
+                               (0, 0, row_width, row_height), border_radius=10)
+                
+                glow_rect = glow_surface.get_rect(center=(SCREEN_WIDTH // 2, current_y))
+                self.screen.blit(glow_surface, glow_rect)
+                
+                # Draw arrows for changeable values (not for Back option)
+                if i != SETTINGS_MENU_BACK:
+                    # Left arrow
+                    left_arrow_x = SCREEN_WIDTH // 2 + 20
+                    arrow_y = current_y
+                    arrow_color = NEON_YELLOW if is_selected else (100, 100, 100)
+                    
+                    # Draw left arrow
+                    arrow_points = [
+                        (left_arrow_x - 10, arrow_y),
+                        (left_arrow_x, arrow_y - 8),
+                        (left_arrow_x, arrow_y + 8)
+                    ]
+                    pygame.draw.polygon(self.screen, arrow_color, arrow_points)
+                    
+                    # Right arrow  
+                    right_arrow_x = value_rect.right + 30
+                    arrow_points = [
+                        (right_arrow_x + 10, arrow_y),
+                        (right_arrow_x, arrow_y - 8),
+                        (right_arrow_x, arrow_y + 8)
+                    ]
+                    pygame.draw.polygon(self.screen, arrow_color, arrow_points)
+            
+            # Draw main option text
+            self.screen.blit(option_surface, option_rect)
+            
+            # Draw value text (except for Back option)
+            if i != SETTINGS_MENU_BACK:
+                self.screen.blit(value_surface, value_rect)
+        
+        # Draw instructions at bottom
+        instruction_y = 720
+        instructions = [
+            "Use ↑/↓ to navigate • Use ←/→ to change values",
+            "Press ENTER to select • Press ESC to go back"
+        ]
+        
+        for i, instruction in enumerate(instructions):
+            text_surface = self.font_small.render(instruction, True, (150, 150, 150))
+            text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, instruction_y + i * 25))
+            self.screen.blit(text_surface, text_rect)

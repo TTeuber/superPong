@@ -10,7 +10,17 @@ class AIPlayer:
         self.paddle = paddle
         self.difficulty = difficulty  # 0.0 to 1.0, higher = better AI
         self.reaction_delay = 0
-        self.max_reaction_delay = int(10 * (1 - difficulty))  # Frames to delay reaction
+        
+        # Store original paddle speed to prevent degradation
+        self.original_paddle_speed = paddle.speed
+        
+        # Enhanced reaction delays for easier difficulties
+        if difficulty < 0.25:  # Easy mode (0.1)
+            self.max_reaction_delay = 20  # Very slow reactions (0.33 seconds)
+        elif difficulty < 0.5:  # Medium mode (0.3) 
+            self.max_reaction_delay = 12  # Moderate reactions (0.2 seconds)
+        else:  # Hard mode (0.6+)
+            self.max_reaction_delay = int(10 * (1 - difficulty))  # Original formula
         self.target_position = None
         self.movement_smoothing = 0.3  # Base smoothing increased from 0.15 to 0.3
         
@@ -25,10 +35,30 @@ class AIPlayer:
         
         # Threshold hysteresis
         self.last_threshold_state = "normal"  # "tight", "normal", "loose"
+        
+        # Movement speed modifier based on difficulty
+        if difficulty < 0.25:  # Easy mode (0.1)
+            self.movement_speed_modifier = 0.7  # 30% slower movement
+        elif difficulty < 0.5:  # Medium mode (0.3)
+            self.movement_speed_modifier = 0.85  # 15% slower movement  
+        else:  # Hard mode (0.6+)
+            self.movement_speed_modifier = 1.0  # Full speed
+            
+        # Intentional accuracy reduction for easier difficulties
+        if difficulty < 0.25:  # Easy mode (0.1)
+            self.accuracy_modifier = 0.6  # 40% chance of "missing" optimal position
+        elif difficulty < 0.5:  # Medium mode (0.3)
+            self.accuracy_modifier = 0.8  # 20% chance of "missing" optimal position
+        else:  # Hard mode (0.6+)
+            self.accuracy_modifier = 1.0  # Perfect accuracy
 
     def predict_ball_intersection(self, ball):
         """Predict where the ball will intersect with this paddle's plane"""
         if not AI_PREDICTION_ENABLED:
+            return ball.x, ball.y
+            
+        # Disable prediction for easier difficulties
+        if self.difficulty < 0.25:  # Easy mode (0.1) - no prediction
             return ball.x, ball.y
         
         # Get current ball state
@@ -247,6 +277,10 @@ class AIPlayer:
         """Calculate target position considering strategic positioning"""
         if not AI_CENTER_SEEK_ENABLED:
             return predicted_x, predicted_y
+            
+        # Disable strategic positioning for easier difficulties
+        if self.difficulty < 0.25:  # Easy mode (0.1) - no strategic positioning
+            return predicted_x, predicted_y
         
         # Calculate distance to ball and whether it's approaching
         ball_distance = self.calculate_ball_distance(ball)
@@ -303,6 +337,24 @@ class AIPlayer:
         
         # Default: use predicted position
         return predicted_x, predicted_y
+        
+    def apply_accuracy_modifier(self, target_x, target_y):
+        """Apply intentional accuracy reduction for easier difficulties"""
+        import random
+        
+        # Check if AI should "miss" this time
+        if random.random() > self.accuracy_modifier:
+            # Introduce intentional error
+            if self.paddle.orientation == 'vertical':
+                # Add random offset to Y target (up to 50 pixels off)
+                error_offset = random.randint(-50, 50)
+                target_y += error_offset
+            else:  # horizontal paddle
+                # Add random offset to X target (up to 50 pixels off)
+                error_offset = random.randint(-50, 50)
+                target_x += error_offset
+                
+        return target_x, target_y
 
     def update(self, ball):
         """Update AI paddle movement to track the ball"""
@@ -321,6 +373,9 @@ class AIPlayer:
         
         # Apply strategic positioning
         strategic_x, strategic_y = self.calculate_strategic_target(ball, stable_x, stable_y)
+        
+        # Apply accuracy modifier for easier difficulties
+        strategic_x, strategic_y = self.apply_accuracy_modifier(strategic_x, strategic_y)
 
         # Calculate desired position with smoothing
         if self.paddle.orientation == 'vertical':
@@ -349,6 +404,10 @@ class AIPlayer:
                 self.movement_commitment_frames -= 1
                 # Continue current movement, don't change direction
             elif abs(diff) > threshold:
+                # Calculate effective speed with modifier but don't modify paddle.speed permanently
+                effective_speed = max(1, int(self.original_paddle_speed * self.movement_speed_modifier))
+                self.paddle.speed = effective_speed
+                
                 if diff < 0:
                     self.paddle.moving_up = True
                     self.is_moving = True
@@ -364,6 +423,8 @@ class AIPlayer:
                     self.reaction_delay = self.max_reaction_delay
             else:
                 self.is_moving = False
+                # Restore original speed when not moving
+                self.paddle.speed = self.original_paddle_speed
 
         else:  # horizontal paddle
             # Horizontal paddle follows strategic X position
@@ -391,6 +452,10 @@ class AIPlayer:
                 self.movement_commitment_frames -= 1
                 # Continue current movement, don't change direction
             elif abs(diff) > threshold:
+                # Calculate effective speed with modifier but don't modify paddle.speed permanently
+                effective_speed = max(1, int(self.original_paddle_speed * self.movement_speed_modifier))
+                self.paddle.speed = effective_speed
+                
                 if diff < 0:
                     self.paddle.moving_left = True
                     self.is_moving = True
@@ -406,3 +471,5 @@ class AIPlayer:
                     self.reaction_delay = self.max_reaction_delay
             else:
                 self.is_moving = False
+                # Restore original speed when not moving
+                self.paddle.speed = self.original_paddle_speed

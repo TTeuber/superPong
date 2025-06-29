@@ -10,6 +10,8 @@ from systems.collision_system import CollisionSystem
 from systems.player_manager import PlayerManager
 from systems.start_screen_system import StartScreenSystem
 from systems.game_over_system import GameOverSystem
+from systems.settings_system import SettingsSystem
+from systems.settings_screen_system import SettingsScreenSystem
 from utils.constants import *
 
 class Game:
@@ -28,9 +30,20 @@ class Game:
         self.menu_system = MenuSystem()
         self.aiming_system = AimingSystem()
         self.collision_system = CollisionSystem()
-        self.player_manager = PlayerManager()
+        
+        # Initialize settings system first to get settings
+        self.settings_system = SettingsSystem()
+        ai_difficulty = self.settings_system.get_setting('ai_difficulty')
+        controller_sensitivity = self.settings_system.get_setting('controller_sensitivity')
+        
+        self.player_manager = PlayerManager(ai_difficulty=ai_difficulty)
+        
+        # Apply controller sensitivity if it's different from default
+        if controller_sensitivity != CONTROLLER_SENSITIVITY:
+            print(f"Applying controller sensitivity: {controller_sensitivity}")
         self.start_screen_system = StartScreenSystem()
         self.game_over_system = GameOverSystem()
+        self.settings_screen_system = SettingsScreenSystem()
         
         # Initialize game entities
         self.ball = Ball(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
@@ -53,6 +66,12 @@ class Game:
             on_restart=self.restart_game,
             on_main_menu=self.return_to_main_menu,
             on_quit=self.quit_game
+        )
+        
+        # Set up settings screen callbacks
+        self.settings_screen_system.set_callbacks(
+            on_back=self.exit_settings,
+            on_setting_changed=self.on_setting_changed
         )
         
         # Pause input handling
@@ -88,8 +107,36 @@ class Game:
         print("Starting game")
         
     def show_settings(self):
-        """Show settings screen (placeholder)"""
-        print("Settings - Coming Soon!")
+        """Show settings screen"""
+        # Load current settings into the settings screen system
+        self.settings_screen_system.load_current_settings(self.settings_system)
+        
+        # Enter settings state
+        self.state_manager.enter_settings()
+        print("Entering settings screen")
+        
+    def exit_settings(self):
+        """Exit settings screen and return to start screen"""
+        self.state_manager.enter_start_screen()
+        print("Exiting settings screen")
+        
+    def on_setting_changed(self, setting_key, setting_value):
+        """Handle when a setting is changed"""
+        self.settings_system.set_setting(setting_key, setting_value)
+        
+        # Apply setting changes immediately
+        if setting_key == 'ai_difficulty':
+            # Update existing AI player difficulties
+            for ai_player in self.player_manager.get_ai_players():
+                ai_player.difficulty = setting_value
+            print(f"AI difficulty updated to: {setting_value}")
+        elif setting_key == 'controller_sensitivity':
+            print(f"Controller sensitivity updated to: {setting_value}")
+            # Note: Controller sensitivity is applied from constants, 
+            # so it will take effect on the next input reading
+        elif setting_key == 'sound_enabled':
+            print(f"Sound setting updated to: {setting_value}")
+            # Note: Sound system will be implemented in future
         
     def restart_game(self):
         """Restart the game from game over screen"""
@@ -145,6 +192,9 @@ class Game:
         if self.state_manager.is_start_screen():
             # Handle start screen input
             self.start_screen_system.handle_start_menu_input(self.input_handler)
+        elif self.state_manager.is_settings():
+            # Handle settings screen input
+            self.settings_screen_system.handle_settings_input(self.input_handler)
         elif self.state_manager.is_game_over():
             # Handle game over input
             self.game_over_system.handle_game_over_input(self.input_handler)
@@ -171,6 +221,8 @@ class Game:
         """Update game state based on current mode"""
         if self.state_manager.is_start_screen():
             self.update_start_screen()
+        elif self.state_manager.is_settings():
+            self.update_settings()
         elif self.state_manager.is_game_over():
             self.update_game_over()
         elif self.state_manager.is_playing():
@@ -181,13 +233,18 @@ class Game:
             # Don't update game logic when paused, only particle system
             pass
         
-        # Always update particle system (except on start screen and game over)
-        if not self.state_manager.is_start_screen() and not self.state_manager.is_game_over():
+        # Always update particle system (except on start screen, settings, and game over)
+        if not self.state_manager.is_start_screen() and not self.state_manager.is_settings() and not self.state_manager.is_game_over():
             self.particle_system.update()
     
     def update_start_screen(self):
         """Update start screen demo game"""
         self.start_screen_system.update_demo_game()
+    
+    def update_settings(self):
+        """Update settings screen"""
+        # Settings screen doesn't need game logic updates, just input handling
+        pass
     
     def update_game_over(self):
         """Update game over screen effects"""
@@ -302,6 +359,9 @@ class Game:
         if self.state_manager.is_start_screen():
             # Render start screen
             self.renderer.render_start_screen(self.start_screen_system)
+        elif self.state_manager.is_settings():
+            # Render settings screen
+            self.renderer.render_settings_screen(self.settings_screen_system)
         elif self.state_manager.is_game_over():
             # Render game over screen
             self.renderer.render_game_over_screen(self.game_over_system)

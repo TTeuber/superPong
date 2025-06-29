@@ -10,6 +10,7 @@ FPS = 60
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 NEON_BLUE = (0, 255, 255)
+NEON_CYAN = (0, 255, 255)  # Same as NEON_BLUE for consistency
 NEON_PINK = (255, 20, 147)
 NEON_GREEN = (57, 255, 20)
 NEON_YELLOW = (255, 255, 0)
@@ -44,6 +45,7 @@ PADDLE_MARGIN = 50
 
 # Game states
 GAME_STATE_START_SCREEN = "start_screen"
+GAME_STATE_SETTINGS = "settings"
 GAME_STATE_PLAYING = "playing"
 GAME_STATE_AIMING = "aiming"
 GAME_STATE_PAUSED = "paused"
@@ -69,6 +71,24 @@ GAME_OVER_MENU_OPTIONS = ["Restart", "Main Menu", "Quit"]
 GAME_OVER_RESTART = 0
 GAME_OVER_MAIN_MENU = 1
 GAME_OVER_QUIT = 2
+
+# Settings menu
+SETTINGS_MENU_OPTIONS = ["Difficulty", "Sound", "Controller Sensitivity", "Back"]
+SETTINGS_MENU_DIFFICULTY = 0
+SETTINGS_MENU_SOUND = 1
+SETTINGS_MENU_CONTROLLER = 2
+SETTINGS_MENU_BACK = 3
+
+# Difficulty levels
+DIFFICULTY_EASY = "Easy"
+DIFFICULTY_MEDIUM = "Medium"
+DIFFICULTY_HARD = "Hard"
+DIFFICULTY_VALUES = {
+    DIFFICULTY_EASY: 0.1,    # Much easier - beginner friendly
+    DIFFICULTY_MEDIUM: 0.3,  # Moderate challenge  
+    DIFFICULTY_HARD: 0.6     # Challenging but fair
+}
+DIFFICULTY_OPTIONS = [DIFFICULTY_EASY, DIFFICULTY_MEDIUM, DIFFICULTY_HARD]
 
 # Controller settings
 CONTROLLER_DEADZONE = 0.15  # Dead zone for analog sticks (0.0-1.0)

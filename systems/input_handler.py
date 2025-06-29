@@ -167,6 +167,36 @@ class InputHandler:
         
         return keyboard_confirm or controller_confirm
 
+    def get_horizontal_navigation(self):
+        """Get horizontal navigation direction (-1 for left, 1 for right, 0 for none)"""
+        # Check keyboard input
+        if pygame.K_LEFT in self.keys_pressed or pygame.K_a in self.keys_pressed:
+            return -1
+        elif pygame.K_RIGHT in self.keys_pressed or pygame.K_d in self.keys_pressed:
+            return 1
+        
+        # Check controller input
+        if self.controller_connected:
+            # Check left analog stick
+            left_stick_x_axis = SWITCH_CONTROLLER_MAPPINGS.get('left_stick_x', 0)
+            if left_stick_x_axis in self.controller_axes:
+                stick_x = self.controller_axes[left_stick_x_axis]
+                if stick_x < -CONTROLLER_DEADZONE:
+                    return -1
+                elif stick_x > CONTROLLER_DEADZONE:
+                    return 1
+            
+            # Check D-pad
+            dpad_left = SWITCH_CONTROLLER_MAPPINGS.get('dpad_left', 14)
+            dpad_right = SWITCH_CONTROLLER_MAPPINGS.get('dpad_right', 15)
+            
+            if dpad_left in self.controller_buttons and self.controller_buttons[dpad_left]:
+                return -1
+            elif dpad_right in self.controller_buttons and self.controller_buttons[dpad_right]:
+                return 1
+        
+        return 0
+
     def is_menu_cancel_pressed(self):
         """Check if menu cancel/back button is pressed (B button or ESC)"""
         # Check keyboard input

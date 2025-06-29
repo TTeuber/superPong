@@ -5,11 +5,14 @@ from utils.constants import *
 class PlayerManager:
     """Manages player state, lives, and eliminations"""
     
-    def __init__(self):
+    def __init__(self, ai_difficulty=0.6):
         # Game state - lives system
         self.lives = [STARTING_LIVES, STARTING_LIVES, STARTING_LIVES, STARTING_LIVES]  # Each player starts with configured lives
         self.alive_players = [True, True, True, True]  # Track which players are still alive
         self.starting_lives = STARTING_LIVES
+        
+        # Store AI difficulty for creating AI players
+        self.ai_difficulty = ai_difficulty
         
         # Initialize paddles and AI
         self.paddles = []
@@ -45,9 +48,9 @@ class PlayerManager:
     def init_ai_players(self):
         """Initialize AI players (players 1, 2, 3 are AI by default)"""
         self.ai_players = [
-            AIPlayer(self.paddles[1], difficulty=0.7),  # Player 2 (right)
-            AIPlayer(self.paddles[2], difficulty=0.6),  # Player 3 (top)
-            AIPlayer(self.paddles[3], difficulty=0.6),  # Player 4 (bottom)
+            AIPlayer(self.paddles[1], difficulty=self.ai_difficulty),  # Player 2 (right)
+            AIPlayer(self.paddles[2], difficulty=self.ai_difficulty),  # Player 3 (top)
+            AIPlayer(self.paddles[3], difficulty=self.ai_difficulty),  # Player 4 (bottom)
         ]
         
     def get_paddles(self):
