@@ -49,6 +49,20 @@ We're building "the coolest Pong game ever" with these key features:
 - **Screen shake effects**: Dynamic screen shake for paddle hits, eliminations, and collisions
 - **Dynamic visual feedback**: Color-coded glow based on last paddle hit, dimmed visuals for eliminated players
 
+### ✅ Phase 2.5: Settings & Difficulty System (COMPLETED)
+**Status**: ✅ DONE
+
+**Implemented Features**:
+- **Settings System**: JSON persistence with `settings.json` file
+- **Settings Screen**: Full UI with navigation and value changing
+- **Start Screen**: Main menu with Play and Settings options
+- **Difficulty System**: Three-tier AI difficulty with comprehensive behavior changes
+  - **Easy (0.1)**: No prediction/strategy, 20-frame delays, 30% slower movement, 60% accuracy
+  - **Medium (0.3)**: Limited AI features, 12-frame delays, 15% slower movement, 80% accuracy
+  - **Hard (0.6)**: Full AI capabilities, 4-frame delays, full speed, 100% accuracy
+- **AI Fixes**: Resolved speed degradation bug that caused AI to stop moving
+- **Enhanced Menu System**: Neon-styled menus with controller and keyboard support
+
 ### 🚧 Phase 3: Power-ups System (NEXT)
 **Priority**: High
 
@@ -100,7 +114,7 @@ The codebase was refactored to improve scalability and maintainability:
 - Event handling and input coordination
 
 **GameStateManager** (`systems/game_state_manager.py`):
-- Game state transitions (Playing, Aiming, Paused)
+- Game state transitions (Start Screen, Settings, Playing, Aiming, Paused, Game Over)
 - State validation and management
 - Pause/resume functionality
 
@@ -108,6 +122,16 @@ The codebase was refactored to improve scalability and maintainability:
 - Pause menu navigation and selection
 - Menu input handling with callback system
 - Extensible for future menu systems
+
+**SettingsSystem** (`systems/settings_system.py`):
+- JSON file persistence for game settings
+- Settings validation and default handling
+- Auto-creation of settings.json with defaults
+
+**SettingsScreenSystem** (`systems/settings_screen_system.py`):
+- Settings menu UI and navigation
+- Value changing with left/right input
+- Real-time difficulty application to AI players
 
 **AimingSystem** (`systems/aiming_system.py`):
 - Player aiming mode coordination
@@ -192,9 +216,10 @@ NEON_ORANGE = (255, 165, 0)    # For obstacles
 ## 🎮 Gameplay Balance
 
 ### Current AI Difficulty Settings
-- Player 2 (Right): 0.7 difficulty (hardest)
-- Player 3 (Top): 0.6 difficulty
-- Player 4 (Bottom): 0.6 difficulty
+- **Easy (0.1)**: No prediction/strategy, 20-frame delays, 30% slower movement, 60% accuracy
+- **Medium (0.3)**: Limited prediction/strategy, 12-frame delays, 15% slower movement, 80% accuracy  
+- **Hard (0.6)**: Full AI capabilities, 4-frame delays, full speed, 100% accuracy
+- All AI players (Right, Top, Bottom) use the same difficulty level from settings
 
 ### Ball Physics Parameters
 - Base speed: 6 pixels/frame
@@ -221,11 +246,27 @@ NEON_ORANGE = (255, 165, 0)    # For obstacles
 - Wall bouncing with boundary thickness consideration
 - Power-up collection uses simple rect overlap
 
+### Settings System
+- JSON persistence with `settings.json` file
+- Automatic creation of defaults if file missing
+- Real-time application of difficulty changes
+- Validation of setting ranges and types
+
+### AI Difficulty Implementation
+- **Multi-layer difficulty system** with exponential scaling
+- **Feature toggles**: Prediction and strategy disabled for Easy mode
+- **Speed preservation**: Original paddle speed stored to prevent degradation
+- **Accuracy modifiers**: Intentional errors injected for easier difficulties
+- **Reaction scaling**: 20/12/4 frame delays for Easy/Medium/Hard
+
 ### File Organization
 ```
 superPong/
 ├── main.py                           # Entry point
 ├── game.py                           # Main game coordination (227 lines)
+├── settings.json                     # Persistent game settings (JSON)
+├── CLAUDE.md                         # Development context and instructions
+├── README.md                         # Project documentation
 ├── entities/
 │   ├── paddle.py                     # Paddle movement and collision
 │   ├── ball.py                       # Ball physics and bouncing
@@ -234,15 +275,17 @@ superPong/
 ├── systems/
 │   ├── game_state_manager.py         # Game state transitions
 │   ├── menu_system.py                # Menu navigation and callbacks
+│   ├── settings_system.py            # Settings persistence and management
+│   ├── settings_screen_system.py     # Settings UI and navigation
 │   ├── aiming_system.py              # Aiming mode and ball launching
 │   ├── collision_system.py           # Collision detection and handling
 │   ├── player_manager.py             # Lives, elimination, AI coordination
 │   ├── renderer.py                   # Neon visual effects
 │   ├── input_handler.py              # Keyboard and controller input
-│   ├── ai.py                         # AI player logic
+│   ├── ai.py                         # AI player logic with difficulty scaling
 │   └── particle_system.py            # Visual effect particles
 ├── utils/
-│   ├── constants.py                  # Game configuration
+│   ├── constants.py                  # Game configuration and difficulty values
 │   └── math_utils.py                 # Vector math utilities
 └── tests/
     └── controller_button_tester.py   # Controller testing utility
@@ -257,9 +300,18 @@ superPong/
 ## 🐛 Known Issues to Address
 
 1. **Ball corner sticking**: Rare issue where ball gets stuck in corners
-2. **AI prediction**: AI doesn't anticipate ball trajectory, only current position
-3. **Power-up balance**: Need playtesting to fine-tune effects
-4. **Visual polish**: Some glow effects could be more dramatic
+2. **Power-up balance**: Need playtesting to fine-tune effects (when implemented)
+3. **Visual polish**: Some glow effects could be more dramatic
+4. **Sound system**: No audio implementation yet
+
+## 🎆 Recent Improvements (June 2025)
+
+### Settings & Difficulty System Implementation
+- **Complete settings infrastructure** with JSON persistence
+- **Three-tier difficulty system** with comprehensive AI behavior changes
+- **AI bug fixes**: Resolved speed degradation causing complete movement failure
+- **Enhanced menu system** with neon styling and controller support
+- **Real-time difficulty application** to existing AI players
 
 ## 💡 Future Enhancement Ideas
 

@@ -6,7 +6,10 @@ A retro-style Pong game featuring 4 players, neon visual effects, Nintendo Switc
 
 - **4-Player Gameplay**: Paddles on all four sides (left, right, top, bottom)
 - **Retro Neon Aesthetic**: Glowing paddles, ball trails, and grid backgrounds
-- **AI Opponents**: Smart AI with different difficulty levels
+- **AI Opponents**: Smart AI with configurable difficulty levels (Easy, Medium, Hard)
+- **Settings System**: Persistent JSON settings with in-game menu
+- **Start Screen**: Main menu with Play and Settings options
+- **Pause Menu**: In-game pause with Resume, Restart, and Quit options
 - **Power-ups** (planned): Paddle size modifiers, multi-ball, speed boosts
 - **Obstacles** (planned): Bouncy barriers in the center area
 - **Smooth Physics**: Realistic ball bouncing with spin effects
@@ -24,6 +27,8 @@ A retro-style Pong game featuring 4 players, neon visual effects, Nintendo Switc
 - **Player 4 (Bottom, Yellow)**: AI controlled
 
 ### Game Controls
+- **Start Screen**: Navigate with analog stick/arrow keys, select with A/ENTER
+- **Settings Menu**: Navigate with analog stick/arrow keys, change values with left/right, back with B/ESC
 - **Pause Menu**: Navigate with analog stick/arrow keys, confirm with A/ENTER, cancel with B/ESC
 - **R**: Reset game
 - **ESC**: Quit game
@@ -52,6 +57,7 @@ python main.py
 superPong/
 ├── main.py                           # Entry point
 ├── game.py                           # Main game coordination (227 lines)
+├── settings.json                     # Persistent game settings
 ├── entities/
 │   ├── paddle.py                     # Paddle movement and collision
 │   ├── ball.py                       # Ball physics and bouncing
@@ -60,12 +66,14 @@ superPong/
 ├── systems/
 │   ├── game_state_manager.py         # Game state transitions
 │   ├── menu_system.py                # Menu navigation and callbacks
+│   ├── settings_system.py            # Settings persistence and management
+│   ├── settings_screen_system.py     # Settings UI and navigation
 │   ├── aiming_system.py              # Aiming mode and ball launching
 │   ├── collision_system.py           # Collision detection and handling
 │   ├── player_manager.py             # Lives, elimination, AI coordination
 │   ├── renderer.py                   # Neon visual effects
 │   ├── input_handler.py              # Keyboard and controller input
-│   ├── ai.py                         # AI player logic
+│   ├── ai.py                         # AI player logic with difficulty scaling
 │   └── particle_system.py            # Visual effect particles
 ├── utils/
 │   ├── constants.py                  # Game configuration
@@ -81,9 +89,11 @@ superPong/
 - Ball physics with realistic collision detection
 - Nintendo Switch USB controller support with hot-plug detection
 - Dual input system (controller + keyboard)
-- AI opponents with different difficulty levels
+- AI opponents with configurable difficulty levels
 - Lives system with player elimination
 - Aiming mode for ball launching after life loss
+- Start screen with main menu navigation
+- Settings system with JSON persistence
 - Pause menu with navigation (Resume/Restart/Quit)
 - Basic neon visual effects and rendering
 - Game loop with 60 FPS performance
@@ -136,23 +146,33 @@ superPong/
 
 ## 🤖 AI System
 
-The AI players use a simple but effective tracking system:
-- **Target tracking**: AI paddles follow the ball position
-- **Reaction delays**: Configurable delays make AI beatable
-- **Difficulty scaling**: Different precision levels per AI player (0.6-0.7)
-- **Movement smoothing**: Natural-feeling paddle movement
-- **Aiming intelligence**: AI automatically aims with smooth angle transitions
+The AI players use an advanced multi-layer difficulty system:
+- **Ball Prediction**: Trajectory prediction with wall bounce calculation
+- **Strategic Positioning**: Center-seeking behavior and defensive positioning
+- **Difficulty Scaling**: Three distinct difficulty levels with multiple parameters
+  - **Easy (0.1)**: No prediction, no strategy, slow reactions (20 frames), 30% slower movement, 40% accuracy
+  - **Medium (0.3)**: Limited prediction/strategy, moderate reactions (12 frames), 15% slower movement, 80% accuracy
+  - **Hard (0.6)**: Full AI capabilities, fast reactions (4 frames), full speed, 100% accuracy
+- **Movement Smoothing**: Natural-feeling paddle movement with hysteresis
+- **Aiming Intelligence**: AI automatically aims with smooth angle transitions
+- **Reaction Delays**: Variable delays based on difficulty to maintain fairness
 
 ## 🔧 Configuration
 
-Key settings can be modified in `utils/constants.py`:
+### In-Game Settings (settings.json)
+- **AI Difficulty**: Easy, Medium, Hard levels with comprehensive AI behavior changes
+- **Sound**: Enable/disable sound effects (when implemented)
+- **Controller Sensitivity**: Analog stick sensitivity adjustment
+
+### Developer Settings (utils/constants.py)
 - Screen dimensions (850x850)
 - Paddle sizes and speeds
 - Ball physics parameters
 - Color scheme (neon theme)
-- AI difficulty levels
+- AI prediction and strategy parameters
 - Controller settings (deadzone, sensitivity)
 - Nintendo Switch controller button mappings
+- Game state definitions and menu configurations
 
 ## 🐛 Known Issues
 
