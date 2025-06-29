@@ -17,7 +17,7 @@ NEON_PURPLE = (191, 0, 255)
 NEON_ORANGE = (255, 165, 0)
 
 # Paddle settings
-PADDLE_SPEED = 10
+PADDLE_SPEED = 8
 PADDLE_WIDTH = 15
 PADDLE_HEIGHT = 100
 
@@ -37,7 +37,7 @@ BOUNDARY_THICKNESS = 10
 PLAYER_COLORS = [NEON_BLUE, NEON_PINK, NEON_GREEN, NEON_YELLOW]
 
 # Game settings
-STARTING_LIVES = 1  # Number of lives each player starts with
+STARTING_LIVES = 3  # Number of lives each player starts with
 
 # Paddle margins from edges
 PADDLE_MARGIN = 50
@@ -73,6 +73,20 @@ GAME_OVER_QUIT = 2
 # Controller settings
 CONTROLLER_DEADZONE = 0.15  # Dead zone for analog sticks (0.0-1.0)
 CONTROLLER_SENSITIVITY = 1.0  # Movement sensitivity multiplier
+
+# AI Prediction settings
+AI_PREDICTION_ENABLED = True           # Enable trajectory prediction
+AI_PREDICTION_LOOKAHEAD_TIME = 60     # Frames to look ahead (1 second at 60fps)
+AI_MAX_PREDICTION_BOUNCES = 1          # Maximum wall bounces to predict
+AI_PREDICTION_ACCURACY = 0.9           # Base prediction accuracy (0.0-1.0)
+
+# AI Strategic Positioning settings
+AI_CENTER_SEEK_ENABLED = True          # Enable center-seeking behavior
+AI_CENTER_SEEK_STRENGTH = 0.7          # How strongly AI seeks center (0.0-1.0)
+AI_ANTICIPATION_DISTANCE = 250         # Distance threshold for anticipatory movement
+AI_DEFENSIVE_ZONE_SIZE = 300           # Size of defensive zone around paddle center (increased)
+AI_MIN_THREAT_DISTANCE = 400           # Minimum distance to consider ball a threat
+AI_OPPOSITE_WALL_THRESHOLD = 0.8       # Velocity threshold for detecting opposite wall direction
 
 # Nintendo Switch Pro Controller button/axis mappings
 # These values are based on testing - use controller_button_tester.py to verify
