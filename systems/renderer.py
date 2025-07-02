@@ -21,14 +21,20 @@ class GameRenderer:
         
         # Load retro font for start screen
         try:
+            self.font_retro_super_massive = pygame.font.Font("assets/PressStart2P-Regular.ttf", 128)  # For split title
+            self.font_retro_massive = pygame.font.Font("assets/PressStart2P-Regular.ttf", 96)  # For split title
             self.font_retro_huge = pygame.font.Font("assets/PressStart2P-Regular.ttf", 72)  # For main title
             self.font_retro_large = pygame.font.Font("assets/PressStart2P-Regular.ttf", 48)
-            self.font_retro_medium = pygame.font.Font("assets/PressStart2P-Regular.ttf", 32)  # Increased for menu options
+            self.font_retro_large_menu = pygame.font.Font("assets/PressStart2P-Regular.ttf", 40)  # For menu options
+            self.font_retro_medium = pygame.font.Font("assets/PressStart2P-Regular.ttf", 32)
             self.font_retro_small = pygame.font.Font("assets/PressStart2P-Regular.ttf", 16)
         except:
             # Fallback to default fonts if retro font fails to load
+            self.font_retro_super_massive = pygame.font.Font(None, 128)
+            self.font_retro_massive = pygame.font.Font(None, 96)
             self.font_retro_huge = pygame.font.Font(None, 72)
             self.font_retro_large = self.font_large
+            self.font_retro_large_menu = pygame.font.Font(None, 40)
             self.font_retro_medium = pygame.font.Font(None, 32)
             self.font_retro_small = self.font_small
 
@@ -80,7 +86,7 @@ class GameRenderer:
             self.draw_pause_overlay(pause_menu_selected)
         
         # Draw controls info
-        self.draw_controls_info(alive_players)
+        # self.draw_controls_info(alive_players)
         
         # Restore original screen and blit with shake offset
         self.screen = original_screen
@@ -379,7 +385,7 @@ class GameRenderer:
     def draw_controls_info(self, alive_players):
         """Draw control information (only for alive players)"""
         controls = [
-            "P1: W/S", "P2: ↑/↓", "P3: J/L", "P4: NUM4/6"
+            "P1: W/S", "P2: up/down", "P3: J/L", "P4: NUM4/6"
         ]
 
         y_offset = SCREEN_HEIGHT - 120
@@ -497,9 +503,9 @@ class GameRenderer:
         # Get demo game state
         demo_state = start_screen_system.get_demo_game_state()
         
-        # Draw title "SUPER PONG" at top
-        title_y = 120  # Moved down slightly to accommodate larger title
-        title_text = "SUPER PONG"
+        # Draw split title "SUPER" and "PONG"
+        title_words = ["SUPER", "PONG"]
+        title_positions = [120, 280]  # Y positions for each word
         
         # Pulsing animation calculations
         pulse_time = self.frame_count * 0.05  # Slower pulse
@@ -508,22 +514,6 @@ class GameRenderer:
         
         # Create animated glow colors with rainbow effect
         base_colors = [NEON_BLUE, NEON_PINK, NEON_GREEN, NEON_YELLOW, NEON_PURPLE]
-        glow_colors = []
-        
-        for i, base_color in enumerate(base_colors):
-            # Create pulsing glow with varying intensities
-            glow_alpha = int((pulse_intensity * 0.3 + 0.1) * 255)  # 10% to 40% opacity
-            glow_color = (base_color[0] // 4, base_color[1] // 4, base_color[2] // 4, glow_alpha)
-            glow_colors.append(glow_color)
-        
-        # Draw multiple animated glow layers
-        for i, glow_color in enumerate(glow_colors):
-            glow_offset = math.sin(pulse_time + i * 0.5) * 2  # Slight offset variation
-            glow_surface = pygame.Surface((SCREEN_WIDTH, 120), pygame.SRCALPHA)
-            glow_text = self.font_retro_huge.render(title_text, True, glow_color[:3])
-            glow_rect = glow_text.get_rect(center=(SCREEN_WIDTH // 2 + glow_offset, 60))
-            glow_surface.blit(glow_text, glow_rect)
-            self.screen.blit(glow_surface, (0, title_y - 60))
         
         # Main title with color cycling
         title_color_index = int(color_cycle) % len(base_colors)
@@ -539,67 +529,67 @@ class GameRenderer:
             int(current_color[2] * (1 - color_blend) + next_color[2] * color_blend)
         )
         
-        # Draw main title text with pulsing size
-        scale_factor = 0.9 + pulse_intensity * 0.1  # Slight size pulsing
-        title_surface = self.font_retro_huge.render(title_text, True, title_color)
-        if scale_factor != 1.0:
-            # Scale the title surface
-            scaled_size = (int(title_surface.get_width() * scale_factor), 
-                          int(title_surface.get_height() * scale_factor))
-            title_surface = pygame.transform.scale(title_surface, scaled_size)
+        # Draw each word of the title
+        for word_idx, (word, y_pos) in enumerate(zip(title_words, title_positions)):
+            # Create pulsing glow layers for this word
+            glow_colors = []
+            for i, base_color in enumerate(base_colors):
+                # Create pulsing glow with varying intensities
+                glow_alpha = int((pulse_intensity * 0.3 + 0.1) * 255)  # 10% to 40% opacity
+                glow_color = (base_color[0] // 4, base_color[1] // 4, base_color[2] // 4, glow_alpha)
+                glow_colors.append(glow_color)
+            
+            # Draw multiple animated glow layers for this word
+            for i, glow_color in enumerate(glow_colors):
+                glow_offset = math.sin(pulse_time + i * 0.5 + word_idx * 0.3) * 2  # Slight offset variation
+                glow_surface = pygame.Surface((SCREEN_WIDTH, 150), pygame.SRCALPHA)
+                glow_text = self.font_retro_massive.render(word, True, glow_color[:3])
+                glow_rect = glow_text.get_rect(center=(SCREEN_WIDTH // 2 + glow_offset, 75))
+                glow_surface.blit(glow_text, glow_rect)
+                self.screen.blit(glow_surface, (0, y_pos - 75))
+            
+            # Draw main word with pulsing size
+            scale_factor = 0.9 + pulse_intensity * 0.1  # Slight size pulsing
+            word_surface = self.font_retro_massive.render(word, True, title_color)
+            if scale_factor != 1.0:
+                # Scale the word surface
+                scaled_size = (int(word_surface.get_width() * scale_factor), 
+                              int(word_surface.get_height() * scale_factor))
+                word_surface = pygame.transform.scale(word_surface, scaled_size)
+            
+            word_rect = word_surface.get_rect(center=(SCREEN_WIDTH // 2, y_pos))
+            self.screen.blit(word_surface, word_rect)
         
-        title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, title_y))
-        self.screen.blit(title_surface, title_rect)
+        # Draw AI demo game at full screen scale (behind title and menu)
         
-        # Draw AI demo game in center area
-        demo_area_y = 240  # Moved down to accommodate larger title
-        demo_area_height = 310  # Reduced slightly to keep menu visible
-        
-        # Create demo area boundaries (for positioning only)
-        demo_rect = pygame.Rect(100, demo_area_y, SCREEN_WIDTH - 200, demo_area_height)
-        
-        # Scale and position demo game elements
-        demo_scale = 0.7
-        demo_offset_x = 150
-        demo_offset_y = demo_area_y + 50
-        
-        # Draw demo paddles
+        # Draw demo paddles at actual game size
         for paddle in demo_state['paddles']:
-            scaled_rect = pygame.Rect(
-                demo_offset_x + paddle.x * demo_scale,
-                demo_offset_y + paddle.y * demo_scale,
-                paddle.width * demo_scale,
-                paddle.height * demo_scale
-            )
+            paddle_rect = pygame.Rect(paddle.x, paddle.y, paddle.width, paddle.height)
             
             # Draw paddle glow
-            glow_surface = pygame.Surface((scaled_rect.width + 20, scaled_rect.height + 20), pygame.SRCALPHA)
+            glow_surface = pygame.Surface((paddle_rect.width + 20, paddle_rect.height + 20), pygame.SRCALPHA)
             glow_color = (*paddle.color, 60)
             pygame.draw.rect(glow_surface, glow_color, 
-                           (10, 10, scaled_rect.width, scaled_rect.height))
-            self.screen.blit(glow_surface, (scaled_rect.x - 10, scaled_rect.y - 10))
+                           (10, 10, paddle_rect.width, paddle_rect.height))
+            self.screen.blit(glow_surface, (paddle_rect.x - 10, paddle_rect.y - 10))
             
             # Draw main paddle
-            pygame.draw.rect(self.screen, paddle.color, scaled_rect)
+            pygame.draw.rect(self.screen, paddle.color, paddle_rect)
         
-        # Draw demo ball
+        # Draw demo ball at actual game size
         ball = demo_state['ball']
-        scaled_ball_x = demo_offset_x + ball.x * demo_scale
-        scaled_ball_y = demo_offset_y + ball.y * demo_scale
-        scaled_ball_size = ball.size * demo_scale
         
         # Draw ball glow
-        glow_radius = int(scaled_ball_size * 2)
+        glow_radius = int(ball.size * 2)
         glow_surface = pygame.Surface((glow_radius * 2, glow_radius * 2), pygame.SRCALPHA)
         pygame.draw.circle(glow_surface, (*WHITE, 40), (glow_radius, glow_radius), glow_radius)
-        self.screen.blit(glow_surface, (scaled_ball_x - glow_radius, scaled_ball_y - glow_radius))
+        self.screen.blit(glow_surface, (ball.x - glow_radius, ball.y - glow_radius))
         
         # Draw main ball
-        pygame.draw.circle(self.screen, WHITE, 
-                         (int(scaled_ball_x), int(scaled_ball_y)), int(scaled_ball_size))
+        pygame.draw.circle(self.screen, WHITE, (int(ball.x), int(ball.y)), int(ball.size))
         
         # Draw menu options at bottom
-        menu_y = 620  # Moved down slightly for better spacing
+        menu_y = 580  # Moved down more for larger menu text
         selected_option = start_screen_system.get_selected_option()
         
         for i, option in enumerate(START_MENU_OPTIONS):
@@ -607,11 +597,11 @@ class GameRenderer:
             
             # Create text surface
             if is_selected:
-                text_surface = self.font_retro_medium.render(option, True, NEON_YELLOW)
+                text_surface = self.font_retro_large_menu.render(option, True, NEON_YELLOW)
             else:
-                text_surface = self.font_retro_medium.render(option, True, WHITE)
+                text_surface = self.font_retro_large_menu.render(option, True, WHITE)
             
-            text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, menu_y + i * 60))
+            text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, menu_y + i * 70))  # Increased spacing for larger text
             
             # Draw glow for selected option
             if is_selected:
@@ -619,11 +609,11 @@ class GameRenderer:
                 pulse = abs(math.sin(self.frame_count * 0.1)) * 0.5 + 0.5
                 glow_alpha = int(80 + pulse * 40)
                 
-                glow_size = 20
+                glow_size = 25  # Larger glow for larger text
                 glow_surface = pygame.Surface((text_rect.width + glow_size * 2, 
                                              text_rect.height + glow_size * 2), pygame.SRCALPHA)
                 glow_color = (*NEON_YELLOW, glow_alpha)
-                glow_text = self.font_retro_medium.render(option, True, glow_color)
+                glow_text = self.font_retro_large_menu.render(option, True, glow_color)
                 glow_text_rect = glow_text.get_rect(center=(glow_surface.get_width() // 2, 
                                                           glow_surface.get_height() // 2))
                 glow_surface.blit(glow_text, glow_text_rect)
@@ -635,7 +625,7 @@ class GameRenderer:
         # Draw instructions at bottom
         instruction_y = 720
         instructions = [
-            "Use ↑/↓ or Analog Stick to navigate",
+            "Use Up/Down or Analog Stick to navigate",
             "Press A or ENTER to select"
         ]
         
