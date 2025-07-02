@@ -1,0 +1,2 @@
+- read README.md, CLAUDE.md
+- run git ls-files

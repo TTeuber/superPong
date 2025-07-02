@@ -21,13 +21,15 @@ class GameRenderer:
         
         # Load retro font for start screen
         try:
+            self.font_retro_huge = pygame.font.Font("assets/PressStart2P-Regular.ttf", 72)  # For main title
             self.font_retro_large = pygame.font.Font("assets/PressStart2P-Regular.ttf", 48)
-            self.font_retro_medium = pygame.font.Font("assets/PressStart2P-Regular.ttf", 24)
+            self.font_retro_medium = pygame.font.Font("assets/PressStart2P-Regular.ttf", 32)  # Increased for menu options
             self.font_retro_small = pygame.font.Font("assets/PressStart2P-Regular.ttf", 16)
         except:
             # Fallback to default fonts if retro font fails to load
+            self.font_retro_huge = pygame.font.Font(None, 72)
             self.font_retro_large = self.font_large
-            self.font_retro_medium = self.font_medium
+            self.font_retro_medium = pygame.font.Font(None, 32)
             self.font_retro_small = self.font_small
 
     def render_frame(self, paddles, ball, lives, alive_players, particle_system=None, 
@@ -496,37 +498,65 @@ class GameRenderer:
         demo_state = start_screen_system.get_demo_game_state()
         
         # Draw title "SUPER PONG" at top
-        title_y = 100
+        title_y = 120  # Moved down slightly to accommodate larger title
         title_text = "SUPER PONG"
         
-        # Create multiple glow layers for dramatic effect
-        glow_colors = [
-            (NEON_BLUE[0] // 4, NEON_BLUE[1] // 4, NEON_BLUE[2] // 4),  # Dim blue glow
-            (NEON_PINK[0] // 3, NEON_PINK[1] // 3, NEON_PINK[2] // 3),  # Dim pink glow
-        ]
+        # Pulsing animation calculations
+        pulse_time = self.frame_count * 0.05  # Slower pulse
+        pulse_intensity = abs(math.sin(pulse_time)) * 0.6 + 0.4  # Range from 0.4 to 1.0
+        color_cycle = self.frame_count * 0.02  # Color cycling
         
-        # Draw multiple glow layers
+        # Create animated glow colors with rainbow effect
+        base_colors = [NEON_BLUE, NEON_PINK, NEON_GREEN, NEON_YELLOW, NEON_PURPLE]
+        glow_colors = []
+        
+        for i, base_color in enumerate(base_colors):
+            # Create pulsing glow with varying intensities
+            glow_alpha = int((pulse_intensity * 0.3 + 0.1) * 255)  # 10% to 40% opacity
+            glow_color = (base_color[0] // 4, base_color[1] // 4, base_color[2] // 4, glow_alpha)
+            glow_colors.append(glow_color)
+        
+        # Draw multiple animated glow layers
         for i, glow_color in enumerate(glow_colors):
-            glow_size = 8 + i * 4
-            glow_surface = pygame.Surface((SCREEN_WIDTH, 80), pygame.SRCALPHA)
-            glow_text = self.font_retro_large.render(title_text, True, glow_color)
-            glow_rect = glow_text.get_rect(center=(SCREEN_WIDTH // 2, 40))
+            glow_offset = math.sin(pulse_time + i * 0.5) * 2  # Slight offset variation
+            glow_surface = pygame.Surface((SCREEN_WIDTH, 120), pygame.SRCALPHA)
+            glow_text = self.font_retro_huge.render(title_text, True, glow_color[:3])
+            glow_rect = glow_text.get_rect(center=(SCREEN_WIDTH // 2 + glow_offset, 60))
             glow_surface.blit(glow_text, glow_rect)
-            self.screen.blit(glow_surface, (0, title_y - 40))
+            self.screen.blit(glow_surface, (0, title_y - 60))
         
-        # Draw main title text
-        title_surface = self.font_retro_large.render(title_text, True, WHITE)
+        # Main title with color cycling
+        title_color_index = int(color_cycle) % len(base_colors)
+        next_color_index = (title_color_index + 1) % len(base_colors)
+        color_blend = color_cycle - int(color_cycle)
+        
+        # Blend between two colors
+        current_color = base_colors[title_color_index]
+        next_color = base_colors[next_color_index]
+        title_color = (
+            int(current_color[0] * (1 - color_blend) + next_color[0] * color_blend),
+            int(current_color[1] * (1 - color_blend) + next_color[1] * color_blend),
+            int(current_color[2] * (1 - color_blend) + next_color[2] * color_blend)
+        )
+        
+        # Draw main title text with pulsing size
+        scale_factor = 0.9 + pulse_intensity * 0.1  # Slight size pulsing
+        title_surface = self.font_retro_huge.render(title_text, True, title_color)
+        if scale_factor != 1.0:
+            # Scale the title surface
+            scaled_size = (int(title_surface.get_width() * scale_factor), 
+                          int(title_surface.get_height() * scale_factor))
+            title_surface = pygame.transform.scale(title_surface, scaled_size)
+        
         title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, title_y))
         self.screen.blit(title_surface, title_rect)
         
         # Draw AI demo game in center area
-        demo_area_y = 200
-        demo_area_height = 350
+        demo_area_y = 240  # Moved down to accommodate larger title
+        demo_area_height = 310  # Reduced slightly to keep menu visible
         
-        # Create demo area boundaries
+        # Create demo area boundaries (for positioning only)
         demo_rect = pygame.Rect(100, demo_area_y, SCREEN_WIDTH - 200, demo_area_height)
-        pygame.draw.rect(self.screen, (20, 20, 20), demo_rect)
-        pygame.draw.rect(self.screen, NEON_BLUE, demo_rect, 2)
         
         # Scale and position demo game elements
         demo_scale = 0.7
@@ -569,7 +599,7 @@ class GameRenderer:
                          (int(scaled_ball_x), int(scaled_ball_y)), int(scaled_ball_size))
         
         # Draw menu options at bottom
-        menu_y = 600
+        menu_y = 620  # Moved down slightly for better spacing
         selected_option = start_screen_system.get_selected_option()
         
         for i, option in enumerate(START_MENU_OPTIONS):
