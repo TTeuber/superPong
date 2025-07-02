@@ -1,2 +1,3 @@
 - read README.md, CLAUDE.md
+- read instructions/*.md
 - run git ls-files

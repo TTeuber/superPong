@@ -17,7 +17,8 @@ class GameRenderer:
         self.menu_renderer = MenuRenderer(self.ui_effects)
 
     def render_frame(self, paddles, ball, lives, alive_players, particle_system=None, 
-                   game_state="playing", aiming_player=-1, aiming_angle=0, aiming_timer=0, pause_menu_selected=0):
+                   game_state="playing", aiming_player=-1, aiming_angle=0, aiming_timer=0, pause_menu_selected=0,
+                   powerup_system=None, powerup_renderer=None):
         """Render a complete game frame with screen shake"""
         self.frame_count += 1
         
@@ -34,7 +35,8 @@ class GameRenderer:
         # Render game elements to the game surface
         self.game_renderer.render_game_elements(
             game_surface, paddles, ball, lives, alive_players, particle_system,
-            game_state, aiming_player, aiming_angle, aiming_timer
+            game_state, aiming_player, aiming_angle, aiming_timer,
+            powerup_system, powerup_renderer
         )
         
         # Draw pause overlay if paused

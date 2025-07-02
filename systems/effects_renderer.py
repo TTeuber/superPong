@@ -145,3 +145,16 @@ class EffectsRenderer:
         self.shake_duration = 0
         self.shake_offset_x = 0
         self.shake_offset_y = 0
+        
+    def draw_glow(self, screen, x, y, color, radius):
+        """Draw a simple glow effect at position"""
+        self.draw_circular_glow(screen, (x, y), radius, color, intensity=0.8)
+        
+    def draw_paddle_effect(self, screen, paddle, color, alpha):
+        """Draw special effect on paddle (for power-ups)"""
+        # Create pulsing border effect
+        border_rect = paddle.rect.inflate(10, 10)
+        effect_surface = pygame.Surface((border_rect.width, border_rect.height), pygame.SRCALPHA)
+        pygame.draw.rect(effect_surface, (*color, int(alpha)), effect_surface.get_rect(), 
+                        width=3, border_radius=5)
+        screen.blit(effect_surface, border_rect.topleft)

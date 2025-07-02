@@ -10,11 +10,16 @@ class Paddle:
 
         # Set dimensions based on orientation
         if orientation == 'vertical':
-            self.width = PADDLE_WIDTH
-            self.height = PADDLE_HEIGHT
+            self.base_width = PADDLE_WIDTH
+            self.base_height = PADDLE_HEIGHT
         else:  # horizontal
-            self.width = H_PADDLE_WIDTH
-            self.height = H_PADDLE_HEIGHT
+            self.base_width = H_PADDLE_WIDTH
+            self.base_height = H_PADDLE_HEIGHT
+            
+        # Current dimensions (can be modified by power-ups)
+        self.width = self.base_width
+        self.height = self.base_height
+        self.size_modifier = 1.0
 
         self.x = x
         self.y = y
@@ -71,3 +76,35 @@ class Paddle:
             self.moving_left = active
         elif direction == 'right':
             self.moving_right = active
+            
+    def apply_size_modifier(self, modifier):
+        """Apply a size modifier from power-ups"""
+        self.size_modifier = modifier
+        
+        # Update dimensions based on modifier
+        if self.orientation == 'vertical':
+            self.height = int(self.base_height * modifier)
+            # Keep width unchanged for vertical paddles
+            self.width = self.base_width
+        else:  # horizontal
+            self.width = int(self.base_width * modifier)
+            # Keep height unchanged for horizontal paddles
+            self.height = self.base_height
+            
+        # Recenter paddle to avoid position jumps
+        old_rect = self.rect.copy()
+        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        
+        # Adjust position to keep center point
+        if self.orientation == 'vertical':
+            self.y = old_rect.centery - self.height // 2
+            self.y = clamp(self.y, BOUNDARY_THICKNESS,
+                          SCREEN_HEIGHT - BOUNDARY_THICKNESS - self.height)
+        else:
+            self.x = old_rect.centerx - self.width // 2
+            self.x = clamp(self.x, BOUNDARY_THICKNESS,
+                          SCREEN_WIDTH - BOUNDARY_THICKNESS - self.width)
+                          
+        # Update rect with new position
+        self.rect.x = self.x
+        self.rect.y = self.y

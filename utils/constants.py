@@ -139,3 +139,35 @@ SWITCH_CONTROLLER_MAPPINGS = {
     'dpad_left': 14,        # D-pad left button  
     'dpad_right': 15,       # D-pad right button
 }
+
+# Power-up System Constants
+POWERUP_SIZE = 30  # Size of power-up pickup
+POWERUP_SPAWN_MIN_TIME = 1200  # 20 seconds at 60 FPS
+POWERUP_SPAWN_MAX_TIME = 1800  # 30 seconds at 60 FPS
+POWERUP_WARNING_TIME = 180     # 3 seconds warning before spawn
+POWERUP_COLLECT_RADIUS = 40    # Collection radius for power-ups (ball-based)
+
+# Power-up Types (Version 1: Classic)
+POWERUP_PADDLE_SIZE = "paddle_size"
+POWERUP_BALL_SPEED = "ball_speed"
+POWERUP_SHIELD = "shield"
+
+# Power-up Durations (in frames at 60 FPS)
+POWERUP_DURATION_PADDLE_SIZE = 480    # 8 seconds
+POWERUP_DURATION_BALL_SPEED = 600     # 10 seconds
+POWERUP_DURATION_SHIELD = -1          # Single use (no duration)
+
+# Power-up Effect Values
+POWERUP_PADDLE_SIZE_INCREASE = 1.5    # 50% larger
+POWERUP_PADDLE_SIZE_DECREASE = 0.75   # 25% smaller for enemies
+POWERUP_BALL_SPEED_SLOW = 0.75        # 75% speed
+POWERUP_BALL_SPEED_FAST = 1.25        # 125% speed
+
+# Power-up Spawn Positions (center area variations)
+POWERUP_SPAWN_POSITIONS = [
+    (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2),  # Center
+    (SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2),  # Left of center
+    (SCREEN_WIDTH // 2 + 100, SCREEN_HEIGHT // 2),  # Right of center
+    (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 100),  # Above center
+    (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 100),  # Below center
+]

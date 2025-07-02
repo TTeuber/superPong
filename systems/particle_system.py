@@ -160,3 +160,29 @@ class ParticleSystem:
     def clear(self):
         """Remove all particles"""
         self.particles.clear()
+        
+    def add_shield_break_effect(self, x, y):
+        """Create particle effect when shield breaks"""
+        # Blue/purple shield fragments
+        particle_count = 20
+        for i in range(particle_count):
+            angle = (i / particle_count) * 2 * math.pi
+            speed = random.uniform(3, 8)
+            velocity_x = math.cos(angle) * speed
+            velocity_y = math.sin(angle) * speed
+            
+            # Shield colors - blue to purple
+            r = random.randint(100, 200)
+            g = random.randint(0, 50)
+            b = 255
+            color = (r, g, b)
+            
+            size = random.uniform(3, 6)
+            lifetime = random.randint(20, 40)
+            
+            self.particles.append(Particle(x, y, velocity_x, velocity_y, color, size, lifetime))
+            
+    def add_particle(self, x, y, vx, vy, color, lifetime):
+        """Add a single particle (for power-up collection effects)"""
+        size = random.uniform(2, 4)
+        self.particles.append(Particle(x, y, vx, vy, color, size, lifetime))

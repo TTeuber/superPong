@@ -12,6 +12,8 @@ from systems.start_screen_system import StartScreenSystem
 from systems.game_over_system import GameOverSystem
 from systems.settings_system import SettingsSystem
 from systems.settings_screen_system import SettingsScreenSystem
+from systems.powerup_system import PowerUpSystem
+from systems.powerup_renderer import PowerUpRenderer
 from utils.constants import *
 
 class Game:
@@ -30,6 +32,11 @@ class Game:
         self.menu_system = MenuSystem()
         self.aiming_system = AimingSystem()
         self.collision_system = CollisionSystem()
+        self.powerup_system = PowerUpSystem()
+        self.powerup_renderer = PowerUpRenderer()
+        
+        # Link power-up system to collision system
+        self.collision_system.set_powerup_system(self.powerup_system)
         
         # Initialize settings system first to get settings
         self.settings_system = SettingsSystem()
@@ -98,6 +105,7 @@ class Game:
         self.player_manager.reset()
         self.ball.reset_position()
         self.particle_system.clear()
+        self.powerup_system.clear()
         self.aiming_system.reset()
         self.menu_system.reset_menu()
         self.pause_key_pressed = False
@@ -145,6 +153,7 @@ class Game:
         self.player_manager.reset()
         self.ball.reset_position()
         self.particle_system.clear()
+        self.powerup_system.clear()
         self.aiming_system.reset()
         self.menu_system.reset_menu()
         self.game_over_system.reset()
@@ -160,6 +169,7 @@ class Game:
         self.player_manager.reset()
         self.ball.reset_position()
         self.particle_system.clear()
+        self.powerup_system.clear()
         self.aiming_system.reset()
         self.menu_system.reset_menu()
         self.game_over_system.reset()
@@ -260,6 +270,26 @@ class Game:
 
         # Update AI players
         self.player_manager.update_ai_players(self.ball)
+        
+        # Update power-up system
+        self.powerup_system.update()
+        
+        # Check power-up collection (ball-based)
+        collected = self.powerup_system.check_ball_collection(self.ball, alive_players)
+        if collected:
+            # Add collection particle effect at ball position
+            self.powerup_renderer.render_collection_effect(
+                self.particle_system, self.ball.x, self.ball.y, collected['type']
+            )
+            
+        # Apply power-up effects to paddles
+        for i, paddle in enumerate(paddles):
+            size_modifier = self.powerup_system.get_paddle_size_modifier(i, list(range(4)))
+            paddle.apply_size_modifier(size_modifier)
+            
+        # Apply power-up effects to ball
+        ball_speed_modifier = self.powerup_system.get_ball_speed_modifier()
+        self.ball.apply_speed_modifier(ball_speed_modifier)
 
         # Update paddles
         self.player_manager.update_paddles()
@@ -293,6 +323,15 @@ class Game:
         # Launch ball when timer expires
         if should_launch:
             self.aiming_system.launch_ball(self.ball)
+            
+            # Check for immediate power-up collection from aimed shot
+            collected = self.powerup_system.check_ball_collection(self.ball, alive_players)
+            if collected:
+                # Add collection particle effect at ball position
+                self.powerup_renderer.render_collection_effect(
+                    self.particle_system, self.ball.x, self.ball.y, collected['type']
+                )
+                
             self.state_manager.enter_playing_mode()
             
     def handle_life_loss(self, player_id):
@@ -347,6 +386,7 @@ class Game:
         self.player_manager.reset()
         self.ball.reset_position()
         self.particle_system.clear()
+        self.powerup_system.clear()
         self.state_manager.reset()
         self.aiming_system.reset()
         self.menu_system.reset_menu()
@@ -378,7 +418,8 @@ class Game:
             
             self.renderer.render_frame(paddles, self.ball, lives, alive_players, 
                                      self.particle_system, game_state, aiming_player, 
-                                     aiming_angle, aiming_timer, pause_menu_selected)
+                                     aiming_angle, aiming_timer, pause_menu_selected,
+                                     self.powerup_system, self.powerup_renderer)
         pygame.display.flip()
 
     def run(self):

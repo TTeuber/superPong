@@ -205,7 +205,8 @@ class CoreGameRenderer:
                 x_offset += 1
 
     def render_game_elements(self, screen, paddles, ball, lives, alive_players, particle_system=None, 
-                           game_state="playing", aiming_player=-1, aiming_angle=0, aiming_timer=0):
+                           game_state="playing", aiming_player=-1, aiming_angle=0, aiming_timer=0,
+                           powerup_system=None, powerup_renderer=None):
         """Render all core game elements"""
         # Clear screen with black background
         screen.fill(BLACK)
@@ -215,6 +216,10 @@ class CoreGameRenderer:
 
         # Draw boundaries
         self.draw_boundaries(screen)
+        
+        # Draw power-ups (before paddles so they appear underneath)
+        if powerup_system and powerup_renderer:
+            powerup_renderer.render_powerups(screen, powerup_system.get_powerups(), self.effects_renderer)
 
         # Draw ball trail
         self.draw_ball_trail(screen, ball)
@@ -225,6 +230,10 @@ class CoreGameRenderer:
         # Draw paddles (only alive players, or dimmed for dead players)
         for i, paddle in enumerate(paddles):
             self.draw_paddle(screen, paddle, alive_players[i])
+            
+        # Draw active power-up effects on paddles
+        if powerup_system and powerup_renderer:
+            powerup_renderer.render_active_effects(screen, paddles, powerup_system.get_active_effects(), self.effects_renderer)
 
         # Draw particle effects
         if particle_system:

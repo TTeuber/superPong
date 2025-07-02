@@ -9,7 +9,9 @@ class Ball:
         self.x = x
         self.y = y
         self.size = BALL_SIZE
-        self.speed = BALL_SPEED
+        self.base_speed = BALL_SPEED
+        self.speed = self.base_speed
+        self.speed_modifier = 1.0
 
         # Random starting direction
         angle = random.uniform(0, 2 * math.pi)
@@ -32,6 +34,9 @@ class Ball:
         self.max_trail_length = 15
         self.last_hit_color = NEON_BLUE  # Color from last paddle hit
         self.glow_intensity = 1.0
+        
+        # Power-up collection tracking
+        self.last_hit_player_id = -1  # Track who last hit the ball for power-up collection
 
     def update(self):
         """Update ball position and handle wall collisions"""
@@ -59,6 +64,9 @@ class Ball:
         # Store the color of the paddle that hit the ball
         self.last_hit_color = paddle.color
         self.glow_intensity = 1.5  # Boost glow intensity on hit
+        
+        # Track which player hit the ball for power-up collection
+        self.last_hit_player_id = paddle.player_id
 
         # Calculate relative hit position (-1 to 1)
         if paddle.orientation == 'vertical':
@@ -139,6 +147,9 @@ class Ball:
         # Reset visual effects
         self.last_hit_color = NEON_BLUE
         self.glow_intensity = 1.0
+        
+        # Reset power-up collection tracking
+        self.last_hit_player_id = -1
 
         # Ensure minimum speed in both directions
         if abs(self.velocity.x) < 2:
@@ -163,3 +174,15 @@ class Ball:
             # If somehow velocity is zero, set a default direction
             self.velocity.x = target_speed
             self.velocity.y = 0
+            
+    def apply_speed_modifier(self, modifier):
+        """Apply a speed modifier from power-ups"""
+        self.speed_modifier = modifier
+        self.speed = self.base_speed * modifier
+        
+        # Update current velocity to match new speed
+        self.normalize_velocity(self.speed)
+        
+    def set_last_hitter(self, player_id):
+        """Set which player last hit the ball for power-up collection"""
+        self.last_hit_player_id = player_id

@@ -159,6 +159,9 @@ class AimingSystem:
         if abs(ball.velocity.y) < 2:
             ball.velocity.y = 2 if ball.velocity.y >= 0 else -2
         
+        # Set aiming player as the ball hitter for power-up collection
+        ball.set_last_hitter(self.aiming_player)
+        
         # Reset aiming state
         self.aiming_player = -1
         self.aiming_timer = 0
