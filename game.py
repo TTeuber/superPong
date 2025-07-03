@@ -1,4 +1,5 @@
 import pygame
+import random
 from entities.ball import Ball
 from systems.renderer import GameRenderer
 from systems.input_handler import InputHandler
@@ -32,14 +33,15 @@ class Game:
         self.menu_system = MenuSystem()
         self.aiming_system = AimingSystem()
         self.collision_system = CollisionSystem()
-        self.powerup_system = PowerUpSystem()
+        # Initialize settings system first to get settings
+        self.settings_system = SettingsSystem()
+        self.powerup_system = PowerUpSystem(self.settings_system)
         self.powerup_renderer = PowerUpRenderer()
         
         # Link power-up system to collision system
         self.collision_system.set_powerup_system(self.powerup_system)
         
-        # Initialize settings system first to get settings
-        self.settings_system = SettingsSystem()
+        # Get settings for other systems
         ai_difficulty = self.settings_system.get_setting('ai_difficulty')
         controller_sensitivity = self.settings_system.get_setting('controller_sensitivity')
         
@@ -266,13 +268,23 @@ class Game:
         paddles = self.player_manager.get_paddles()
         alive_players = self.player_manager.get_alive_players()
         
-        self.input_handler.update_paddle_movement([paddles[0]])
+        # Apply control scrambling if active
+        target_player_id = self.powerup_system.get_scrambled_player_id(0)  # Human is player 0
+        if target_player_id < len(paddles):
+            self.input_handler.update_paddle_movement([paddles[target_player_id]])
+        else:
+            self.input_handler.update_paddle_movement([paddles[0]])
 
         # Update AI players
         self.player_manager.update_ai_players(self.ball)
         
         # Update power-up system
         self.powerup_system.update()
+        
+        # Check for pending paddle swap
+        swap_player = self.powerup_system.get_pending_paddle_swap()
+        if swap_player >= 0:
+            self.execute_paddle_swap(swap_player, alive_players)
         
         # Check power-up collection (ball-based)
         collected = self.powerup_system.check_ball_collection(self.ball, alive_players)
@@ -290,17 +302,40 @@ class Game:
         # Apply power-up effects to ball
         ball_speed_modifier = self.powerup_system.get_ball_speed_modifier()
         self.ball.apply_speed_modifier(ball_speed_modifier)
+        
+        # Apply magnetic forces from magnetized paddles
+        self.powerup_system.apply_magnetic_force(self.ball, paddles)
+        
+        # Apply chaos power-up effects
+        # Wild bounce effect
+        wild_bounce_occurred = self.powerup_system.apply_wild_bounce(self.ball)
+        if wild_bounce_occurred:
+            # Create visual effect for wild bounce
+            self.powerup_renderer.render_wild_bounce_effect(
+                self.particle_system, self.ball.x, self.ball.y
+            )
 
         # Update paddles
         self.player_manager.update_paddles()
 
         # Update ball
         self.ball.update()
+        
+        # Update decoy balls
+        decoy_balls = self.powerup_system.get_decoy_balls()
+        for decoy_ball in decoy_balls:
+            decoy_ball.update()
 
         # Check ball-paddle collisions
         self.collision_system.check_ball_paddle_collisions(
             self.ball, paddles, alive_players, self.particle_system, self.renderer
         )
+        
+        # Check decoy ball-paddle collisions (they bounce but don't affect scoring)
+        for decoy_ball in decoy_balls:
+            self.collision_system.check_ball_paddle_collisions(
+                decoy_ball, paddles, alive_players, self.particle_system, self.renderer
+            )
 
         # Check for boundary collisions and handle life loss
         collision_info = self.collision_system.check_ball_boundary_collisions(
@@ -309,6 +344,13 @@ class Game:
         
         if collision_info['life_lost']:
             self.handle_life_loss(collision_info['player_hit'])
+            
+        # Check decoy ball boundary collisions (they just bounce off walls)
+        for decoy_ball in decoy_balls:
+            self.collision_system.check_ball_boundary_collisions(
+                decoy_ball, alive_players, self.particle_system, self.renderer, 
+                force_bounce=True  # Force decoy balls to bounce off walls
+            )
     
     def update_aiming_mode(self):
         """Update game during aiming phase"""
@@ -431,3 +473,34 @@ class Game:
             self.clock.tick(FPS)
 
         pygame.quit()
+        
+    def execute_paddle_swap(self, player_id, alive_players):
+        """Execute paddle swap between player and random opponent"""
+        # Get list of other alive players
+        other_players = [i for i in range(4) if i != player_id and alive_players[i]]
+        
+        if not other_players:
+            return  # No one to swap with
+            
+        # Choose random opponent
+        opponent_id = random.choice(other_players)
+        
+        # Get paddles
+        paddles = self.player_manager.get_paddles()
+        player_paddle = paddles[player_id]
+        opponent_paddle = paddles[opponent_id]
+        
+        # Swap positions
+        temp_x, temp_y = player_paddle.x, player_paddle.y
+        player_paddle.x, player_paddle.y = opponent_paddle.x, opponent_paddle.y
+        opponent_paddle.x, opponent_paddle.y = temp_x, temp_y
+        
+        # Add visual effect
+        self.particle_system.add_particle(
+            player_paddle.x, player_paddle.y, 0, 0, NEON_ORANGE, 60
+        )
+        self.particle_system.add_particle(
+            opponent_paddle.x, opponent_paddle.y, 0, 0, NEON_ORANGE, 60
+        )
+        
+        print(f"Player {player_id} swapped with Player {opponent_id}")

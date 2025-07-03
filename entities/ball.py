@@ -5,13 +5,14 @@ from utils.constants import *
 from utils.math_utils import Vector2, clamp
 
 class Ball:
-    def __init__(self, x, y):
+    def __init__(self, x, y, is_decoy=False):
         self.x = x
         self.y = y
         self.size = BALL_SIZE
         self.base_speed = BALL_SPEED
         self.speed = self.base_speed
         self.speed_modifier = 1.0
+        self.is_decoy = is_decoy  # Flag to indicate if this is a decoy ball
 
         # Random starting direction
         angle = random.uniform(0, 2 * math.pi)
@@ -37,6 +38,16 @@ class Ball:
         
         # Power-up collection tracking
         self.last_hit_player_id = -1  # Track who last hit the ball for power-up collection
+        
+        # Decoy ball specific properties
+        if self.is_decoy:
+            self.lifetime = POWERUP_DURATION_DECOY_BALL  # 8 seconds
+            self.alpha = int(255 * POWERUP_DECOY_BALL_TRANSPARENCY)  # Slightly transparent
+            self.trail_color = (255, 100, 255)  # Magenta trail for decoy
+        else:
+            self.lifetime = -1  # Infinite for real ball
+            self.alpha = 255  # Fully opaque
+            self.trail_color = None  # Use default trail color
 
     def update(self):
         """Update ball position and handle wall collisions"""
@@ -48,6 +59,14 @@ class Ball:
         # Gradually reduce glow intensity
         if self.glow_intensity > 1.0:
             self.glow_intensity -= 0.02
+
+        # Update decoy ball lifetime
+        if self.is_decoy and self.lifetime > 0:
+            self.lifetime -= 1
+            # Fade out in last second
+            if self.lifetime < 60:  # Last second at 60 FPS
+                fade_factor = self.lifetime / 60.0
+                self.alpha = int(255 * POWERUP_DECOY_BALL_TRANSPARENCY * fade_factor)
 
         # Update position
         self.x += self.velocity.x
@@ -186,3 +205,11 @@ class Ball:
     def set_last_hitter(self, player_id):
         """Set which player last hit the ball for power-up collection"""
         self.last_hit_player_id = player_id
+        
+    def is_expired(self):
+        """Check if decoy ball has expired and should be removed"""
+        return self.is_decoy and self.lifetime <= 0
+        
+    def causes_life_loss(self):
+        """Check if this ball should cause life loss when hitting edges"""
+        return not self.is_decoy

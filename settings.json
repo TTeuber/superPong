@@ -1,5 +1,10 @@
 {
   "ai_difficulty": 0.3,
   "sound_enabled": true,
-  "controller_sensitivity": 1.0
+  "controller_sensitivity": 1.0,
+  "enabled_powerups": [
+    "decoy_ball",
+    "wild_bounce",
+    "control_scramble"
+  ]
 }

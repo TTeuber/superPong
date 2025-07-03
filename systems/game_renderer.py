@@ -226,6 +226,12 @@ class CoreGameRenderer:
 
         # Draw ball
         self.draw_ball(screen, ball)
+        
+        # Draw decoy balls
+        if powerup_system and powerup_renderer:
+            decoy_balls = powerup_system.get_decoy_balls()
+            if decoy_balls:
+                powerup_renderer.render_decoy_balls(screen, decoy_balls, self.effects_renderer)
 
         # Draw paddles (only alive players, or dimmed for dead players)
         for i, paddle in enumerate(paddles):

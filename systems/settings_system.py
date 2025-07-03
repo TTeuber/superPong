@@ -12,7 +12,8 @@ class SettingsSystem:
         self.default_settings = {
             'ai_difficulty': DIFFICULTY_VALUES[DIFFICULTY_MEDIUM],  # 0.6
             'sound_enabled': True,
-            'controller_sensitivity': CONTROLLER_SENSITIVITY
+            'controller_sensitivity': CONTROLLER_SENSITIVITY,
+            'enabled_powerups': POWERUP_CLASSIC_TYPES.copy()  # Start with classic power-ups
         }
         
         # Current settings (will be loaded from file or set to defaults)
@@ -72,6 +73,17 @@ class SettingsSystem:
                                 self.settings[key] = value
                             else:
                                 print(f"Invalid sound setting {value}, using default")
+                        # Validate power-up selection
+                        elif key == 'enabled_powerups':
+                            if isinstance(value, list) and len(value) > 0:
+                                # Filter to only valid power-up types
+                                valid_powerups = [p for p in value if p in POWERUP_ALL_TYPES]
+                                if len(valid_powerups) > 0:
+                                    self.settings[key] = valid_powerups
+                                else:
+                                    print(f"No valid power-ups in selection, using defaults")
+                            else:
+                                print(f"Invalid power-up selection {value}, using default")
                         else:
                             self.settings[key] = value
                 
@@ -100,3 +112,34 @@ class SettingsSystem:
                 return name
         
         return DIFFICULTY_MEDIUM  # Default fallback
+        
+    def get_enabled_powerups(self):
+        """Get list of enabled power-up types"""
+        return self.settings.get('enabled_powerups', POWERUP_CLASSIC_TYPES.copy())
+        
+    def is_powerup_enabled(self, powerup_type):
+        """Check if a specific power-up type is enabled"""
+        enabled = self.get_enabled_powerups()
+        return powerup_type in enabled
+        
+    def toggle_powerup(self, powerup_type):
+        """Toggle a power-up type on/off"""
+        if powerup_type not in POWERUP_ALL_TYPES:
+            print(f"Unknown power-up type: {powerup_type}")
+            return False
+            
+        enabled = self.get_enabled_powerups()
+        
+        if powerup_type in enabled:
+            # Don't allow disabling all power-ups
+            if len(enabled) > 1:
+                enabled.remove(powerup_type)
+                self.set_setting('enabled_powerups', enabled)
+                return True
+            else:
+                print("Cannot disable last power-up type")
+                return False
+        else:
+            enabled.append(powerup_type)
+            self.set_setting('enabled_powerups', enabled)
+            return True

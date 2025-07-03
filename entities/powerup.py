@@ -12,7 +12,7 @@ class PowerUp:
         
         # Choose random type if not specified
         if powerup_type is None:
-            self.type = random.choice([POWERUP_PADDLE_SIZE, POWERUP_BALL_SPEED, POWERUP_SHIELD])
+            self.type = random.choice(POWERUP_CLASSIC_TYPES)
         else:
             self.type = powerup_type
             
@@ -39,8 +39,22 @@ class PowerUp:
             self.variant = random.choice(["increase_self", "decrease_enemies"])
         elif self.type == POWERUP_BALL_SPEED:
             self.variant = random.choice(["slow", "fast"])
-        else:  # POWERUP_SHIELD
+        elif self.type == POWERUP_SHIELD:
             self.variant = "shield"
+        elif self.type == POWERUP_PADDLE_SWAP:
+            self.variant = "swap"
+        elif self.type == POWERUP_GHOST_BALL:
+            self.variant = "ghost"
+        elif self.type == POWERUP_MAGNETIZE:
+            self.variant = "magnetize"
+        elif self.type == POWERUP_DECOY_BALL:
+            self.variant = "decoy"
+        elif self.type == POWERUP_WILD_BOUNCE:
+            self.variant = "wild"
+        elif self.type == POWERUP_CONTROL_SCRAMBLE:
+            self.variant = "scramble"
+        else:
+            self.variant = "default"
             
     def update(self):
         """Update power-up state and animations"""
@@ -112,6 +126,18 @@ class PowerUp:
             return POWERUP_DURATION_BALL_SPEED
         elif self.type == POWERUP_SHIELD:
             return POWERUP_DURATION_SHIELD
+        elif self.type == POWERUP_PADDLE_SWAP:
+            return POWERUP_DURATION_PADDLE_SWAP
+        elif self.type == POWERUP_GHOST_BALL:
+            return POWERUP_DURATION_GHOST_BALL
+        elif self.type == POWERUP_MAGNETIZE:
+            return POWERUP_DURATION_MAGNETIZE
+        elif self.type == POWERUP_DECOY_BALL:
+            return POWERUP_DURATION_DECOY_BALL
+        elif self.type == POWERUP_WILD_BOUNCE:
+            return POWERUP_DURATION_WILD_BOUNCE
+        elif self.type == POWERUP_CONTROL_SCRAMBLE:
+            return POWERUP_DURATION_CONTROL_SCRAMBLE
         return 0
         
     def get_color(self):
@@ -119,15 +145,35 @@ class PowerUp:
         if self.warning_phase:
             # Flashing white during warning
             flash = int(self.warning_timer / 10) % 2
-            return WHITE if flash else NEON_PURPLE
+            return WHITE if flash else self.get_base_color()
             
-        # Different shades of purple for different types
+        return self.get_base_color()
+    
+    def get_base_color(self):
+        """Get base color for power-up type"""
+        # Classic power-ups (purple tones)
         if self.type == POWERUP_PADDLE_SIZE:
             return NEON_PURPLE
         elif self.type == POWERUP_BALL_SPEED:
             return (255, 0, 200)  # Pinkish purple
-        else:  # POWERUP_SHIELD
+        elif self.type == POWERUP_SHIELD:
             return (150, 0, 255)  # Bluish purple
+        # Strategic power-ups (different colors)
+        elif self.type == POWERUP_PADDLE_SWAP:
+            return NEON_ORANGE  # Orange for swap
+        elif self.type == POWERUP_GHOST_BALL:
+            return NEON_CYAN    # Cyan for ghost
+        elif self.type == POWERUP_MAGNETIZE:
+            return NEON_YELLOW  # Yellow for magnetize
+        # Chaos power-ups (bright, chaotic colors)
+        elif self.type == POWERUP_DECOY_BALL:
+            return (255, 100, 255)  # Bright magenta for decoy
+        elif self.type == POWERUP_WILD_BOUNCE:
+            return (255, 50, 0)     # Bright red-orange for wild
+        elif self.type == POWERUP_CONTROL_SCRAMBLE:
+            return (100, 255, 100)  # Bright lime green for scramble
+        else:
+            return NEON_PURPLE  # Default
             
     def get_icon_points(self):
         """Get points for drawing simple icon based on type"""
@@ -146,10 +192,65 @@ class PowerUp:
                 (cx - 2, cy + 2), (cx + 5, cy + 10),
                 (cx + 2, cy + 2), (cx - 2, cy - 2)
             ]]
-        else:  # POWERUP_SHIELD
+        elif self.type == POWERUP_SHIELD:
             # Shield icon
             return [[
                 (cx - 8, cy - 8), (cx + 8, cy - 8),
                 (cx + 8, cy + 2), (cx, cy + 10),
                 (cx - 8, cy + 2)
+            ]]
+        elif self.type == POWERUP_PADDLE_SWAP:
+            # Circular arrows (swap)
+            return [
+                [(cx - 8, cy - 4), (cx - 4, cy - 8), (cx, cy - 4)],  # Top arrow
+                [(cx + 8, cy + 4), (cx + 4, cy + 8), (cx, cy + 4)]   # Bottom arrow
+            ]
+        elif self.type == POWERUP_GHOST_BALL:
+            # Ghost shape (wavy bottom)
+            return [[
+                (cx - 8, cy - 6), (cx - 8, cy + 2),
+                (cx - 6, cy + 6), (cx - 4, cy + 2),
+                (cx - 2, cy + 6), (cx, cy + 2),
+                (cx + 2, cy + 6), (cx + 4, cy + 2),
+                (cx + 6, cy + 6), (cx + 8, cy + 2),
+                (cx + 8, cy - 6), (cx + 4, cy - 10),
+                (cx - 4, cy - 10)
+            ]]
+        elif self.type == POWERUP_MAGNETIZE:
+            # Magnet shape (horseshoe)
+            return [
+                [(cx - 8, cy - 8), (cx - 8, cy + 6)],  # Left line
+                [(cx + 8, cy - 8), (cx + 8, cy + 6)],  # Right line
+                [(cx - 8, cy + 6), (cx - 4, cy + 6)],  # Left bottom
+                [(cx + 8, cy + 6), (cx + 4, cy + 6)]   # Right bottom
+            ]
+        elif self.type == POWERUP_DECOY_BALL:
+            # Two overlapping circles (real + fake ball)
+            return [
+                [(cx - 6, cy - 3), (cx - 3, cy - 6), (cx + 3, cy - 6), (cx + 6, cy - 3),
+                 (cx + 6, cy + 3), (cx + 3, cy + 6), (cx - 3, cy + 6), (cx - 6, cy + 3)],  # Main circle
+                [(cx - 2, cy + 1), (cx + 1, cy - 2), (cx + 5, cy - 2), (cx + 8, cy + 1),
+                 (cx + 8, cy + 5), (cx + 5, cy + 8), (cx + 1, cy + 8), (cx - 2, cy + 5)]   # Offset circle
+            ]
+        elif self.type == POWERUP_WILD_BOUNCE:
+            # Chaotic zigzag pattern
+            return [[
+                (cx - 8, cy - 6), (cx - 4, cy + 2), (cx, cy - 4),
+                (cx + 4, cy + 6), (cx + 8, cy - 2), (cx + 6, cy + 4),
+                (cx + 2, cy - 8), (cx - 2, cy + 8), (cx - 6, cy - 4)
+            ]]
+        elif self.type == POWERUP_CONTROL_SCRAMBLE:
+            # Curved arrows in different directions (scrambled controls)
+            return [
+                [(cx - 8, cy - 4), (cx - 4, cy - 8), (cx, cy - 4), (cx - 2, cy - 6)],  # Top left arrow
+                [(cx + 8, cy - 4), (cx + 4, cy - 8), (cx, cy - 4), (cx + 2, cy - 6)],  # Top right arrow
+                [(cx - 4, cy + 8), (cx - 8, cy + 4), (cx - 4, cy), (cx - 6, cy + 2)],  # Bottom left arrow
+                [(cx + 4, cy + 8), (cx + 8, cy + 4), (cx + 4, cy), (cx + 6, cy + 2)]   # Bottom right arrow
+            ]
+        else:
+            # Default icon (question mark)
+            return [[
+                (cx - 4, cy - 8), (cx + 4, cy - 8),
+                (cx + 4, cy - 4), (cx, cy),
+                (cx, cy + 4), (cx, cy + 8)
             ]]

@@ -73,11 +73,12 @@ GAME_OVER_MAIN_MENU = 1
 GAME_OVER_QUIT = 2
 
 # Settings menu
-SETTINGS_MENU_OPTIONS = ["Difficulty", "Sound", "Controller Sensitivity", "Back"]
+SETTINGS_MENU_OPTIONS = ["Difficulty", "Sound", "Controller Sensitivity", "Power-up Types", "Back"]
 SETTINGS_MENU_DIFFICULTY = 0
 SETTINGS_MENU_SOUND = 1
 SETTINGS_MENU_CONTROLLER = 2
-SETTINGS_MENU_BACK = 3
+SETTINGS_MENU_POWERUPS = 3
+SETTINGS_MENU_BACK = 4
 
 # Difficulty levels
 DIFFICULTY_EASY = "Easy"
@@ -141,27 +142,79 @@ SWITCH_CONTROLLER_MAPPINGS = {
 }
 
 # Power-up System Constants
-POWERUP_SIZE = 30  # Size of power-up pickup
-POWERUP_SPAWN_MIN_TIME = 1200  # 20 seconds at 60 FPS
-POWERUP_SPAWN_MAX_TIME = 1800  # 30 seconds at 60 FPS
-POWERUP_WARNING_TIME = 180     # 3 seconds warning before spawn
-POWERUP_COLLECT_RADIUS = 40    # Collection radius for power-ups (ball-based)
+POWERUP_SIZE = 40  # Size of power-up pickup
+POWERUP_SPAWN_MIN_TIME = 600  # 20 seconds at 60 FPS
+POWERUP_SPAWN_MAX_TIME = 900  # 30 seconds at 60 FPS
+POWERUP_WARNING_TIME = 120     # 3 seconds warning before spawn
+POWERUP_COLLECT_RADIUS = 50    # Collection radius for power-ups (ball-based)
 
 # Power-up Types (Version 1: Classic)
 POWERUP_PADDLE_SIZE = "paddle_size"
 POWERUP_BALL_SPEED = "ball_speed"
 POWERUP_SHIELD = "shield"
 
+# Power-up Types (Version 2: Strategic)
+POWERUP_PADDLE_SWAP = "paddle_swap"
+POWERUP_GHOST_BALL = "ghost_ball"
+POWERUP_MAGNETIZE = "magnetize"
+
+# Power-up Types (Version 3: Chaos)
+POWERUP_DECOY_BALL = "decoy_ball"
+POWERUP_WILD_BOUNCE = "wild_bounce"
+POWERUP_CONTROL_SCRAMBLE = "control_scramble"
+
+# Power-up Selection System
+POWERUP_CLASSIC_TYPES = [POWERUP_PADDLE_SIZE, POWERUP_BALL_SPEED, POWERUP_SHIELD]
+POWERUP_STRATEGIC_TYPES = [POWERUP_PADDLE_SWAP, POWERUP_GHOST_BALL, POWERUP_MAGNETIZE]
+POWERUP_CHAOS_TYPES = [POWERUP_DECOY_BALL, POWERUP_WILD_BOUNCE, POWERUP_CONTROL_SCRAMBLE]
+POWERUP_ALL_TYPES = POWERUP_CLASSIC_TYPES + POWERUP_STRATEGIC_TYPES + POWERUP_CHAOS_TYPES
+
+# Power-up Categories for UI
+POWERUP_CATEGORIES = {
+    "Classic": POWERUP_CLASSIC_TYPES,
+    "Strategic": POWERUP_STRATEGIC_TYPES,
+    "Chaos": POWERUP_CHAOS_TYPES
+}
+
+# Power-up Descriptions
+POWERUP_DESCRIPTIONS = {
+    POWERUP_PADDLE_SIZE: "Increase your paddle size or decrease enemies'",
+    POWERUP_BALL_SPEED: "Speed up or slow down the ball",
+    POWERUP_SHIELD: "Protect from one life loss",
+    POWERUP_PADDLE_SWAP: "Swap positions with a random opponent",
+    POWERUP_GHOST_BALL: "Ball passes through enemy paddles",
+    POWERUP_MAGNETIZE: "Your paddle attracts the ball",
+    POWERUP_DECOY_BALL: "Spawn a fake ball that doesn't cause life loss",
+    POWERUP_WILD_BOUNCE: "Ball randomly changes direction during flight",
+    POWERUP_CONTROL_SCRAMBLE: "All player controls get scrambled"
+}
+
 # Power-up Durations (in frames at 60 FPS)
 POWERUP_DURATION_PADDLE_SIZE = 480    # 8 seconds
 POWERUP_DURATION_BALL_SPEED = 600     # 10 seconds
-POWERUP_DURATION_SHIELD = -1          # Single use (no duration)
+POWERUP_DURATION_SHIELD = 600         # 10 seconds
+POWERUP_DURATION_PADDLE_SWAP = -1     # Instant effect
+POWERUP_DURATION_GHOST_BALL = 240     # 4 seconds
+POWERUP_DURATION_MAGNETIZE = 480      # 8 seconds
+POWERUP_DURATION_DECOY_BALL = 480     # 8 seconds
+POWERUP_DURATION_WILD_BOUNCE = 600    # 10 seconds
+POWERUP_DURATION_CONTROL_SCRAMBLE = 360  # 6 seconds
 
 # Power-up Effect Values
 POWERUP_PADDLE_SIZE_INCREASE = 1.5    # 50% larger
 POWERUP_PADDLE_SIZE_DECREASE = 0.75   # 25% smaller for enemies
 POWERUP_BALL_SPEED_SLOW = 0.75        # 75% speed
 POWERUP_BALL_SPEED_FAST = 1.25        # 125% speed
+
+# Strategic Power-up Effect Values
+POWERUP_MAGNETIC_FIELD_RADIUS = 120   # Pixels from paddle center
+POWERUP_MAGNETIC_FORCE = 0.3          # Attraction force strength
+
+# Chaos Power-up Effect Values
+POWERUP_WILD_BOUNCE_ANGLE_RANGE = 30  # ±30 degrees random deflection
+POWERUP_WILD_BOUNCE_INTERVAL = 150    # Frames between direction changes (2.5 seconds)
+POWERUP_WILD_BOUNCE_MIN_INTERVAL = 90  # Minimum interval (1.5 seconds)
+POWERUP_DECOY_BALL_TRANSPARENCY = 0.9  # Slight transparency to hint it's fake
 
 # Power-up Spawn Positions (center area variations)
 POWERUP_SPAWN_POSITIONS = [
