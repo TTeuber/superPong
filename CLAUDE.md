@@ -80,6 +80,32 @@ We're building "the coolest Pong game ever" with these key features:
 - **`systems/effects_renderer.py`**: Screen shake, glow effects, and visual impact systems
 - **`systems/renderer.py`**: Main coordinator (~50 lines, down from 913)
 
+### ✅ Phase 2.7: Mouse Support & Input System Improvements (COMPLETED)
+**Status**: ✅ DONE
+
+**Mouse Support Implementation**:
+- **Full mouse support**: Added mouse hover and click detection for all menu systems
+- **Hover highlighting**: Menu options highlight when mouse cursor hovers over them
+- **Click selection**: Mouse clicks execute menu actions (Play, Settings, Resume, etc.)
+- **Settings navigation**: Left/right arrow clicks for changing setting values
+- **Coordinate precision**: Fixed mouse detection coordinates to match visual button positions
+
+**Input System Enhancements**:
+- **Mouse state tracking**: Added `mouse_pos`, `mouse_clicked`, `mouse_just_clicked` to InputHandler
+- **Single-frame detection**: Proper mouse click detection prevents double-triggering
+- **Point-in-rectangle utility**: Added `is_point_in_rect()` for accurate hit detection
+
+**Powerup System Simplification**:
+- **Reduced complexity**: Simplified from 9 powerup types to 3 essential ones (paddle size, shield, decoy ball)
+- **Simple toggle**: Replaced complex powerup selection UI with on/off toggle in settings
+- **Cleaner codebase**: Removed unused powerup selection rendering and logic
+
+**Critical Bug Fix: Escape Key Double-Trigger**:
+- **Root cause identified**: SPACE and ESCAPE serve dual purposes (pause + menu actions)
+- **Solution implemented**: Added pause usage tracking flags (`escape_used_for_pause`, `space_used_for_pause`)
+- **Proper lifecycle**: Flags persist until key release, preventing immediate menu processing
+- **Clean separation**: Each keypress can only trigger ONE action (either pause OR menu)
+
 ### 🚧 Phase 3: Power-ups System (NEXT)
 **Priority**: High
 
@@ -198,9 +224,12 @@ The codebase was refactored to improve scalability and maintainability:
 - Reusable effect utilities
 
 **InputHandler Class** (`systems/input_handler.py`):
-- Keyboard and controller input processing
-- Nintendo Switch controller support
+- Keyboard, controller, and mouse input processing
+- Nintendo Switch controller support with hot-plug detection
 - Player control mapping and coordination
+- Mouse hover and click detection for menu systems
+- Single-press detection for escape/space keys to prevent double-triggering
+- Pause usage tracking to prevent dual-purpose key conflicts
 
 **AIPlayer Class** (`systems/ai.py`):
 - Ball tracking logic with configurable difficulty
@@ -351,6 +380,13 @@ superPong/
 3. **Visual polish**: Some glow effects could be more dramatic
 4. **Sound system**: No audio implementation yet
 
+## ✅ Recently Fixed Issues
+
+1. **Escape key double-trigger**: Fixed issue where pressing escape would pause and immediately resume the game
+2. **Mouse detection offset**: Resolved mouse hover detection being offset from visual button positions
+3. **AI speed degradation**: Fixed bug where AI players would gradually slow down and stop moving
+4. **Powerup system complexity**: Simplified from 9 powerup types to 3 essential ones with cleaner UI
+
 ## 🎆 Recent Improvements (July 2025)
 
 ### Settings & Difficulty System Implementation
@@ -366,6 +402,14 @@ superPong/
 - **Specialized renderers**: Game elements, effects, and UI separated for maintainability
 - **Preserved functionality**: All visual effects and features maintained during refactor
 - **Improved scalability**: Much easier to add new rendering features or modify existing ones
+
+### Mouse Support & Input System Overhaul
+- **Full mouse integration**: Complete mouse support for all menu systems (start, settings, pause, game over)
+- **Interactive menus**: Hover highlighting and click selection for all menu options
+- **Settings enhancement**: Mouse-clickable arrows for changing setting values
+- **Powerup simplification**: Reduced from 9 types to 3 essential powerups with simple toggle
+- **Critical bug fix**: Resolved escape key double-trigger that caused immediate pause/resume
+- **Input architecture**: Enhanced InputHandler with proper single-press detection and dual-purpose key handling
 
 ## 💡 Future Enhancement Ideas
 

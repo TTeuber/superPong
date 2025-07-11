@@ -8,9 +8,10 @@ A retro-style Pong game featuring 4 players, neon visual effects, Nintendo Switc
 - **Retro Neon Aesthetic**: Glowing paddles, ball trails, and grid backgrounds
 - **AI Opponents**: Smart AI with configurable difficulty levels (Easy, Medium, Hard)
 - **Settings System**: Persistent JSON settings with in-game menu
+- **Mouse Support**: Full mouse integration for all menus with hover highlighting and click selection
 - **Start Screen**: Main menu with Play and Settings options
-- **Pause Menu**: In-game pause with Resume, Restart, and Quit options
-- **Power-ups** (planned): Paddle size modifiers, multi-ball, speed boosts
+- **Pause Menu**: In-game pause with Resume, Restart, Main Menu, and Quit options
+- **Power-ups**: Simplified system with paddle size, shield, and decoy ball (toggle on/off)
 - **Obstacles** (planned): Bouncy barriers in the center area
 - **Smooth Physics**: Realistic ball bouncing with spin effects
 
@@ -27,11 +28,12 @@ A retro-style Pong game featuring 4 players, neon visual effects, Nintendo Switc
 - **Player 4 (Bottom, Yellow)**: AI controlled
 
 ### Game Controls
-- **Start Screen**: Navigate with analog stick/arrow keys, select with A/ENTER
-- **Settings Menu**: Navigate with analog stick/arrow keys, change values with left/right, back with B/ESC
-- **Pause Menu**: Navigate with analog stick/arrow keys, confirm with A/ENTER, cancel with B/ESC
+- **Start Screen**: Navigate with analog stick/arrow keys, select with A/ENTER, or use mouse hover/click
+- **Settings Menu**: Navigate with analog stick/arrow keys, change values with left/right, back with B/ESC, or use mouse hover/click on arrows
+- **Pause Menu**: Navigate with analog stick/arrow keys, confirm with A/ENTER, cancel with B/ESC, or use mouse hover/click
+- **Game Over Screen**: Navigate with analog stick/arrow keys, select with A/ENTER, or use mouse hover/click
 - **R**: Reset game
-- **ESC**: Quit game
+- **ESC**: Pause game (no longer quits)
 
 ## 🚀 Quick Start
 
@@ -93,13 +95,13 @@ superPong/
 - 4-player paddle setup with proper positioning
 - Ball physics with realistic collision detection
 - Nintendo Switch USB controller support with hot-plug detection
-- Dual input system (controller + keyboard)
+- Triple input system (controller + keyboard + mouse)
 - AI opponents with configurable difficulty levels
 - Lives system with player elimination
 - Aiming mode for ball launching after life loss
 - Start screen with main menu navigation
 - Settings system with JSON persistence
-- Pause menu with navigation (Resume/Restart/Quit)
+- Pause menu with navigation (Resume/Restart/Main Menu/Quit)
 - Basic neon visual effects and rendering
 - Game loop with 60 FPS performance
 - **Refactored Architecture**: Reduced main game file from 514 to 227 lines
@@ -120,6 +122,15 @@ superPong/
 - **Improved maintainability**: Each renderer handles single responsibility (menus, game elements, effects)
 - **Better testability**: Isolated rendering components for unit testing
 - **Preserved functionality**: All existing visual effects and features maintained
+
+### ✅ Phase 2.7 Complete: Mouse Support & Input System Improvements
+- **Full mouse integration**: Complete mouse support for all menu systems (start, settings, pause, game over)
+- **Interactive menus**: Hover highlighting and click selection for all menu options
+- **Settings enhancement**: Mouse-clickable arrows for changing setting values
+- **Powerup simplification**: Reduced from 9 types to 3 essential powerups (paddle size, shield, decoy ball)
+- **Simple powerup toggle**: Replaced complex powerup selection with on/off toggle in settings
+- **Critical bug fix**: Resolved escape key double-trigger that caused immediate pause/resume
+- **Enhanced input handling**: Improved InputHandler with proper single-press detection and dual-purpose key management
 
 ### 🚧 Phase 3 Next: Power-ups System
 - Paddle size modifiers (grow/shrink)
@@ -142,7 +153,7 @@ superPong/
 - **Entity system**: Modular game objects (Paddle, Ball, PowerUp, Obstacle)
 - **System managers**: GameState, Menu, Aiming, Collision, Player management
 - **Modular rendering**: Specialized renderers for game elements, UI, and effects
-- **Event-driven input**: Responsive controls with controller and keyboard support
+- **Multi-input support**: Responsive controls with controller, keyboard, and mouse support
 - **Vector-based physics**: Smooth movement and collisions
 - **Scalable design**: Easy to add new features and systems
 
@@ -177,6 +188,7 @@ The AI players use an advanced multi-layer difficulty system:
 - **AI Difficulty**: Easy, Medium, Hard levels with comprehensive AI behavior changes
 - **Sound**: Enable/disable sound effects (when implemented)
 - **Controller Sensitivity**: Analog stick sensitivity adjustment
+- **Powerups**: Simple on/off toggle for powerup system (paddle size, shield, decoy ball)
 
 ### Developer Settings (utils/constants.py)
 - Screen dimensions (850x850)
@@ -194,6 +206,12 @@ The AI players use an advanced multi-layer difficulty system:
 - AI players don't account for power-ups or obstacles yet
 - No sound effects implemented
 - Visual polish could be enhanced with more dramatic effects
+
+## ✅ Recently Fixed
+
+- **Escape key double-trigger**: Fixed issue where pressing escape would pause and immediately resume the game
+- **Mouse detection offset**: Resolved mouse hover detection being offset from visual button positions
+- **Complex powerup system**: Simplified from 9 powerup types to 3 essential ones with cleaner interface
 
 ## 🤝 Contributing
 
