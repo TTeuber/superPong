@@ -12,7 +12,7 @@ class PowerUp:
         
         # Choose random type if not specified
         if powerup_type is None:
-            self.type = random.choice(POWERUP_CLASSIC_TYPES)
+            self.type = random.choice(POWERUP_ALL_TYPES)
         else:
             self.type = powerup_type
             

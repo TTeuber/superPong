@@ -90,11 +90,11 @@ class MenuRenderer:
             screen.blit(text_surface, text_rect)
         
         # Instructions at bottom
-        instruction_y = SCREEN_HEIGHT // 2 + 130
+        instruction_y = SCREEN_HEIGHT // 2 + 200
         instructions = [
             "Use ↑/↓ or Analog Stick to navigate",
             "Press A or ENTER to confirm",
-            "Press B or ESC to cancel • START/P to quick resume"
+            "Press B or ESC to cancel • START/ESC to quick resume"
         ]
         
         for i, instruction in enumerate(instructions):
@@ -396,13 +396,8 @@ class MenuRenderer:
         # Draw subtle background grid
         self.ui_effects.draw_background_grid(screen, self.frame_count)
         
-        # Check if we're in power-up selection mode
-        powerup_state = settings_screen_system.get_powerup_selection_state()
-        
-        if powerup_state['in_selection']:
-            self.render_powerup_selection_screen(screen, powerup_state)
-        else:
-            self.render_main_settings_screen(screen, settings_screen_system)
+        # Always render main settings screen (no powerup selection mode)
+        self.render_main_settings_screen(screen, settings_screen_system)
     
     def render_main_settings_screen(self, screen, settings_screen_system):
         """Render the main settings screen with options and current values"""
@@ -528,142 +523,3 @@ class MenuRenderer:
             text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, instruction_y + i * 25))
             screen.blit(text_surface, text_rect)
     
-    def render_powerup_selection_screen(self, screen, powerup_state):
-        """Render the power-up selection screen with categories and toggles"""
-        # Draw "POWER-UP SELECTION" title at top
-        title_y = 120
-        title_text = "POWER-UP SELECTION"
-        
-        # Create multiple glow layers for title
-        glow_colors = [
-            (NEON_PURPLE[0] // 4, NEON_PURPLE[1] // 4, NEON_PURPLE[2] // 4),  # Dim purple glow
-            (NEON_ORANGE[0] // 3, NEON_ORANGE[1] // 3, NEON_ORANGE[2] // 3),  # Dim orange glow
-        ]
-        
-        # Draw multiple glow layers for title
-        for i, glow_color in enumerate(glow_colors):
-            glow_size = 8 + i * 4
-            glow_surface = pygame.Surface((SCREEN_WIDTH, 80), pygame.SRCALPHA)
-            glow_text = self.ui_effects.font_retro_large.render(title_text, True, glow_color)
-            glow_rect = glow_text.get_rect(center=(SCREEN_WIDTH // 2, 40))
-            glow_surface.blit(glow_text, glow_rect)
-            screen.blit(glow_surface, (0, title_y - 40))
-        
-        # Draw main title text
-        title_surface = self.ui_effects.font_retro_large.render(title_text, True, WHITE)
-        title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, title_y))
-        screen.blit(title_surface, title_rect)
-        
-        # Draw category selection at top
-        category_y = 220
-        category_names = list(POWERUP_CATEGORIES.keys())
-        selected_category = powerup_state['category_selected']
-        
-        # Draw category selection with arrows
-        category_text = f"◄ {category_names[selected_category]} ►"
-        category_surface = self.ui_effects.font_retro_medium.render(category_text, True, NEON_CYAN)
-        category_rect = category_surface.get_rect(center=(SCREEN_WIDTH // 2, category_y))
-        
-        # Draw glow for category
-        pulse = abs(math.sin(self.frame_count * 0.1)) * 0.5 + 0.5
-        glow_alpha = int(60 + pulse * 30)
-        glow_surface = pygame.Surface((category_rect.width + 40, category_rect.height + 20), pygame.SRCALPHA)
-        glow_color = (*NEON_CYAN, glow_alpha)
-        glow_text = self.ui_effects.font_retro_medium.render(category_text, True, glow_color)
-        glow_text_rect = glow_text.get_rect(center=(glow_surface.get_width() // 2, glow_surface.get_height() // 2))
-        glow_surface.blit(glow_text, glow_text_rect)
-        screen.blit(glow_surface, (category_rect.x - 20, category_rect.y - 10))
-        
-        screen.blit(category_surface, category_rect)
-        
-        # Get current category power-ups
-        current_category_name = category_names[selected_category]
-        current_powerups = POWERUP_CATEGORIES[current_category_name]
-        selected_item = powerup_state['item_selected']
-        enabled_powerups = powerup_state['enabled_powerups']
-        
-        # Draw power-up list
-        powerup_start_y = 300
-        powerup_spacing = 70
-        
-        for i, powerup_type in enumerate(current_powerups):
-            is_selected = (i == selected_item)
-            is_enabled = powerup_type in enabled_powerups
-            current_y = powerup_start_y + i * powerup_spacing
-            
-            # Get power-up display name (remove prefix for cleaner display)
-            display_name = powerup_type.replace('_', ' ').title()
-            
-            # Create status indicator
-            status_text = "✓ ON" if is_enabled else "✗ OFF"
-            status_color = NEON_GREEN if is_enabled else NEON_PINK
-            
-            # Create main text color based on selection and status
-            if is_selected:
-                name_color = NEON_YELLOW
-                description_color = NEON_CYAN
-            else:
-                name_color = WHITE if is_enabled else (150, 150, 150)
-                description_color = (200, 200, 200) if is_enabled else (120, 120, 120)
-            
-            # Draw power-up name
-            name_surface = self.ui_effects.font_retro_medium.render(display_name, True, name_color)
-            name_rect = name_surface.get_rect()
-            name_rect.left = 150
-            name_rect.centery = current_y - 15
-            
-            # Draw status
-            status_surface = self.ui_effects.font_medium.render(status_text, True, status_color)
-            status_rect = status_surface.get_rect()
-            status_rect.right = SCREEN_WIDTH - 150
-            status_rect.centery = current_y - 15
-            
-            # Draw description
-            description = POWERUP_DESCRIPTIONS.get(powerup_type, "No description available")
-            description_surface = self.ui_effects.font_small.render(description, True, description_color)
-            description_rect = description_surface.get_rect()
-            description_rect.left = 150
-            description_rect.centery = current_y + 15
-            
-            # Draw selection glow
-            if is_selected:
-                # Create glow for the entire power-up row
-                row_width = SCREEN_WIDTH - 200
-                row_height = 60
-                glow_surface = pygame.Surface((row_width, row_height), pygame.SRCALPHA)
-                
-                # Draw background glow
-                pulse_glow_alpha = int(40 + pulse * 30)
-                glow_color = (*NEON_YELLOW, pulse_glow_alpha)
-                pygame.draw.rect(glow_surface, glow_color, 
-                               (0, 0, row_width, row_height), border_radius=10)
-                
-                glow_rect = glow_surface.get_rect(center=(SCREEN_WIDTH // 2, current_y))
-                screen.blit(glow_surface, glow_rect)
-                
-                # Draw selection arrow
-                arrow_text = "►"
-                arrow_surface = self.ui_effects.font_retro_medium.render(arrow_text, True, NEON_YELLOW)
-                arrow_rect = arrow_surface.get_rect()
-                arrow_rect.right = 130
-                arrow_rect.centery = current_y - 15
-                screen.blit(arrow_surface, arrow_rect)
-            
-            # Draw main text elements
-            screen.blit(name_surface, name_rect)
-            screen.blit(status_surface, status_rect)
-            screen.blit(description_surface, description_rect)
-        
-        # Draw instructions at bottom
-        instruction_y = 680
-        instructions = [
-            "Use ↑/↓ to navigate power-ups • Use ←/→ to switch categories",
-            "Press ENTER to toggle power-up • Press ESC to go back",
-            f"Enabled: {len(enabled_powerups)}/{len(POWERUP_ALL_TYPES)} power-ups"
-        ]
-        
-        for i, instruction in enumerate(instructions):
-            color = (150, 150, 150) if i < 2 else NEON_GREEN
-            text_surface = self.ui_effects.font_small.render(instruction, True, color)
-            text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, instruction_y + i * 25))
-            screen.blit(text_surface, text_rect)

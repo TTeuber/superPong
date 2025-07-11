@@ -13,12 +13,14 @@ class MenuSystem:
         # Callback functions for menu actions
         self.on_resume = None
         self.on_restart = None
+        self.on_main_menu = None
         self.on_quit = None
         
-    def set_callbacks(self, on_resume=None, on_restart=None, on_quit=None):
+    def set_callbacks(self, on_resume=None, on_restart=None, on_main_menu=None, on_quit=None):
         """Set callback functions for menu actions"""
         self.on_resume = on_resume
         self.on_restart = on_restart
+        self.on_main_menu = on_main_menu
         self.on_quit = on_quit
         
     def get_selected_option(self):
@@ -27,7 +29,29 @@ class MenuSystem:
         
     def handle_pause_menu_input(self, input_handler):
         """Handle input for pause menu navigation"""
-        # Check for menu navigation (up/down)
+        # Mouse support - check hover and clicks
+        mouse_pos = input_handler.get_mouse_pos()
+        
+        # Define button positions (centered)
+        button_y_start = SCREEN_HEIGHT // 2 - 60
+        button_height = 40
+        button_width = 200
+        button_x = SCREEN_WIDTH // 2 - button_width // 2
+        
+        # Check mouse hover and clicks
+        for i, option in enumerate(PAUSE_MENU_OPTIONS):
+            button_y = button_y_start + i * 60
+            button_rect = (button_x, button_y, button_width, button_height)
+            
+            if input_handler.is_point_in_rect(mouse_pos, button_rect):
+                self.pause_menu_selected = i
+                
+                # Check for click
+                if input_handler.is_mouse_clicked():
+                    self.execute_menu_action(i)
+                    return
+        
+        # Original keyboard/controller navigation
         nav_direction = input_handler.get_menu_navigation()
         if nav_direction != 0:
             if not self.menu_nav_pressed:  # Only trigger on initial press
@@ -61,6 +85,9 @@ class MenuSystem:
         elif action == PAUSE_MENU_RESTART:
             if self.on_restart:
                 self.on_restart()
+        elif action == PAUSE_MENU_MAIN_MENU:
+            if self.on_main_menu:
+                self.on_main_menu()
         elif action == PAUSE_MENU_QUIT:
             if self.on_quit:
                 self.on_quit()

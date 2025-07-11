@@ -61,6 +61,7 @@ class Game:
         self.menu_system.set_callbacks(
             on_resume=self.resume_game,
             on_restart=self.restart_game,
+            on_main_menu=self.go_to_start_screen,
             on_quit=self.quit_game
         )
         
@@ -95,6 +96,11 @@ class Game:
     def resume_game(self):
         """Resume game from pause"""
         self.state_manager.resume_game()
+        
+    def go_to_start_screen(self):
+        """Go back to start screen"""
+        self.state_manager.set_state(GAME_STATE_START_SCREEN)
+        self.start_screen_system.reset()
         
     def quit_game(self):
         """Quit the game"""
@@ -192,9 +198,7 @@ class Game:
             if event.type == pygame.QUIT:
                 self.running = False
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    self.running = False
-                elif event.key == pygame.K_r:
+                if event.key == pygame.K_r:
                     self.reset_game()
 
         # Update input handler
@@ -212,20 +216,28 @@ class Game:
             self.game_over_system.handle_game_over_input(self.input_handler)
         else:
             # Handle pause input (single-press detection) - only during gameplay
+            pause_action_taken = False
             if self.input_handler.is_pause_pressed():
                 if not self.pause_key_pressed:  # Only trigger on initial press
+                    # Mark both escape and space as used for pause to prevent menu actions
+                    if self.input_handler.escape_just_pressed:
+                        self.input_handler.mark_escape_used_for_pause()
+                    if self.input_handler.space_just_pressed:
+                        self.input_handler.mark_space_used_for_pause()
                     if not self.state_manager.is_paused():
                         self.state_manager.toggle_pause()
                         self.menu_system.reset_menu()
+                        pause_action_taken = True
                     else:
                         # If already paused, quick resume with pause button
                         self.resume_game()
+                        pause_action_taken = True
                     self.pause_key_pressed = True
             else:
                 self.pause_key_pressed = False
                 
-            # Handle pause menu navigation (only when paused)
-            if self.state_manager.is_paused():
+            # Handle pause menu navigation (only when paused and no pause action was taken this frame)
+            if self.state_manager.is_paused() and not pause_action_taken:
                 self.menu_system.handle_pause_menu_input(self.input_handler)
 
 

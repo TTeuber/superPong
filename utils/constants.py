@@ -56,10 +56,11 @@ AIMING_TIME = 90  # 3 seconds at 60 FPS
 AIMING_ANGLE_RANGE = 60  # ±60 degrees from straight out
 
 # Pause menu
-PAUSE_MENU_OPTIONS = ["Resume", "Restart", "Quit"]
+PAUSE_MENU_OPTIONS = ["Resume", "Restart", "Main Menu", "Quit"]
 PAUSE_MENU_RESUME = 0
 PAUSE_MENU_RESTART = 1
-PAUSE_MENU_QUIT = 2
+PAUSE_MENU_MAIN_MENU = 2
+PAUSE_MENU_QUIT = 3
 
 # Start screen menu
 START_MENU_OPTIONS = ["Play", "Settings"]
@@ -73,7 +74,7 @@ GAME_OVER_MAIN_MENU = 1
 GAME_OVER_QUIT = 2
 
 # Settings menu
-SETTINGS_MENU_OPTIONS = ["Difficulty", "Sound", "Controller Sensitivity", "Power-up Types", "Back"]
+SETTINGS_MENU_OPTIONS = ["Difficulty", "Sound", "Controller Sensitivity", "Power-ups", "Back"]
 SETTINGS_MENU_DIFFICULTY = 0
 SETTINGS_MENU_SOUND = 1
 SETTINGS_MENU_CONTROLLER = 2
@@ -148,26 +149,24 @@ POWERUP_SPAWN_MAX_TIME = 900  # 30 seconds at 60 FPS
 POWERUP_WARNING_TIME = 120     # 3 seconds warning before spawn
 POWERUP_COLLECT_RADIUS = 50    # Collection radius for power-ups (ball-based)
 
-# Power-up Types (Version 1: Classic)
+# Power-up Types (Simplified)
 POWERUP_PADDLE_SIZE = "paddle_size"
-POWERUP_BALL_SPEED = "ball_speed"
 POWERUP_SHIELD = "shield"
+POWERUP_DECOY_BALL = "decoy_ball"
 
-# Power-up Types (Version 2: Strategic)
+# Power-up Selection System (Simplified)
+POWERUP_ALL_TYPES = [POWERUP_PADDLE_SIZE, POWERUP_SHIELD, POWERUP_DECOY_BALL]
+
+# Legacy power-up types (kept for compatibility)
+POWERUP_BALL_SPEED = "ball_speed"
 POWERUP_PADDLE_SWAP = "paddle_swap"
 POWERUP_GHOST_BALL = "ghost_ball"
 POWERUP_MAGNETIZE = "magnetize"
-
-# Power-up Types (Version 3: Chaos)
-POWERUP_DECOY_BALL = "decoy_ball"
 POWERUP_WILD_BOUNCE = "wild_bounce"
 POWERUP_CONTROL_SCRAMBLE = "control_scramble"
-
-# Power-up Selection System
-POWERUP_CLASSIC_TYPES = [POWERUP_PADDLE_SIZE, POWERUP_BALL_SPEED, POWERUP_SHIELD]
-POWERUP_STRATEGIC_TYPES = [POWERUP_PADDLE_SWAP, POWERUP_GHOST_BALL, POWERUP_MAGNETIZE]
-POWERUP_CHAOS_TYPES = [POWERUP_DECOY_BALL, POWERUP_WILD_BOUNCE, POWERUP_CONTROL_SCRAMBLE]
-POWERUP_ALL_TYPES = POWERUP_CLASSIC_TYPES + POWERUP_STRATEGIC_TYPES + POWERUP_CHAOS_TYPES
+POWERUP_CLASSIC_TYPES = [POWERUP_PADDLE_SIZE, POWERUP_SHIELD]
+POWERUP_STRATEGIC_TYPES = []
+POWERUP_CHAOS_TYPES = [POWERUP_DECOY_BALL]
 
 # Power-up Categories for UI
 POWERUP_CATEGORIES = {
@@ -179,12 +178,13 @@ POWERUP_CATEGORIES = {
 # Power-up Descriptions
 POWERUP_DESCRIPTIONS = {
     POWERUP_PADDLE_SIZE: "Increase your paddle size or decrease enemies'",
-    POWERUP_BALL_SPEED: "Speed up or slow down the ball",
     POWERUP_SHIELD: "Protect from one life loss",
+    POWERUP_DECOY_BALL: "Spawn a fake ball that doesn't cause life loss",
+    # Legacy descriptions
+    POWERUP_BALL_SPEED: "Speed up or slow down the ball",
     POWERUP_PADDLE_SWAP: "Swap positions with a random opponent",
     POWERUP_GHOST_BALL: "Ball passes through enemy paddles",
     POWERUP_MAGNETIZE: "Your paddle attracts the ball",
-    POWERUP_DECOY_BALL: "Spawn a fake ball that doesn't cause life loss",
     POWERUP_WILD_BOUNCE: "Ball randomly changes direction during flight",
     POWERUP_CONTROL_SCRAMBLE: "All player controls get scrambled"
 }

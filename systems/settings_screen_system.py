@@ -18,12 +18,7 @@ class SettingsScreenSystem:
         self.current_difficulty = DIFFICULTY_MEDIUM
         self.current_sound_enabled = True
         self.current_controller_sensitivity = 1.0
-        self.current_enabled_powerups = POWERUP_CLASSIC_TYPES.copy()
-        
-        # Power-up selection state (when in power-up menu)
-        self.in_powerup_selection = False
-        self.powerup_category_selected = 0  # 0 = Classic, 1 = Strategic
-        self.powerup_item_selected = 0      # Index within current category
+        self.current_powerups_enabled = True
         
     def set_callbacks(self, on_back=None, on_setting_changed=None):
         """Set callback functions for menu actions"""
@@ -42,7 +37,7 @@ class SettingsScreenSystem:
             
             self.current_sound_enabled = settings_system.get_setting('sound_enabled')
             self.current_controller_sensitivity = settings_system.get_setting('controller_sensitivity')
-            self.current_enabled_powerups = settings_system.get_enabled_powerups()
+            self.current_powerups_enabled = settings_system.get_setting('powerups_enabled')
         
     def get_selected_option(self):
         """Get the currently selected menu option"""
@@ -57,19 +52,53 @@ class SettingsScreenSystem:
         elif option == SETTINGS_MENU_CONTROLLER:
             return f"{self.current_controller_sensitivity:.1f}"
         elif option == SETTINGS_MENU_POWERUPS:
-            return f"{len(self.current_enabled_powerups)} enabled"
+            return "On" if self.current_powerups_enabled else "Off"
         return ""
         
     def handle_settings_input(self, input_handler):
         """Handle input for settings menu navigation"""
-        if self.in_powerup_selection:
-            self.handle_powerup_selection_input(input_handler)
-        else:
-            self.handle_main_settings_input(input_handler)
+        self.handle_main_settings_input(input_handler)
     
     def handle_main_settings_input(self, input_handler):
         """Handle input for main settings menu"""
-        # Check for menu navigation (up/down)
+        # Mouse support - check hover and clicks
+        mouse_pos = input_handler.get_mouse_pos()
+        
+        # Define button positions (match rendering in menu_renderer.py)
+        button_y_start = 280  # Matches menu_start_y in menu_renderer.py
+        button_height = 40
+        button_width = 500
+        button_x = SCREEN_WIDTH // 2 - button_width // 2
+        arrow_width = 40
+        
+        # Check mouse hover and clicks on options
+        for i, option in enumerate(SETTINGS_MENU_OPTIONS):
+            button_y = button_y_start + i * 80  # Matches menu_spacing in menu_renderer.py
+            button_rect = (button_x, button_y, button_width, button_height)
+            
+            if input_handler.is_point_in_rect(mouse_pos, button_rect):
+                self.settings_menu_selected = i
+                
+                # Check for click on option
+                if input_handler.is_mouse_clicked():
+                    if option == SETTINGS_MENU_BACK:
+                        self.execute_menu_action(option)
+                        return
+                    elif option == SETTINGS_MENU_POWERUPS:
+                        self.execute_menu_action(option)
+                        return
+                        
+                # Check for clicks on left/right arrows for value changes
+                left_arrow_rect = (button_x - arrow_width - 10, button_y, arrow_width, button_height)
+                right_arrow_rect = (button_x + button_width + 10, button_y, arrow_width, button_height)
+                
+                if input_handler.is_mouse_clicked():
+                    if input_handler.is_point_in_rect(mouse_pos, left_arrow_rect):
+                        self.change_setting_value(option, -1)
+                    elif input_handler.is_point_in_rect(mouse_pos, right_arrow_rect):
+                        self.change_setting_value(option, 1)
+        
+        # Original keyboard/controller navigation
         nav_direction = input_handler.get_menu_navigation()
         if nav_direction != 0:
             if not self.menu_nav_pressed:
@@ -101,40 +130,6 @@ class SettingsScreenSystem:
             if self.on_back:
                 self.on_back()
                 
-    def handle_powerup_selection_input(self, input_handler):
-        """Handle input for power-up selection sub-menu"""
-        # Check for menu navigation (up/down)
-        nav_direction = input_handler.get_menu_navigation()
-        if nav_direction != 0:
-            if not self.menu_nav_pressed:
-                self.navigate_powerup_selection(nav_direction)
-                self.menu_nav_pressed = True
-        else:
-            self.menu_nav_pressed = False
-            
-        # Check for category changes (left/right)
-        value_direction = input_handler.get_horizontal_navigation()
-        if value_direction != 0:
-            if not self.value_change_pressed:
-                category_names = list(POWERUP_CATEGORIES.keys())
-                self.powerup_category_selected = (self.powerup_category_selected + value_direction) % len(category_names)
-                self.powerup_item_selected = 0  # Reset item selection when changing category
-                self.value_change_pressed = True
-        else:
-            self.value_change_pressed = False
-            
-        # Check for confirmation (toggle power-up)
-        if input_handler.is_menu_confirm_pressed():
-            if not self.menu_confirm_pressed:
-                self.toggle_current_powerup()
-                self.menu_confirm_pressed = True
-        else:
-            self.menu_confirm_pressed = False
-            
-        # Check for back/escape (exit power-up selection)
-        if input_handler.is_menu_cancel_pressed():
-            self.in_powerup_selection = False
-                
     def change_setting_value(self, setting_option, direction):
         """Change the value of a setting option"""
         if setting_option == SETTINGS_MENU_DIFFICULTY:
@@ -165,10 +160,12 @@ class SettingsScreenSystem:
                 self.on_setting_changed('controller_sensitivity', self.current_controller_sensitivity)
                 
         elif setting_option == SETTINGS_MENU_POWERUPS:
-            # Enter power-up selection mode
-            self.in_powerup_selection = True
-            self.powerup_category_selected = 0
-            self.powerup_item_selected = 0
+            # Toggle powerups on/off
+            self.current_powerups_enabled = not self.current_powerups_enabled
+            
+            # Notify settings changed
+            if self.on_setting_changed:
+                self.on_setting_changed('powerups_enabled', self.current_powerups_enabled)
                 
     def execute_menu_action(self, action):
         """Execute the selected menu action"""
@@ -176,48 +173,8 @@ class SettingsScreenSystem:
             if self.on_back:
                 self.on_back()
         elif action == SETTINGS_MENU_POWERUPS:
-            # Enter power-up selection mode
-            self.in_powerup_selection = True
-            self.powerup_category_selected = 0
-            self.powerup_item_selected = 0
-                
-    def navigate_powerup_selection(self, direction):
-        """Navigate within power-up selection"""
-        category_names = list(POWERUP_CATEGORIES.keys())
-        current_category_name = category_names[self.powerup_category_selected]
-        current_category_items = POWERUP_CATEGORIES[current_category_name]
-        
-        self.powerup_item_selected = (self.powerup_item_selected + direction) % len(current_category_items)
-    
-    def toggle_current_powerup(self):
-        """Toggle the currently selected power-up"""
-        category_names = list(POWERUP_CATEGORIES.keys())
-        current_category_name = category_names[self.powerup_category_selected]
-        current_category_items = POWERUP_CATEGORIES[current_category_name]
-        
-        if self.powerup_item_selected < len(current_category_items):
-            powerup_type = current_category_items[self.powerup_item_selected]
-            
-            # Toggle power-up in local state
-            if powerup_type in self.current_enabled_powerups:
-                # Don't allow disabling all power-ups
-                if len(self.current_enabled_powerups) > 1:
-                    self.current_enabled_powerups.remove(powerup_type)
-                    if self.on_setting_changed:
-                        self.on_setting_changed('enabled_powerups', self.current_enabled_powerups)
-            else:
-                self.current_enabled_powerups.append(powerup_type)
-                if self.on_setting_changed:
-                    self.on_setting_changed('enabled_powerups', self.current_enabled_powerups)
-    
-    def get_powerup_selection_state(self):
-        """Get current power-up selection state for rendering"""
-        return {
-            'in_selection': self.in_powerup_selection,
-            'category_selected': self.powerup_category_selected,
-            'item_selected': self.powerup_item_selected,
-            'enabled_powerups': self.current_enabled_powerups
-        }
+            # Just toggle powerups
+            self.change_setting_value(SETTINGS_MENU_POWERUPS, 0)
 
     def reset(self):
         """Reset settings screen system"""
@@ -225,6 +182,3 @@ class SettingsScreenSystem:
         self.menu_nav_pressed = False
         self.menu_confirm_pressed = False
         self.value_change_pressed = False
-        self.in_powerup_selection = False
-        self.powerup_category_selected = 0
-        self.powerup_item_selected = 0

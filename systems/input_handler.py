@@ -14,6 +14,17 @@ class InputHandler:
         self.controller_buttons = {}
         self.controller_axes = {}
         
+        # Mouse state
+        self.mouse_pos = (0, 0)
+        self.mouse_clicked = False
+        self.mouse_just_clicked = False  # Single frame click detection
+        
+        # Key press tracking for single-press detection
+        self.escape_just_pressed = False
+        self.space_just_pressed = False
+        self.escape_used_for_pause = False  # Track if escape was used for pause
+        self.space_used_for_pause = False   # Track if space was used for pause
+        
         # Initialize controller if available
         self.initialize_controller()
 
@@ -108,8 +119,8 @@ class InputHandler:
 
     def is_pause_pressed(self):
         """Check if pause button/key is pressed (single press detection)"""
-        # Check keyboard pause (P key or SPACE)
-        keyboard_pause = pygame.K_p in self.keys_pressed or pygame.K_SPACE in self.keys_pressed
+        # Check keyboard pause (Escape key or SPACE) - only on initial press
+        keyboard_pause = self.escape_just_pressed or self.space_just_pressed
         
         # Check controller pause buttons
         controller_pause = False
@@ -156,8 +167,8 @@ class InputHandler:
 
     def is_menu_confirm_pressed(self):
         """Check if menu confirmation button/key is pressed"""
-        # Check keyboard input
-        keyboard_confirm = pygame.K_RETURN in self.keys_pressed or pygame.K_SPACE in self.keys_pressed
+        # Check keyboard input - exclude space if it was used for pause
+        keyboard_confirm = pygame.K_RETURN in self.keys_pressed or (pygame.K_SPACE in self.keys_pressed and not self.space_used_for_pause)
         
         # Check controller input
         controller_confirm = False
@@ -199,8 +210,8 @@ class InputHandler:
 
     def is_menu_cancel_pressed(self):
         """Check if menu cancel/back button is pressed (B button or ESC)"""
-        # Check keyboard input
-        keyboard_cancel = pygame.K_ESCAPE in self.keys_pressed
+        # Check keyboard input - only allow escape if it wasn't used for pause this frame or last frame
+        keyboard_cancel = pygame.K_ESCAPE in self.keys_pressed and not self.escape_just_pressed and not self.escape_used_for_pause
         
         # Check controller input
         controller_cancel = False
@@ -212,11 +223,36 @@ class InputHandler:
 
     def handle_events(self, events):
         """Process pygame events"""
+        # Reset single-frame detections
+        self.mouse_just_clicked = False
+        self.escape_just_pressed = False
+        self.space_just_pressed = False
+        # DON'T reset pause usage flags here - they persist until key release
+        
         for event in events:
             if event.type == pygame.KEYDOWN:
                 self.keys_pressed.add(event.key)
+                # Track single key presses
+                if event.key == pygame.K_ESCAPE:
+                    self.escape_just_pressed = True
+                elif event.key == pygame.K_SPACE:
+                    self.space_just_pressed = True
             elif event.type == pygame.KEYUP:
                 self.keys_pressed.discard(event.key)
+                # Reset pause usage flags when keys are released
+                if event.key == pygame.K_ESCAPE:
+                    self.escape_used_for_pause = False
+                elif event.key == pygame.K_SPACE:
+                    self.space_used_for_pause = False
+            elif event.type == pygame.MOUSEMOTION:
+                self.mouse_pos = event.pos
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:  # Left click
+                    self.mouse_clicked = True
+                    self.mouse_just_clicked = True
+            elif event.type == pygame.MOUSEBUTTONUP:
+                if event.button == 1:  # Left click
+                    self.mouse_clicked = False
             else:
                 # Handle controller events
                 self.handle_controller_events(event)
@@ -291,3 +327,35 @@ class InputHandler:
         if self.controller_connected:
             self.controller_buttons.clear()
             self.controller_axes.clear()
+            
+        # Clear mouse states
+        self.mouse_clicked = False
+        self.mouse_just_clicked = False
+        
+        # Clear key press states
+        self.escape_just_pressed = False
+        self.space_just_pressed = False
+        # Reset pause usage flags when doing full reset
+        self.escape_used_for_pause = False
+        self.space_used_for_pause = False
+    
+    def get_mouse_pos(self):
+        """Get current mouse position"""
+        return self.mouse_pos
+    
+    def is_mouse_clicked(self):
+        """Check if mouse was just clicked this frame"""
+        return self.mouse_just_clicked
+    
+    def is_point_in_rect(self, point, rect):
+        """Check if a point is inside a rectangle"""
+        x, y = point
+        return rect[0] <= x <= rect[0] + rect[2] and rect[1] <= y <= rect[1] + rect[3]
+    
+    def mark_escape_used_for_pause(self):
+        """Mark that escape was used for pause this frame"""
+        self.escape_used_for_pause = True
+    
+    def mark_space_used_for_pause(self):
+        """Mark that space was used for pause this frame"""
+        self.space_used_for_pause = True

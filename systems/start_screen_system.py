@@ -66,7 +66,29 @@ class StartScreenSystem:
         
     def handle_start_menu_input(self, input_handler):
         """Handle input for start menu navigation"""
-        # Check for menu navigation (up/down)
+        # Mouse support - check hover and clicks
+        mouse_pos = input_handler.get_mouse_pos()
+        
+        # Define button positions (match rendering in menu_renderer.py)
+        button_y_start = 580  # Matches menu_y in menu_renderer.py
+        button_height = 40
+        button_width = 200
+        button_x = SCREEN_WIDTH // 2 - button_width // 2
+        
+        # Check mouse hover
+        for i, option in enumerate(START_MENU_OPTIONS):
+            button_y = button_y_start + i * 70  # Matches spacing in menu_renderer.py
+            button_rect = (button_x, button_y, button_width, button_height)
+            
+            if input_handler.is_point_in_rect(mouse_pos, button_rect):
+                self.start_menu_selected = i
+                
+                # Check for click
+                if input_handler.is_mouse_clicked():
+                    self.execute_menu_action(i)
+                    return
+        
+        # Original keyboard/controller navigation
         nav_direction = input_handler.get_menu_navigation()
         if nav_direction != 0:
             if not self.menu_nav_pressed:

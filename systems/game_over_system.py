@@ -52,7 +52,30 @@ class GameOverSystem:
         
     def handle_game_over_input(self, input_handler):
         """Handle input for game over menu navigation"""
-        # Check for menu navigation (up/down)
+        # Mouse support - check hover and clicks
+        mouse_pos = input_handler.get_mouse_pos()
+        
+        # Define button positions (centered)
+        button_y_start = SCREEN_HEIGHT // 2 + 100
+        button_height = 40
+        button_width = 250
+        button_x = SCREEN_WIDTH // 2 - button_width // 2
+        
+        # Check mouse hover and clicks
+        for i, option in enumerate(GAME_OVER_MENU_OPTIONS):
+            button_y = button_y_start + i * 60
+            button_rect = (button_x, button_y, button_width, button_height)
+            
+            if input_handler.is_point_in_rect(mouse_pos, button_rect):
+                self.game_over_menu_selected = i
+                
+                # Check for click
+                if input_handler.is_mouse_clicked():
+                    print(f"Game Over: Selected '{GAME_OVER_MENU_OPTIONS[i]}'")
+                    self.execute_menu_action(i)
+                    return
+        
+        # Original keyboard/controller navigation
         nav_direction = input_handler.get_menu_navigation()
         if nav_direction != 0:
             if not self.menu_nav_pressed:
