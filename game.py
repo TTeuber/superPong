@@ -99,8 +99,22 @@ class Game:
         
     def go_to_start_screen(self):
         """Go back to start screen"""
+        # Reset game entities when returning to start screen
+        self.player_manager.reset()
+        self.ball.reset_position()
+        self.particle_system.clear()
+        self.powerup_system.clear()
+        self.aiming_system.reset()
+        self.menu_system.reset_menu()
+        self.pause_key_pressed = False
+        
+        # Now set state to start screen
         self.state_manager.set_state(GAME_STATE_START_SCREEN)
         self.start_screen_system.reset()
+        
+        # IMPORTANT: Force the start screen to ignore the current confirm input
+        # This prevents the Enter key from pause menu selection being processed on start screen
+        self.start_screen_system.menu_confirm_pressed = True
         
     def quit_game(self):
         """Quit the game"""

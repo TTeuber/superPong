@@ -40,7 +40,7 @@ def main():
     print("-" * 50)
     
     # Set up display
-    screen = pygame.display.set_mode((800, 600))
+    screen = pygame.display.set_mode((800, 800))
     pygame.display.set_caption("Switch Controller Button Tester")
     font = pygame.font.Font(None, 24)
     small_font = pygame.font.Font(None, 18)
