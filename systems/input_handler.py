@@ -1,5 +1,5 @@
 import pygame
-from utils.constants import CONTROLLER_DEADZONE, CONTROLLER_SENSITIVITY, SWITCH_CONTROLLER_MAPPINGS
+from utils.constants import CONTROLLER_DEADZONE, CONTROLLER_SENSITIVITY, SWITCH_CONTROLLER_MAPPINGS, MAX_CONTROLLERS
 
 class InputHandler:
     def __init__(self):
@@ -8,11 +8,21 @@ class InputHandler:
         # Initialize joystick subsystem
         pygame.joystick.init()
         
-        # Controller state
+        # Multiple controller state
+        self.controllers = {}  # Dict of {controller_index: pygame.Joystick}
+        self.multi_controller_buttons = {}  # Dict of {controller_index: {button_id: pressed}}
+        self.multi_controller_axes = {}  # Dict of {controller_index: {axis_id: value}}
+        self.controller_just_pressed_a = {}  # Dict of {controller_index: bool} for A button detection
+        
+        # Player assignment to controllers
+        self.player_controllers = {}  # Dict of {player_id: controller_index}
+        self.controller_players = {}  # Dict of {controller_index: player_id}
+        
+        # Legacy single controller support (for backwards compatibility)
         self.controller = None
         self.controller_connected = False
-        self.controller_buttons = {}
-        self.controller_axes = {}
+        self.controller_buttons = {}  # Legacy format for backwards compatibility
+        self.controller_axes = {}  # Legacy format for backwards compatibility
         
         # Mouse state
         self.mouse_pos = (0, 0)
@@ -25,8 +35,11 @@ class InputHandler:
         self.escape_used_for_pause = False  # Track if escape was used for pause
         self.space_used_for_pause = False   # Track if space was used for pause
         
-        # Initialize controller if available
-        self.initialize_controller()
+        # Menu navigation single-press detection
+        self.menu_nav_pressed = False  # Track if navigation input was already processed
+        
+        # Initialize controllers if available
+        self.initialize_controllers()
 
         # Key mappings for up to 4 players
         self.key_mappings = {
@@ -48,49 +61,169 @@ class InputHandler:
             }
         }
 
-    def initialize_controller(self):
-        """Initialize the first available controller"""
-        if pygame.joystick.get_count() > 0:
-            self.controller = pygame.joystick.Joystick(0)
-            self.controller.init()
+    def initialize_controllers(self):
+        """Initialize all available controllers"""
+        controller_count = pygame.joystick.get_count()
+        print(f"Detected {controller_count} controller(s)")
+        
+        self.controllers.clear()
+        self.multi_controller_buttons.clear()
+        self.multi_controller_axes.clear()
+        self.controller_just_pressed_a.clear()
+        
+        for i in range(min(controller_count, MAX_CONTROLLERS)):
+            try:
+                controller = pygame.joystick.Joystick(i)
+                controller.init()
+                self.controllers[i] = controller
+                self.multi_controller_buttons[i] = {}
+                self.multi_controller_axes[i] = {}
+                self.controller_just_pressed_a[i] = False
+                print(f"Controller {i} initialized: {controller.get_name()}")
+            except pygame.error as e:
+                print(f"Failed to initialize controller {i}: {e}")
+        
+        # Maintain backwards compatibility with single controller
+        if 0 in self.controllers:
+            self.controller = self.controllers[0]
             self.controller_connected = True
-            print(f"Controller connected: {self.controller.get_name()}")
         else:
+            self.controller = None
             self.controller_connected = False
-            print("No controller detected, using keyboard input")
+            
+        if not self.controllers:
+            print("No controllers detected, using keyboard input")
 
     def handle_controller_events(self, event):
         """Handle controller connection/disconnection events"""
         if event.type == pygame.JOYDEVICEADDED:
-            if not self.controller_connected:
-                self.initialize_controller()
+            print(f"Controller connected (device {event.device_index})")
+            self.initialize_controllers()  # Re-initialize all controllers
         elif event.type == pygame.JOYDEVICEREMOVED:
-            if self.controller_connected:
-                self.controller_connected = False
+            print(f"Controller disconnected (device {event.device_index})")
+            # Remove the disconnected controller from our tracking
+            if event.device_index in self.controllers:
+                del self.controllers[event.device_index]
+                del self.multi_controller_buttons[event.device_index]
+                del self.multi_controller_axes[event.device_index]
+                del self.controller_just_pressed_a[event.device_index]
+                
+                # Remove from player assignments
+                if event.device_index in self.controller_players:
+                    player_id = self.controller_players[event.device_index]
+                    del self.player_controllers[player_id]
+                    del self.controller_players[event.device_index]
+            
+            # Update legacy controller reference
+            if 0 in self.controllers:
+                self.controller = self.controllers[0]
+                self.controller_connected = True
+            else:
                 self.controller = None
-                print("Controller disconnected, switching to keyboard input")
+                self.controller_connected = False
 
     def update_controller_state(self):
-        """Update controller button and axis states"""
-        if not self.controller_connected or not self.controller:
-            return
+        """Update controller button and axis states for all controllers"""
+        # Reset A button just pressed states
+        for controller_index in self.controller_just_pressed_a:
+            self.controller_just_pressed_a[controller_index] = False
             
-        # Update button states
-        self.controller_buttons = {}
-        for i in range(self.controller.get_numbuttons()):
-            self.controller_buttons[i] = self.controller.get_button(i)
+        for controller_index, controller in self.controllers.items():
+            try:
+                # Update button states
+                previous_buttons = self.multi_controller_buttons[controller_index].copy()
+                self.multi_controller_buttons[controller_index] = {}
+                for i in range(controller.get_numbuttons()):
+                    current_pressed = controller.get_button(i)
+                    self.multi_controller_buttons[controller_index][i] = current_pressed
+                    
+                    # Detect A button just pressed (was not pressed, now pressed)
+                    a_button = SWITCH_CONTROLLER_MAPPINGS.get('a_button', 0)
+                    if i == a_button and current_pressed and not previous_buttons.get(i, False):
+                        self.controller_just_pressed_a[controller_index] = True
+                
+                # Update axis states
+                self.multi_controller_axes[controller_index] = {}
+                for i in range(controller.get_numaxes()):
+                    axis_value = controller.get_axis(i)
+                    # Apply deadzone
+                    if abs(axis_value) < CONTROLLER_DEADZONE:
+                        axis_value = 0.0
+                    self.multi_controller_axes[controller_index][i] = axis_value
+                    
+            except pygame.error as e:
+                print(f"Error updating controller {controller_index} state: {e}")
+                
+        # Update legacy single controller state for backwards compatibility
+        if 0 in self.multi_controller_buttons:
+            # Map first controller to legacy format for existing code
+            # CRITICAL: Update the actual legacy attributes that existing code uses
+            self.controller_buttons = self.multi_controller_buttons[0].copy()
+            self.controller_axes = self.multi_controller_axes[0].copy()
+        else:
+            # No controllers connected, clear legacy state
+            self.controller_buttons = {}
+            self.controller_axes = {}
+
+    def get_available_controllers(self):
+        """Get list of available controller indices"""
+        return list(self.controllers.keys())
+    
+    def is_controller_connected(self, controller_index):
+        """Check if a specific controller is connected"""
+        return controller_index in self.controllers
+    
+    def get_controller_name(self, controller_index):
+        """Get the name of a specific controller"""
+        if controller_index in self.controllers:
+            return self.controllers[controller_index].get_name()
+        return None
+    
+    def assign_player_to_controller(self, player_id, controller_index):
+        """Assign a player to a specific controller"""
+        if controller_index in self.controllers:
+            # Remove any existing assignments
+            if player_id in self.player_controllers:
+                old_controller = self.player_controllers[player_id]
+                if old_controller in self.controller_players:
+                    del self.controller_players[old_controller]
             
-        # Update axis states
-        self.controller_axes = {}
-        for i in range(self.controller.get_numaxes()):
-            axis_value = self.controller.get_axis(i)
-            # Apply deadzone
-            if abs(axis_value) < CONTROLLER_DEADZONE:
-                axis_value = 0.0
-            self.controller_axes[i] = axis_value
+            if controller_index in self.controller_players:
+                old_player = self.controller_players[controller_index]
+                if old_player in self.player_controllers:
+                    del self.player_controllers[old_player]
+            
+            # Create new assignment
+            self.player_controllers[player_id] = controller_index
+            self.controller_players[controller_index] = player_id
+            return True
+        
+        return False
+    
+    def get_player_controller(self, player_id):
+        """Get the controller assigned to a player"""
+        return self.player_controllers.get(player_id, None)
+    
+    def get_controller_player(self, controller_index):
+        """Get the player assigned to a controller"""
+        return self.controller_players.get(controller_index, None)
+    
+    def is_controller_a_just_pressed(self, controller_index):
+        """Check if A button was just pressed on a specific controller"""
+        return self.controller_just_pressed_a.get(controller_index, False)
+    
+    def get_unassigned_controllers(self):
+        """Get list of controllers not assigned to any player"""
+        return [c for c in self.controllers.keys() if c not in self.controller_players]
+    
+    def clear_player_assignments(self):
+        """Clear all player-controller assignments"""
+        self.player_controllers.clear()
+        self.controller_players.clear()
 
     def get_controller_movement(self, player_id):
-        """Get movement input from controller for specified player"""
+        """Get movement input from controller for specified player (legacy single-controller method)"""
+        # Legacy method: Only Player 0 can use the first controller
         if not self.controller_connected or player_id != 0:
             return {'up': False, 'down': False, 'left': False, 'right': False}
         
@@ -117,6 +250,59 @@ class InputHandler:
             
         return movement
 
+    def get_multi_controller_movement(self, player_id):
+        """Get movement input from assigned controller for specified player (multi-controller system)"""
+        movement = {'up': False, 'down': False, 'left': False, 'right': False}
+        
+        # Get the controller assigned to this player
+        controller_index = self.get_player_controller(player_id)
+        
+        if controller_index is None:
+            return movement
+        
+        # Check if the controller is still connected
+        if controller_index not in self.multi_controller_axes or controller_index not in self.multi_controller_buttons:
+            return movement
+        
+        controller_axes = self.multi_controller_axes[controller_index]
+        controller_buttons = self.multi_controller_buttons[controller_index]
+        
+        # Check analog stick (left stick Y-axis for vertical paddles, X-axis for horizontal)
+        left_stick_y_axis = SWITCH_CONTROLLER_MAPPINGS.get('left_stick_y', 1)
+        left_stick_x_axis = SWITCH_CONTROLLER_MAPPINGS.get('left_stick_x', 0)
+        
+        if left_stick_y_axis in controller_axes:
+            stick_y = controller_axes[left_stick_y_axis]
+            # Invert Y-axis (negative = up, positive = down)
+            if stick_y < -CONTROLLER_DEADZONE:
+                movement['up'] = True
+            elif stick_y > CONTROLLER_DEADZONE:
+                movement['down'] = True
+        
+        if left_stick_x_axis in controller_axes:
+            stick_x = controller_axes[left_stick_x_axis]
+            if stick_x < -CONTROLLER_DEADZONE:
+                movement['left'] = True
+            elif stick_x > CONTROLLER_DEADZONE:
+                movement['right'] = True
+        
+        # Check D-pad buttons as backup
+        dpad_up = SWITCH_CONTROLLER_MAPPINGS.get('dpad_up', 12)
+        dpad_down = SWITCH_CONTROLLER_MAPPINGS.get('dpad_down', 13)
+        dpad_left = SWITCH_CONTROLLER_MAPPINGS.get('dpad_left', 14)
+        dpad_right = SWITCH_CONTROLLER_MAPPINGS.get('dpad_right', 15)
+        
+        if dpad_up in controller_buttons and controller_buttons[dpad_up]:
+            movement['up'] = True
+        if dpad_down in controller_buttons and controller_buttons[dpad_down]:
+            movement['down'] = True
+        if dpad_left in controller_buttons and controller_buttons[dpad_left]:
+            movement['left'] = True
+        if dpad_right in controller_buttons and controller_buttons[dpad_right]:
+            movement['right'] = True
+            
+        return movement
+
     def is_pause_pressed(self):
         """Check if pause button/key is pressed (single press detection)"""
         # Check keyboard pause (Escape key or SPACE) - only on initial press
@@ -136,32 +322,50 @@ class InputHandler:
         return keyboard_pause or controller_pause
 
     def get_menu_navigation(self):
-        """Get menu navigation direction (-1 for up, 1 for down, 0 for none)"""
+        """Get menu navigation direction (-1 for up, 1 for down, 0 for none) with single-press detection"""
+        nav_input_detected = False
+        nav_direction = 0
+        
         # Check keyboard input
         if pygame.K_UP in self.keys_pressed or pygame.K_w in self.keys_pressed:
-            return -1
+            nav_input_detected = True
+            nav_direction = -1
         elif pygame.K_DOWN in self.keys_pressed or pygame.K_s in self.keys_pressed:
-            return 1
+            nav_input_detected = True
+            nav_direction = 1
         
         # Check controller input
-        if self.controller_connected:
+        if self.controller_connected and nav_direction == 0:
             # Check left analog stick
             left_stick_y_axis = SWITCH_CONTROLLER_MAPPINGS.get('left_stick_y', 1)
             if left_stick_y_axis in self.controller_axes:
                 stick_y = self.controller_axes[left_stick_y_axis]
                 if stick_y < -CONTROLLER_DEADZONE:
-                    return -1
+                    nav_input_detected = True
+                    nav_direction = -1
                 elif stick_y > CONTROLLER_DEADZONE:
-                    return 1
+                    nav_input_detected = True
+                    nav_direction = 1
             
-            # Check D-pad
-            dpad_up = SWITCH_CONTROLLER_MAPPINGS.get('dpad_up', 12)
-            dpad_down = SWITCH_CONTROLLER_MAPPINGS.get('dpad_down', 13)
-            
-            if dpad_up in self.controller_buttons and self.controller_buttons[dpad_up]:
-                return -1
-            elif dpad_down in self.controller_buttons and self.controller_buttons[dpad_down]:
-                return 1
+            # Check D-pad (if stick didn't trigger)
+            if nav_direction == 0:
+                dpad_up = SWITCH_CONTROLLER_MAPPINGS.get('dpad_up', 12)
+                dpad_down = SWITCH_CONTROLLER_MAPPINGS.get('dpad_down', 13)
+                
+                if dpad_up in self.controller_buttons and self.controller_buttons[dpad_up]:
+                    nav_input_detected = True
+                    nav_direction = -1
+                elif dpad_down in self.controller_buttons and self.controller_buttons[dpad_down]:
+                    nav_input_detected = True
+                    nav_direction = 1
+        
+        # Single-press detection logic
+        if nav_input_detected:
+            if not self.menu_nav_pressed:
+                self.menu_nav_pressed = True
+                return nav_direction
+        else:
+            self.menu_nav_pressed = False
         
         return 0
 
@@ -262,7 +466,10 @@ class InputHandler:
 
     def update_paddle_movement(self, paddles):
         """Update paddle movement based on current key and controller states"""
-        for player_id, paddle in enumerate(paddles):
+        for paddle in paddles:
+            # Use the paddle's actual player_id, not the enumerate index
+            player_id = paddle.player_id
+            
             if player_id not in self.key_mappings:
                 continue
 
@@ -274,9 +481,12 @@ class InputHandler:
             paddle.moving_left = False
             paddle.moving_right = False
 
-            # For Player 1 (left paddle), check controller input first, then keyboard
-            if player_id == 0 and self.controller_connected:
-                controller_movement = self.get_controller_movement(player_id)
+            # Check for assigned controller first (multi-controller system)
+            controller_movement = self.get_multi_controller_movement(player_id)
+            has_controller_input = any(controller_movement.values())
+            
+            if has_controller_input:
+                # Use multi-controller input
                 if paddle.orientation == 'vertical':
                     paddle.moving_up = controller_movement['up']
                     paddle.moving_down = controller_movement['down']
@@ -284,18 +494,17 @@ class InputHandler:
                     paddle.moving_left = controller_movement['left']
                     paddle.moving_right = controller_movement['right']
             
-            # Always check keyboard input (controller overrides keyboard for Player 1)
-            # For other players, only keyboard input is available
+            # Check keyboard input (always available, can supplement controller)
             if paddle.orientation == 'vertical':
                 keyboard_up = mapping.get('up') in self.keys_pressed
                 keyboard_down = mapping.get('down') in self.keys_pressed
                 
-                # If no controller input for Player 1, use keyboard
-                if player_id != 0 or not self.controller_connected:
+                # Use keyboard if no controller, or allow keyboard to supplement controller
+                if not has_controller_input:
                     paddle.moving_up = keyboard_up
                     paddle.moving_down = keyboard_down
-                elif player_id == 0:
-                    # For Player 1 with controller, keyboard can override if pressed
+                else:
+                    # Allow keyboard to override controller (useful for debugging/backup)
                     if keyboard_up:
                         paddle.moving_up = True
                     if keyboard_down:
@@ -305,10 +514,11 @@ class InputHandler:
                 keyboard_left = mapping.get('left') in self.keys_pressed
                 keyboard_right = mapping.get('right') in self.keys_pressed
                 
-                if player_id != 0 or not self.controller_connected:
+                if not has_controller_input:
                     paddle.moving_left = keyboard_left
                     paddle.moving_right = keyboard_right
-                elif player_id == 0:
+                else:
+                    # Allow keyboard to override controller
                     if keyboard_left:
                         paddle.moving_left = True
                     if keyboard_right:
@@ -327,6 +537,11 @@ class InputHandler:
         if self.controller_connected:
             self.controller_buttons.clear()
             self.controller_axes.clear()
+            # Also clear multi-controller states
+            for controller_index in self.multi_controller_buttons:
+                self.multi_controller_buttons[controller_index].clear()
+            for controller_index in self.multi_controller_axes:
+                self.multi_controller_axes[controller_index].clear()
             
         # Clear mouse states
         self.mouse_clicked = False
@@ -338,6 +553,8 @@ class InputHandler:
         # Reset pause usage flags when doing full reset
         self.escape_used_for_pause = False
         self.space_used_for_pause = False
+        # Reset navigation state
+        self.menu_nav_pressed = False
     
     def get_mouse_pos(self):
         """Get current mouse position"""

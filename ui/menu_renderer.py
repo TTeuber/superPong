@@ -523,3 +523,223 @@ class MenuRenderer:
             text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, instruction_y + i * 25))
             screen.blit(text_surface, text_rect)
     
+    def draw_player_count_screen(self, screen, player_count_system, mouse_pos=None):
+        """Draw player count selection screen"""
+        # Draw background
+        screen.fill(BLACK)
+        self.ui_effects.draw_background_grid(screen, self.frame_count)
+        
+        # Get current menu state
+        selected_option = player_count_system.get_selected_option()
+        menu_options = player_count_system.get_menu_options()
+        title = player_count_system.get_current_screen_title()
+        description = player_count_system.get_selection_description()
+        
+        # Draw title
+        title_surface = self.ui_effects.font_title.render(title, True, NEON_YELLOW)
+        title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, 120))
+        
+        # Title glow effect
+        self._draw_text_glow(screen, title, self.ui_effects.font_title, NEON_YELLOW, title_rect, glow_size=20)
+        screen.blit(title_surface, title_rect)
+        
+        # Draw description
+        if description:
+            desc_surface = self.ui_effects.font_small.render(description, True, NEON_CYAN)
+            desc_rect = desc_surface.get_rect(center=(SCREEN_WIDTH // 2, 170))
+            screen.blit(desc_surface, desc_rect)
+        
+        # Draw menu options
+        menu_start_y = SCREEN_HEIGHT // 2 - 50
+        option_spacing = 80
+        
+        for i, option_text in enumerate(menu_options):
+            y_pos = menu_start_y + i * option_spacing
+            option_rect = (SCREEN_WIDTH // 2 - 150, y_pos - 25, 300, 50)
+            
+            # Check for mouse hover
+            is_hovered = mouse_pos and self._is_point_in_rect(mouse_pos, option_rect)
+            is_selected = i == selected_option or is_hovered
+            
+            if is_selected:
+                # Selected/hovered option
+                text_color = NEON_GREEN
+                font_to_use = self.ui_effects.font_large
+                
+                # Calculate pulsing effect
+                pulse = (math.sin(self.frame_count * 0.15) + 1) * 0.5
+                glow_intensity = 0.8 + pulse * 0.2
+                
+                # Draw selection arrow
+                arrow_text = "►"
+                arrow_surface = self.ui_effects.font_large.render(arrow_text, True, NEON_GREEN)
+                arrow_rect = arrow_surface.get_rect(center=(SCREEN_WIDTH // 2 - 180, y_pos))
+                screen.blit(arrow_surface, arrow_rect)
+                
+            else:
+                # Unselected option
+                text_color = NEON_BLUE
+                font_to_use = self.ui_effects.font_medium
+                glow_intensity = 0.3
+            
+            # Create text surface
+            text_surface = font_to_use.render(option_text, True, text_color)
+            text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, y_pos))
+            
+            # Draw glow effect for selected option
+            if is_selected:
+                self._draw_text_glow(screen, option_text, font_to_use, NEON_GREEN, text_rect, 
+                                   glow_size=int(15 * glow_intensity), glow_alpha=int(100 * glow_intensity))
+            
+            # Draw main text
+            screen.blit(text_surface, text_rect)
+        
+        # Draw navigation instructions
+        instructions = [
+            "Use ↑/↓ to navigate • ENTER/A to select",
+            "ESC/B to go back"
+        ]
+        
+        instruction_y = SCREEN_HEIGHT - 80
+        for i, instruction in enumerate(instructions):
+            instruction_surface = self.ui_effects.font_small.render(instruction, True, NEON_CYAN)
+            instruction_rect = instruction_surface.get_rect(center=(SCREEN_WIDTH // 2, instruction_y + i * 25))
+            screen.blit(instruction_surface, instruction_rect)
+    
+    def draw_controller_setup_screen(self, screen, controller_setup_system, mouse_pos=None):
+        """Draw controller setup screen with readiness indicators"""
+        # Draw background
+        screen.fill(BLACK)
+        self.ui_effects.draw_background_grid(screen, self.frame_count)
+        
+        # Title
+        title = "CONTROLLER SETUP"
+        title_surface = self.ui_effects.font_title.render(title, True, NEON_YELLOW)
+        title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, 80))
+        self._draw_text_glow(screen, title, self.ui_effects.font_title, NEON_YELLOW, title_rect, glow_size=20)
+        screen.blit(title_surface, title_rect)
+        
+        # Status text
+        ready_count = controller_setup_system.get_ready_count()
+        required_count = controller_setup_system.get_required_players()
+        status_text = f"Players Ready: {ready_count}/{required_count}"
+        status_surface = self.ui_effects.font_medium.render(status_text, True, NEON_CYAN)
+        status_rect = status_surface.get_rect(center=(SCREEN_WIDTH // 2, 130))
+        screen.blit(status_surface, status_rect)
+        
+        # Warning if insufficient controllers
+        warning = controller_setup_system.get_insufficient_controllers_warning()
+        if warning:
+            warning_surface = self.ui_effects.font_small.render(warning, True, NEON_ORANGE)
+            warning_rect = warning_surface.get_rect(center=(SCREEN_WIDTH // 2, 160))
+            screen.blit(warning_surface, warning_rect)
+        
+        # Player readiness indicators
+        player_positions = [
+            (SCREEN_WIDTH // 4, SCREEN_HEIGHT // 2),      # Player 1 - Left
+            (3 * SCREEN_WIDTH // 4, SCREEN_HEIGHT // 2),  # Player 2 - Right  
+            (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 4),      # Player 3 - Top
+            (SCREEN_WIDTH // 2, 3 * SCREEN_HEIGHT // 4)   # Player 4 - Bottom
+        ]
+        
+        for player_id in range(required_count):
+            if player_id < len(player_positions):
+                pos_x, pos_y = player_positions[player_id]
+                self._draw_player_ready_indicator(screen, player_id, pos_x, pos_y, 
+                                                controller_setup_system)
+        
+        # Instructions
+        instruction_y = SCREEN_HEIGHT - 100
+        instructions = [
+            "Press A on your controller to toggle ready status",
+            "All players must be ready to start the game",
+            "ESC to go back"
+        ]
+        
+        for i, instruction in enumerate(instructions):
+            instruction_surface = self.ui_effects.font_small.render(instruction, True, NEON_CYAN)
+            instruction_rect = instruction_surface.get_rect(center=(SCREEN_WIDTH // 2, instruction_y + i * 25))
+            screen.blit(instruction_surface, instruction_rect)
+
+    def _draw_player_ready_indicator(self, screen, player_id, pos_x, pos_y, controller_setup_system):
+        """Draw a ready indicator for a specific player"""
+        player_colors = [NEON_BLUE, NEON_PINK, NEON_GREEN, NEON_YELLOW]
+        player_color = player_colors[player_id % len(player_colors)]
+        
+        # Get player info
+        is_ready = controller_setup_system.get_player_ready_status(player_id)
+        fill_amount = controller_setup_system.get_ready_circle_fill(player_id)
+        controller_name = controller_setup_system.get_player_controller_name(player_id)
+        
+        # Draw player label
+        label = f"Player {player_id + 1}"
+        label_surface = self.ui_effects.font_medium.render(label, True, player_color)
+        label_rect = label_surface.get_rect(center=(pos_x, pos_y - 60))
+        screen.blit(label_surface, label_rect)
+        
+        # Draw controller name if available
+        if controller_name:
+            controller_surface = self.ui_effects.font_small.render(controller_name[:20], True, NEON_CYAN)
+            controller_rect = controller_surface.get_rect(center=(pos_x, pos_y - 35))
+            screen.blit(controller_surface, controller_rect)
+        else:
+            no_controller_surface = self.ui_effects.font_small.render("Keyboard", True, (150, 150, 150))
+            no_controller_rect = no_controller_surface.get_rect(center=(pos_x, pos_y - 35))
+            screen.blit(no_controller_surface, no_controller_rect)
+        
+        # Draw ready circle
+        circle_radius = CONTROLLER_READY_CIRCLE_SIZE // 2
+        circle_thickness = CONTROLLER_READY_CIRCLE_THICKNESS
+        
+        # Outer circle (border)
+        pygame.draw.circle(screen, player_color, (int(pos_x), int(pos_y)), 
+                         circle_radius, circle_thickness)
+        
+        # Inner fill circle (shows ready progress)
+        if fill_amount > 0:
+            fill_radius = int(circle_radius * fill_amount)
+            
+            # Create filled circle with alpha blending for smooth animation
+            if fill_radius > 0:
+                fill_surface = pygame.Surface((circle_radius * 2, circle_radius * 2), pygame.SRCALPHA)
+                fill_color = (*player_color, int(150 * fill_amount))
+                pygame.draw.circle(fill_surface, fill_color, 
+                                 (circle_radius, circle_radius), fill_radius)
+                screen.blit(fill_surface, (pos_x - circle_radius, pos_y - circle_radius))
+        
+        # Ready status text
+        status_text = "READY!" if is_ready else "Press A"
+        status_color = NEON_GREEN if is_ready else NEON_CYAN
+        status_surface = self.ui_effects.font_small.render(status_text, True, status_color)
+        status_rect = status_surface.get_rect(center=(pos_x, pos_y + 60))
+        
+        # Add glow effect for ready status
+        if is_ready:
+            # Pulsing glow for ready players
+            pulse = (math.sin(self.frame_count * 0.2) + 1) * 0.5
+            glow_alpha = int(100 * pulse)
+            
+            for i in range(2):
+                glow_surface = pygame.Surface((status_rect.width + 20, status_rect.height + 10), pygame.SRCALPHA)
+                glow_color = (*NEON_GREEN, glow_alpha // (i + 1))
+                glow_text = self.ui_effects.font_small.render(status_text, True, glow_color)
+                glow_text_rect = glow_text.get_rect(center=(glow_surface.get_width() // 2, glow_surface.get_height() // 2))
+                glow_surface.blit(glow_text, glow_text_rect)
+                screen.blit(glow_surface, (status_rect.x - 10, status_rect.y - 5))
+        
+        screen.blit(status_surface, status_rect)
+    
+    def _draw_text_glow(self, screen, text, font, color, rect, glow_size=15, glow_alpha=80):
+        """Helper method to draw text with glow effect"""
+        for i in range(3):
+            glow_surface = pygame.Surface((rect.width + glow_size * 2, rect.height + glow_size * 2), pygame.SRCALPHA)
+            glow_color = (*color, glow_alpha // (i + 1))
+            glow_text = font.render(text, True, glow_color)
+            glow_text_rect = glow_text.get_rect(center=(glow_surface.get_width() // 2, glow_surface.get_height() // 2))
+            glow_surface.blit(glow_text, glow_text_rect)
+            screen.blit(glow_surface, (rect.x - glow_size, rect.y - glow_size))
+    
+    def _is_point_in_rect(self, point, rect):
+        """Helper method to check if point is in rectangle"""
+        x, y = point
+        return rect[0] <= x <= rect[0] + rect[2] and rect[1] <= y <= rect[1] + rect[3]

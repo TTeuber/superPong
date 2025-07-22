@@ -4,11 +4,13 @@ A retro-style Pong game featuring 4 players, neon visual effects, Nintendo Switc
 
 ## 🎮 Game Features
 
-- **4-Player Gameplay**: Paddles on all four sides (left, right, top, bottom)
+- **1-4 Player Multiplayer**: Support for 1-4 human players with AI filling remaining slots
+- **Multi-Controller Support**: Up to 4 Nintendo Switch controllers with automatic assignment
+- **Player Count Selection**: Choose 2-4 player games with controller setup screen
 - **Retro Neon Aesthetic**: Glowing paddles, ball trails, and grid backgrounds
 - **AI Opponents**: Smart AI with configurable difficulty levels (Easy, Medium, Hard)
 - **Settings System**: Persistent JSON settings with in-game menu
-- **Mouse Support**: Full mouse integration for all menus with hover highlighting and click selection
+- **Triple Input Support**: Controller, keyboard, and mouse support for all players
 - **Start Screen**: Main menu with Play and Settings options
 - **Pause Menu**: In-game pause with Resume, Restart, Main Menu, and Quit options
 - **Power-ups**: Simplified system with paddle size, shield, and decoy ball (toggle on/off)
@@ -17,15 +19,18 @@ A retro-style Pong game featuring 4 players, neon visual effects, Nintendo Switc
 
 ## 🕹️ Controls
 
-### Player 1 (Left, Blue) - Human Player
-- **Nintendo Switch Controller**: Left analog stick or D-pad for movement
-- **Keyboard Fallback**: W (up) / S (down)
-- **Pause**: START button or P/SPACE key
+### Multiplayer Controls (2-4 Players)
+- **Player 1 (Left, Blue)**: Nintendo Switch Controller or W/S keys
+- **Player 2 (Right, Pink)**: Nintendo Switch Controller or Arrow keys
+- **Player 3 (Top, Green)**: Nintendo Switch Controller or J/L keys
+- **Player 4 (Bottom, Yellow)**: Nintendo Switch Controller or Numpad 4/6 keys
+- **AI fills remaining slots**: Unused player positions become AI opponents
 
-### AI Players
-- **Player 2 (Right, Pink)**: AI controlled
-- **Player 3 (Top, Green)**: AI controlled  
-- **Player 4 (Bottom, Yellow)**: AI controlled
+### Controller Support
+- **Nintendo Switch Controllers**: Left analog stick or D-pad for movement
+- **Hot-plug Detection**: Controllers can be connected/disconnected during gameplay
+- **Automatic Assignment**: Controllers automatically assigned to players during setup
+- **Ready System**: Players press A button to confirm readiness before game starts
 
 ### Game Controls
 - **Start Screen**: Navigate with analog stick/arrow keys, select with A/ENTER, or use mouse hover/click
@@ -70,13 +75,15 @@ superPong/
 │   ├── menu_system.py                # Menu navigation and callbacks
 │   ├── settings_system.py            # Settings persistence and management
 │   ├── settings_screen_system.py     # Settings UI and navigation
+│   ├── player_count_system.py        # Player count selection screen
+│   ├── controller_setup_system.py    # Controller assignment and ready tracking
 │   ├── aiming_system.py              # Aiming mode and ball launching
 │   ├── collision_system.py           # Collision detection and handling
 │   ├── player_manager.py             # Lives, elimination, AI coordination
 │   ├── renderer.py                   # Main rendering coordinator (~50 lines)
 │   ├── game_renderer.py              # Core game element rendering
 │   ├── effects_renderer.py           # Screen shake and visual effects
-│   ├── input_handler.py              # Keyboard and controller input
+│   ├── input_handler.py              # Multi-controller and keyboard input
 │   ├── ai.py                         # AI player logic with difficulty scaling
 │   └── particle_system.py            # Visual effect particles
 ├── ui/
@@ -131,6 +138,16 @@ superPong/
 - **Simple powerup toggle**: Replaced complex powerup selection with on/off toggle in settings
 - **Critical bug fix**: Resolved escape key double-trigger that caused immediate pause/resume
 - **Enhanced input handling**: Improved InputHandler with proper single-press detection and dual-purpose key management
+
+### ✅ Phase 2.8 Complete: Multiplayer Controller Support
+- **Complete multiplayer foundation**: Added full support for 2-4 player games with controller assignment
+- **Player count selection**: New screen for choosing number of players with controller setup
+- **Multi-controller input**: Enhanced InputHandler to support up to 4 controllers simultaneously
+- **Player-controller assignment**: Dynamic assignment system with hot-plug support and ready confirmation
+- **Human vs AI distinction**: Clear separation between human players and AI opponents in all game modes
+- **Aiming system updates**: Support for manual aiming by any human player, not just Player 1
+- **Input processing fixes**: All human players now receive proper controller/keyboard input during gameplay
+- **Critical multiplayer bugs**: Fixed game auto-start, pause menu flashing, menu navigation speed, and Player 2+ input issues
 
 ### 🚧 Phase 3 Next: Power-ups System
 - Paddle size modifiers (grow/shrink)
@@ -212,6 +229,11 @@ The AI players use an advanced multi-layer difficulty system:
 - **Escape key double-trigger**: Fixed issue where pressing escape would pause and immediately resume the game
 - **Mouse detection offset**: Resolved mouse hover detection being offset from visual button positions
 - **Complex powerup system**: Simplified from 9 powerup types to 3 essential ones with cleaner interface
+- **Game auto-starting**: Fixed input bleed-through causing game to bypass start menu
+- **Pause menu flashing**: Resolved rapid pause/unpause cycles with proper input debouncing
+- **Menu navigation speed**: Added single-press detection to prevent skipping menu options
+- **Multiplayer controller support**: Fixed controller input only working for Player 1, now supports all players
+- **Aiming mode for multiplayer**: Fixed Player 2+ getting AI auto-aiming instead of manual control
 
 ## 🤝 Contributing
 

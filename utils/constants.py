@@ -46,6 +46,8 @@ PADDLE_MARGIN = 50
 # Game states
 GAME_STATE_START_SCREEN = "start_screen"
 GAME_STATE_SETTINGS = "settings"
+GAME_STATE_PLAYER_COUNT_SELECTION = "player_count_selection"
+GAME_STATE_CONTROLLER_SETUP = "controller_setup"
 GAME_STATE_PLAYING = "playing"
 GAME_STATE_AIMING = "aiming"
 GAME_STATE_PAUSED = "paused"
@@ -81,6 +83,17 @@ SETTINGS_MENU_CONTROLLER = 2
 SETTINGS_MENU_POWERUPS = 3
 SETTINGS_MENU_BACK = 4
 
+# Player count selection menu
+PLAYER_COUNT_MENU_OPTIONS = ["Single Player", "Multiplayer"]
+PLAYER_COUNT_SINGLE = 0
+PLAYER_COUNT_MULTI = 1
+
+# Multiplayer count options
+MULTIPLAYER_COUNT_OPTIONS = ["2 Players", "3 Players", "4 Players"]
+MULTIPLAYER_2_PLAYERS = 0
+MULTIPLAYER_3_PLAYERS = 1
+MULTIPLAYER_4_PLAYERS = 2
+
 # Difficulty levels
 DIFFICULTY_EASY = "Easy"
 DIFFICULTY_MEDIUM = "Medium"
@@ -95,6 +108,11 @@ DIFFICULTY_OPTIONS = [DIFFICULTY_EASY, DIFFICULTY_MEDIUM, DIFFICULTY_HARD]
 # Controller settings
 CONTROLLER_DEADZONE = 0.15  # Dead zone for analog sticks (0.0-1.0)
 CONTROLLER_SENSITIVITY = 1.0  # Movement sensitivity multiplier
+
+# Controller setup constants
+MAX_CONTROLLERS = 4  # Maximum number of controllers supported
+CONTROLLER_READY_CIRCLE_SIZE = 80  # Size of ready indicator circles
+CONTROLLER_READY_CIRCLE_THICKNESS = 8  # Thickness of ready indicator circle border
 
 # AI Prediction settings
 AI_PREDICTION_ENABLED = True           # Enable trajectory prediction

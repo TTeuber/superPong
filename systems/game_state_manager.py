@@ -55,6 +55,14 @@ class GameStateManager:
     def enter_settings(self):
         """Enter settings screen mode"""
         self.current_state = GAME_STATE_SETTINGS
+    
+    def enter_player_count_selection(self):
+        """Enter player count selection mode"""
+        self.current_state = GAME_STATE_PLAYER_COUNT_SELECTION
+    
+    def enter_controller_setup(self):
+        """Enter controller setup mode"""
+        self.current_state = GAME_STATE_CONTROLLER_SETUP
         
     def enter_game(self):
         """Enter game from start screen"""
@@ -71,6 +79,14 @@ class GameStateManager:
     def is_settings(self):
         """Check if currently on settings screen"""
         return self.current_state == GAME_STATE_SETTINGS
+    
+    def is_player_count_selection(self):
+        """Check if currently on player count selection screen"""
+        return self.current_state == GAME_STATE_PLAYER_COUNT_SELECTION
+    
+    def is_controller_setup(self):
+        """Check if currently on controller setup screen"""
+        return self.current_state == GAME_STATE_CONTROLLER_SETUP
         
     def is_game_over(self):
         """Check if currently on game over screen"""

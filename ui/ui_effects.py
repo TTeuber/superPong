@@ -7,6 +7,7 @@ class UIEffects:
     def __init__(self):
         # Initialize fonts
         pygame.font.init()
+        self.font_title = pygame.font.Font(None, 72)
         self.font_large = pygame.font.Font(None, 48)
         self.font_medium = pygame.font.Font(None, 32)
         self.font_small = pygame.font.Font(None, 24)

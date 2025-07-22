@@ -5,61 +5,123 @@ from utils.constants import *
 class PlayerManager:
     """Manages player state, lives, and eliminations"""
     
-    def __init__(self, ai_difficulty=0.6):
-        # Game state - lives system
-        self.lives = [STARTING_LIVES, STARTING_LIVES, STARTING_LIVES, STARTING_LIVES]  # Each player starts with configured lives
-        self.alive_players = [True, True, True, True]  # Track which players are still alive
-        self.starting_lives = STARTING_LIVES
-        
+    def __init__(self, ai_difficulty=0.6, player_config=None):
         # Store AI difficulty for creating AI players
         self.ai_difficulty = ai_difficulty
         
-        # Initialize paddles and AI
+        # Player configuration (which players are human vs AI)
+        self.player_config = player_config or self._get_default_config()
+        self.active_players = len([p for p in self.player_config if p['active']])
+        
+        # Game state - lives system (only for active players)
+        self.lives = []
+        self.alive_players = []
+        self.starting_lives = STARTING_LIVES
+        
+        # Initialize based on configuration
         self.paddles = []
         self.ai_players = []
+        self.human_players = []  # Track which player IDs are human
+        self.init_game_state()
         self.init_paddles()
         self.init_ai_players()
+    
+    def _get_default_config(self):
+        """Get default player configuration (single player mode)"""
+        return [
+            {'active': True, 'is_human': True, 'controller_index': None},   # Player 0 - Left (human)
+            {'active': True, 'is_human': False, 'controller_index': None},  # Player 1 - Right (AI)
+            {'active': True, 'is_human': False, 'controller_index': None},  # Player 2 - Top (AI)
+            {'active': True, 'is_human': False, 'controller_index': None}   # Player 3 - Bottom (AI)
+        ]
+    
+    def init_game_state(self):
+        """Initialize game state based on player configuration"""
+        self.lives = []
+        self.alive_players = []
+        self.human_players = []
+        
+        for player_id, config in enumerate(self.player_config):
+            if config['active']:
+                self.lives.append(STARTING_LIVES)
+                self.alive_players.append(True)
+                if config['is_human']:
+                    self.human_players.append(player_id)
+            else:
+                self.lives.append(0)
+                self.alive_players.append(False)
         
     def init_paddles(self):
-        """Initialize the four paddles"""
-        self.paddles = []
-
-        # Player 1 - Left paddle (human player)
-        left_paddle = Paddle(PADDLE_MARGIN, SCREEN_HEIGHT // 2 - PADDLE_HEIGHT // 2,
-                             0, 'vertical')
-        self.paddles.append(left_paddle)
-
-        # Player 2 - Right paddle (AI)
-        right_paddle = Paddle(SCREEN_WIDTH - PADDLE_MARGIN - PADDLE_WIDTH,
-                              SCREEN_HEIGHT // 2 - PADDLE_HEIGHT // 2, 1, 'vertical')
-        self.paddles.append(right_paddle)
-
-        # Player 3 - Top paddle (AI)
-        top_paddle = Paddle(SCREEN_WIDTH // 2 - H_PADDLE_WIDTH // 2, PADDLE_MARGIN,
-                            2, 'horizontal')
-        self.paddles.append(top_paddle)
-
-        # Player 4 - Bottom paddle (AI)
-        bottom_paddle = Paddle(SCREEN_WIDTH // 2 - H_PADDLE_WIDTH // 2,
+        """Initialize paddles for active players"""
+        self.paddles = [None, None, None, None]  # Keep array structure for indexing
+        
+        for player_id, config in enumerate(self.player_config):
+            if not config['active']:
+                continue
+                
+            if player_id == 0:  # Left paddle
+                paddle = Paddle(PADDLE_MARGIN, SCREEN_HEIGHT // 2 - PADDLE_HEIGHT // 2,
+                               player_id, 'vertical')
+            elif player_id == 1:  # Right paddle
+                paddle = Paddle(SCREEN_WIDTH - PADDLE_MARGIN - PADDLE_WIDTH,
+                               SCREEN_HEIGHT // 2 - PADDLE_HEIGHT // 2, player_id, 'vertical')
+            elif player_id == 2:  # Top paddle
+                paddle = Paddle(SCREEN_WIDTH // 2 - H_PADDLE_WIDTH // 2, PADDLE_MARGIN,
+                               player_id, 'horizontal')
+            elif player_id == 3:  # Bottom paddle
+                paddle = Paddle(SCREEN_WIDTH // 2 - H_PADDLE_WIDTH // 2,
                                SCREEN_HEIGHT - PADDLE_MARGIN - H_PADDLE_HEIGHT,
-                               3, 'horizontal')
-        self.paddles.append(bottom_paddle)
+                               player_id, 'horizontal')
+            else:
+                continue  # Skip invalid player IDs
+            
+            self.paddles[player_id] = paddle
         
     def init_ai_players(self):
-        """Initialize AI players (players 1, 2, 3 are AI by default)"""
-        self.ai_players = [
-            AIPlayer(self.paddles[1], difficulty=self.ai_difficulty),  # Player 2 (right)
-            AIPlayer(self.paddles[2], difficulty=self.ai_difficulty),  # Player 3 (top)
-            AIPlayer(self.paddles[3], difficulty=self.ai_difficulty),  # Player 4 (bottom)
-        ]
+        """Initialize AI players for non-human active players"""
+        self.ai_players = []
+        
+        for player_id, config in enumerate(self.player_config):
+            if config['active'] and not config['is_human'] and self.paddles[player_id]:
+                ai_player = AIPlayer(self.paddles[player_id], difficulty=self.ai_difficulty)
+                self.ai_players.append(ai_player)
+                print(f"Created AI player for Player {player_id + 1}")
         
     def get_paddles(self):
-        """Get all paddles"""
-        return self.paddles
+        """Get all active paddles (filtering out None values)"""
+        return [paddle for paddle in self.paddles if paddle is not None]
+    
+    def get_paddle(self, player_id):
+        """Get paddle for specific player"""
+        if 0 <= player_id < len(self.paddles):
+            return self.paddles[player_id]
+        return None
         
     def get_ai_players(self):
         """Get all AI players"""
         return self.ai_players
+    
+    def update_player_configuration(self, player_config):
+        """Update player configuration and reinitialize"""
+        self.player_config = player_config
+        self.active_players = len([p for p in self.player_config if p['active']])
+        self.init_game_state()
+        self.init_paddles()
+        self.init_ai_players()
+    
+    def is_player_human(self, player_id):
+        """Check if a player is human"""
+        if 0 <= player_id < len(self.player_config):
+            return self.player_config[player_id].get('is_human', False)
+        return False
+    
+    def get_human_players(self):
+        """Get list of human player IDs"""
+        return self.human_players
+    
+    def get_active_player_count(self):
+        """Get number of active players"""
+        return self.active_players
         
     def get_lives(self):
         """Get lives array"""
@@ -131,22 +193,22 @@ class PlayerManager:
             
     def update_ai_players(self, ball):
         """Update AI players (only for alive players)"""
-        for i, ai_player in enumerate(self.ai_players):
-            # AI players are at indices 1, 2, 3 (not 0 since player 0 is human)
-            ai_player_index = i + 1
-            if self.alive_players[ai_player_index]:
+        for ai_player in self.ai_players:
+            # Get the player ID from the AI player's paddle
+            paddle = ai_player.paddle
+            if paddle and paddle.player_id < len(self.alive_players) and self.alive_players[paddle.player_id]:
                 ai_player.update(ball)
                 
     def update_paddles(self):
         """Update paddles (only for alive players)"""
         for i, paddle in enumerate(self.paddles):
-            if self.alive_players[i]:
+            if paddle is not None and i < len(self.alive_players) and self.alive_players[i]:
                 paddle.update()
                 
     def reset(self):
         """Reset player manager to initial state"""
-        self.lives = [STARTING_LIVES, STARTING_LIVES, STARTING_LIVES, STARTING_LIVES]
-        self.alive_players = [True, True, True, True]
+        # Reset based on current player configuration
+        self.init_game_state()
         
         # Reset paddle positions
         self.init_paddles()

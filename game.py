@@ -13,6 +13,8 @@ from systems.start_screen_system import StartScreenSystem
 from systems.game_over_system import GameOverSystem
 from systems.settings_system import SettingsSystem
 from systems.settings_screen_system import SettingsScreenSystem
+from systems.player_count_system import PlayerCountSystem
+from systems.controller_setup_system import ControllerSetupSystem
 from systems.powerup_system import PowerUpSystem
 from systems.powerup_renderer import PowerUpRenderer
 from utils.constants import *
@@ -53,6 +55,8 @@ class Game:
         self.start_screen_system = StartScreenSystem()
         self.game_over_system = GameOverSystem()
         self.settings_screen_system = SettingsScreenSystem()
+        self.player_count_system = PlayerCountSystem()
+        self.controller_setup_system = ControllerSetupSystem(self.input_handler)
         
         # Initialize game entities
         self.ball = Ball(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
@@ -67,7 +71,7 @@ class Game:
         
         # Set up start screen callbacks
         self.start_screen_system.set_callbacks(
-            on_play=self.start_game,
+            on_play=self.show_player_count_selection,
             on_settings=self.show_settings
         )
         
@@ -86,6 +90,15 @@ class Game:
         
         # Pause input handling
         self.pause_key_pressed = False  # Track pause key state for single-press detection
+        self.pause_cooldown_frames = 0  # Prevent rapid pause/unpause cycles
+        self.PAUSE_COOLDOWN_FRAMES = 15  # Quarter second at 60 FPS
+        
+        # Initialization debouncing
+        self.initialization_frames = 0  # Prevent input for a few frames after startup
+        self.INPUT_DEBOUNCE_FRAMES = 30  # Half second at 60 FPS
+        
+        # CRITICAL: Reset all input states to prevent auto-triggering during startup
+        self.input_handler.reset_input_states()
         
         # Show controller status
         if self.input_handler.controller_connected:
@@ -135,6 +148,53 @@ class Game:
         # Now enter the game state
         self.state_manager.enter_game()
         print("Starting game")
+    
+    def show_player_count_selection(self):
+        """Show player count selection screen"""
+        self.player_count_system.reset()
+        self.state_manager.enter_player_count_selection()
+        print("Entering player count selection")
+    
+    def start_controller_setup(self, player_count):
+        """Start controller setup with specified player count"""
+        self.controller_setup_system.set_required_players(player_count)
+        self.controller_setup_system.attempt_auto_assignment()
+        self.state_manager.enter_controller_setup()
+        print(f"Entering controller setup for {player_count} players")
+    
+    def start_multiplayer_game(self):
+        """Start multiplayer game with configured players"""
+        # Get player configuration from controller setup
+        assignments = self.controller_setup_system.get_controller_assignments()
+        
+        # Create player configuration for PlayerManager
+        player_config = []
+        for player_id in range(4):  # Always 4 slots, but not all active
+            if player_id in assignments:
+                config = assignments[player_id]
+                player_config.append({
+                    'active': True,
+                    'is_human': config['is_human'],
+                    'controller_index': config['controller_index']
+                })
+            else:
+                # Inactive player slot
+                player_config.append({
+                    'active': False,
+                    'is_human': False,
+                    'controller_index': None
+                })
+        
+        # Apply controller assignments to input handler
+        for player_id, config in enumerate(player_config):
+            if config['active'] and config['controller_index'] is not None:
+                self.input_handler.assign_player_to_controller(player_id, config['controller_index'])
+        
+        # Update player manager with new configuration
+        self.player_manager.update_player_configuration(player_config)
+        
+        # Start the game
+        self.start_game()
         
     def show_settings(self):
         """Show settings screen"""
@@ -218,6 +278,11 @@ class Game:
         # Update input handler
         self.input_handler.handle_events(events)
         
+        # Increment initialization frame counter
+        if self.initialization_frames < self.INPUT_DEBOUNCE_FRAMES:
+            self.initialization_frames += 1
+            return  # Skip all input processing during debounce period
+        
         # Handle input based on current state
         if self.state_manager.is_start_screen():
             # Handle start screen input
@@ -225,35 +290,93 @@ class Game:
         elif self.state_manager.is_settings():
             # Handle settings screen input
             self.settings_screen_system.handle_settings_input(self.input_handler)
+        elif self.state_manager.is_player_count_selection():
+            # Handle player count selection input
+            self.handle_player_count_input()
+        elif self.state_manager.is_controller_setup():
+            # Handle controller setup input
+            self.handle_controller_setup_input()
         elif self.state_manager.is_game_over():
             # Handle game over input
             self.game_over_system.handle_game_over_input(self.input_handler)
         else:
             # Handle pause input (single-press detection) - only during gameplay
             pause_action_taken = False
-            if self.input_handler.is_pause_pressed():
+            
+            # Decrement pause cooldown
+            if self.pause_cooldown_frames > 0:
+                self.pause_cooldown_frames -= 1
+            
+            # Only process pause input if cooldown has expired
+            if self.input_handler.is_pause_pressed() and self.pause_cooldown_frames == 0:
                 if not self.pause_key_pressed:  # Only trigger on initial press
                     # Mark both escape and space as used for pause to prevent menu actions
                     if self.input_handler.escape_just_pressed:
                         self.input_handler.mark_escape_used_for_pause()
                     if self.input_handler.space_just_pressed:
                         self.input_handler.mark_space_used_for_pause()
+                    
                     if not self.state_manager.is_paused():
                         self.state_manager.toggle_pause()
                         self.menu_system.reset_menu()
                         pause_action_taken = True
+                        self.pause_cooldown_frames = self.PAUSE_COOLDOWN_FRAMES  # Start cooldown
                     else:
                         # If already paused, quick resume with pause button
                         self.resume_game()
                         pause_action_taken = True
+                        self.pause_cooldown_frames = self.PAUSE_COOLDOWN_FRAMES  # Start cooldown
                     self.pause_key_pressed = True
-            else:
+            elif not self.input_handler.is_pause_pressed():
                 self.pause_key_pressed = False
                 
             # Handle pause menu navigation (only when paused and no pause action was taken this frame)
             if self.state_manager.is_paused() and not pause_action_taken:
                 self.menu_system.handle_pause_menu_input(self.input_handler)
 
+    def handle_player_count_input(self):
+        """Handle input for player count selection screen"""
+        # Navigation
+        nav_direction = self.input_handler.get_menu_navigation()
+        if nav_direction != 0:
+            if nav_direction > 0:
+                self.player_count_system.navigate_down()
+            else:
+                self.player_count_system.navigate_up()
+        
+        # Selection (with single-press detection)
+        result = self.player_count_system.handle_input(self.input_handler)
+        if result:
+            if result == "start_single_player":
+                # Start single player game directly
+                self.start_game()
+            elif result == "start_controller_setup":
+                # Move to controller setup
+                player_count = self.player_count_system.get_player_count()
+                self.start_controller_setup(player_count)
+            elif result == "enter_multiplayer_selection":
+                # Just stay in player count selection (it updates internally)
+                pass
+        
+        # Back button
+        if self.input_handler.is_menu_cancel_pressed():
+            result = self.player_count_system.go_back()
+            if result == "back_to_main_menu":
+                self.state_manager.enter_start_screen()
+
+    def handle_controller_setup_input(self):
+        """Handle input for controller setup screen"""
+        # Update controller setup system (handles A button presses)
+        self.controller_setup_system.update()
+        
+        # Check if all players are ready
+        if self.controller_setup_system.are_all_players_ready():
+            # Auto-start game when everyone is ready
+            self.start_multiplayer_game()
+        
+        # Back button
+        if self.input_handler.is_menu_cancel_pressed():
+            self.state_manager.enter_player_count_selection()
 
     def update(self):
         """Update game state based on current mode"""
@@ -261,6 +384,12 @@ class Game:
             self.update_start_screen()
         elif self.state_manager.is_settings():
             self.update_settings()
+        elif self.state_manager.is_player_count_selection():
+            # Update player count system for debouncing
+            self.player_count_system.update()
+        elif self.state_manager.is_controller_setup():
+            # Controller setup system is updated in input handling
+            pass
         elif self.state_manager.is_game_over():
             self.update_game_over()
         elif self.state_manager.is_playing():
@@ -271,8 +400,12 @@ class Game:
             # Don't update game logic when paused, only particle system
             pass
         
-        # Always update particle system (except on start screen, settings, and game over)
-        if not self.state_manager.is_start_screen() and not self.state_manager.is_settings() and not self.state_manager.is_game_over():
+        # Always update particle system (except on start screen, settings, player count, controller setup, and game over)
+        if (not self.state_manager.is_start_screen() and 
+            not self.state_manager.is_settings() and 
+            not self.state_manager.is_player_count_selection() and
+            not self.state_manager.is_controller_setup() and
+            not self.state_manager.is_game_over()):
             self.particle_system.update()
     
     def update_start_screen(self):
@@ -290,16 +423,30 @@ class Game:
     
     def update_playing_mode(self):
         """Update game during normal play"""
-        # Update input for human player (player 0)
+        # Update input for all human players
         paddles = self.player_manager.get_paddles()
         alive_players = self.player_manager.get_alive_players()
         
-        # Apply control scrambling if active
-        target_player_id = self.powerup_system.get_scrambled_player_id(0)  # Human is player 0
-        if target_player_id < len(paddles):
-            self.input_handler.update_paddle_movement([paddles[target_player_id]])
-        else:
-            self.input_handler.update_paddle_movement([paddles[0]])
+        # Get all human players and their paddles
+        human_players = self.player_manager.get_human_players()
+        human_paddles = []
+        
+        for player_id in human_players:
+            if player_id < len(paddles) and alive_players[player_id]:
+                # Apply control scrambling if active (for now, only affects original Player 0)
+                if player_id == 0:
+                    target_player_id = self.powerup_system.get_scrambled_player_id(0)
+                    if target_player_id < len(paddles):
+                        human_paddles.append(paddles[target_player_id])
+                    else:
+                        human_paddles.append(paddles[player_id])
+                else:
+                    # Other human players get normal input (no scrambling for now)
+                    human_paddles.append(paddles[player_id])
+        
+        # Update input for all human players at once
+        if human_paddles:
+            self.input_handler.update_paddle_movement(human_paddles)
 
         # Update AI players
         self.player_manager.update_ai_players(self.ball)
@@ -385,7 +532,7 @@ class Game:
         
         # Update aiming system
         should_launch = self.aiming_system.update_aiming_mode(
-            paddles, alive_players, self.input_handler
+            paddles, alive_players, self.input_handler, self.player_manager
         )
         
         # Launch ball when timer expires
@@ -470,6 +617,12 @@ class Game:
         elif self.state_manager.is_settings():
             # Render settings screen
             self.renderer.render_settings_screen(self.settings_screen_system)
+        elif self.state_manager.is_player_count_selection():
+            # Render player count selection screen
+            self.renderer.render_player_count_screen(self.player_count_system)
+        elif self.state_manager.is_controller_setup():
+            # Render controller setup screen
+            self.renderer.render_controller_setup_screen(self.controller_setup_system)
         elif self.state_manager.is_game_over():
             # Render game over screen
             self.renderer.render_game_over_screen(self.game_over_system)

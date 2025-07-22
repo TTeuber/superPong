@@ -71,3 +71,19 @@ class GameRenderer:
         self.menu_renderer.update_frame_count(self.frame_count)
         
         self.menu_renderer.render_settings_screen(self.screen, settings_screen_system)
+    
+    def render_player_count_screen(self, player_count_system):
+        """Render the player count selection screen"""
+        self.frame_count += 1
+        self.menu_renderer.update_frame_count(self.frame_count)
+        
+        mouse_pos = pygame.mouse.get_pos()
+        self.menu_renderer.draw_player_count_screen(self.screen, player_count_system, mouse_pos)
+    
+    def render_controller_setup_screen(self, controller_setup_system):
+        """Render the controller setup screen"""
+        self.frame_count += 1
+        self.menu_renderer.update_frame_count(self.frame_count)
+        
+        mouse_pos = pygame.mouse.get_pos()
+        self.menu_renderer.draw_controller_setup_screen(self.screen, controller_setup_system, mouse_pos)

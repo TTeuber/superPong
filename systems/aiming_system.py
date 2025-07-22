@@ -66,17 +66,19 @@ class AimingSystem:
             # Dead player - just reset ball normally
             ball.reset_position()
             
-    def update_aiming_mode(self, paddles, alive_players, input_handler):
+    def update_aiming_mode(self, paddles, alive_players, input_handler, player_manager):
         """Update game during aiming phase"""
         # Update aiming timer
         self.aiming_timer -= 1
         
         # Update input for aiming player only
         if self.aiming_player >= 0 and alive_players[self.aiming_player]:
-            if self.aiming_player == 0:  # Human player
-                input_handler.update_paddle_movement([paddles[0]])
+            is_human = player_manager.is_player_human(self.aiming_player)
+            
+            if is_human:  # Human player
+                input_handler.update_paddle_movement([paddles[self.aiming_player]])
                 # Actually update the paddle position
-                paddles[0].update()
+                paddles[self.aiming_player].update()
                 self.update_aiming_angle(paddles[self.aiming_player])
             else:  # AI player - auto aim
                 self.auto_aim_for_ai()
