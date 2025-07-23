@@ -3,10 +3,11 @@
 This document provides essential context for continuing development of the 4-Player Neon Pong game.
 
 ## 🎯 Project Overview
-
+w
 A complete 4-player Pong game with these core features:
 - **1-4 player multiplayer** with AI filling remaining slots
 - **Multi-controller support** (up to 4 Nintendo Switch controllers)
+- **Resizable window** with dynamic scaling and aspect ratio preservation
 - **Retro neon aesthetic** with glow effects and particle systems
 - **Configurable AI difficulty** (Easy, Medium, Hard)
 - **Complete UI system** with settings, menus, and multiplayer setup
@@ -100,6 +101,26 @@ NEON_PURPLE = (191, 0, 255)    # Power-ups
 - **Single-press detection**: Prevents rapid menu navigation and double-triggering
 - **Pause handling**: Proper separation of pause vs menu actions
 
+## 📏 Resizable Window System
+
+### Dynamic Scaling Architecture
+- **Base Reference Size**: 850x850px for all game design calculations
+- **Monitor-Relative Scaling**: Window size calculated as percentage of available screen space
+- **Square Aspect Ratio**: Always maintained regardless of screen size
+- **Real-time Scaling**: All game elements (UI, entities, positions) scale dynamically
+
+### Scaling Implementation
+- **Scale Factor Calculation**: `SCALE_FACTOR = min(width, height) / 850`
+- **Universal Application**: Applied to fonts, sprites, positions, speeds, and collision boxes
+- **Settings Integration**: Scale setting (50%-150%) persisted in settings.json
+- **Manual Window Resize**: Drag window corners to resize, settings automatically update
+
+### Technical Details
+- **Import Architecture**: Uses `from utils import constants` to avoid import caching issues
+- **Entity Scaling**: All entities have `recreate_with_scale()` methods for dynamic updates
+- **UI Font Scaling**: Font sizes recalculated and recreated on scale changes
+- **Collision System**: All hitboxes and physics calculations scale-aware
+
 ## ⚙️ Configuration
 
 ### Settings (settings.json)
@@ -107,10 +128,13 @@ NEON_PURPLE = (191, 0, 255)    # Power-ups
 - `controller_sensitivity`: Analog stick sensitivity
 - `sound_enabled`: For future sound implementation
 - `powerups_enabled`: Toggle power-up system on/off
+- `screen_scale`: Window size as percentage of monitor (0.5-1.5, default 0.75)
 
 ### Key Constants (utils/constants.py)
-- Screen dimensions: 850x850
-- Paddle speeds and sizes
+- Base screen dimensions: 850x850 (reference size for scaling)
+- Dynamic screen scaling with `SCALE_FACTOR` applied to all elements
+- Window size range: 600-1600px with square aspect ratio maintained
+- Paddle speeds and sizes (scale-aware)
 - Ball physics parameters (speed, spin factor)
 - Controller settings (deadzone, button mappings)
 - Game states and timing values
@@ -154,6 +178,7 @@ superPong/
 The game is **feature-complete** with:
 - ✅ Full multiplayer support (1-4 players)
 - ✅ Complete controller system with assignment
+- ✅ Resizable window with dynamic scaling system
 - ✅ All game modes and screens functional
 - ✅ Settings system with persistence
 - ✅ AI opponents with difficulty scaling

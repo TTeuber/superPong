@@ -1,6 +1,6 @@
 import json
 import os
-from utils.constants import *
+from utils import constants
 
 class SettingsSystem:
     """Manages game settings with JSON file persistence"""
@@ -10,10 +10,11 @@ class SettingsSystem:
         
         # Default settings
         self.default_settings = {
-            'ai_difficulty': DIFFICULTY_VALUES[DIFFICULTY_MEDIUM],  # 0.6
+            'ai_difficulty': constants.DIFFICULTY_VALUES[constants.DIFFICULTY_MEDIUM],  # 0.6
             'sound_enabled': True,
-            'controller_sensitivity': CONTROLLER_SENSITIVITY,
-            'powerups_enabled': True  # Simple on/off toggle for powerups
+            'controller_sensitivity': constants.CONTROLLER_SENSITIVITY,
+            'powerups_enabled': True,  # Simple on/off toggle for powerups
+            'screen_scale': constants.DEFAULT_SCREEN_SCALE  # Screen size scale factor
         }
         
         # Current settings (will be loaded from file or set to defaults)
@@ -56,7 +57,7 @@ class SettingsSystem:
                     if key in self.default_settings:
                         # Validate difficulty value
                         if key == 'ai_difficulty':
-                            valid_values = list(DIFFICULTY_VALUES.values())
+                            valid_values = list(constants.DIFFICULTY_VALUES.values())
                             if value in valid_values:
                                 self.settings[key] = value
                             else:
@@ -67,6 +68,12 @@ class SettingsSystem:
                                 self.settings[key] = value
                             else:
                                 print(f"Invalid sensitivity value {value}, using default")
+                        # Validate screen scale
+                        elif key == 'screen_scale':
+                            if 0.5 <= value <= 1.5:
+                                self.settings[key] = value
+                            else:
+                                print(f"Invalid screen scale value {value}, using default")
                         # Validate boolean settings
                         elif key in ['sound_enabled', 'powerups_enabled']:
                             if isinstance(value, bool):
@@ -100,20 +107,20 @@ class SettingsSystem:
         
     def get_difficulty_name(self):
         """Get the human-readable difficulty name for current setting"""
-        difficulty_value = self.settings.get('ai_difficulty', DIFFICULTY_VALUES[DIFFICULTY_MEDIUM])
+        difficulty_value = self.settings.get('ai_difficulty', constants.DIFFICULTY_VALUES[constants.DIFFICULTY_MEDIUM])
         
         # Find matching difficulty name
-        for name, value in DIFFICULTY_VALUES.items():
+        for name, value in constants.DIFFICULTY_VALUES.items():
             if abs(value - difficulty_value) < 0.01:  # Float comparison with tolerance
                 return name
         
-        return DIFFICULTY_MEDIUM  # Default fallback
+        return constants.DIFFICULTY_MEDIUM  # Default fallback
         
     def get_enabled_powerups(self):
         """Get list of enabled power-up types"""
         # Return all power-ups if enabled, empty list if disabled
         if self.settings.get('powerups_enabled', True):
-            return POWERUP_ALL_TYPES.copy()
+            return constants.POWERUP_ALL_TYPES.copy()
         else:
             return []
         

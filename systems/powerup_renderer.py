@@ -1,7 +1,7 @@
 import pygame
 import math
 import random
-from utils.constants import *
+from utils import constants
 
 class PowerUpRenderer:
     """Handles rendering of power-ups and their visual effects"""
@@ -37,16 +37,17 @@ class PowerUpRenderer:
             screen.blit(surf, (powerup.x - warning_radius, powerup.y - warning_radius))
             
             # Draw collection radius circle
-            collection_surf = pygame.Surface((POWERUP_COLLECT_RADIUS * 2, POWERUP_COLLECT_RADIUS * 2), pygame.SRCALPHA)
+            collect_radius = int(constants.POWERUP_COLLECT_RADIUS * constants.SCALE_FACTOR)
+            collection_surf = pygame.Surface((collect_radius * 2, collect_radius * 2), pygame.SRCALPHA)
             pygame.draw.circle(collection_surf, (255, 255, 255, 50), 
-                             (POWERUP_COLLECT_RADIUS, POWERUP_COLLECT_RADIUS), 
-                             POWERUP_COLLECT_RADIUS, 2)
-            screen.blit(collection_surf, (powerup.x - POWERUP_COLLECT_RADIUS, powerup.y - POWERUP_COLLECT_RADIUS))
+                             (collect_radius, collect_radius), 
+                             collect_radius, 2)
+            screen.blit(collection_surf, (powerup.x - collect_radius, powerup.y - collect_radius))
             
             # Draw "!" symbol
-            font_size = 24
+            font_size = int(24 * constants.SCALE_FACTOR)
             font = pygame.font.Font(None, font_size)
-            text = font.render("!", True, WHITE)
+            text = font.render("!", True, constants.WHITE)
             text_rect = text.get_rect(center=(powerup.x, powerup.y))
             screen.blit(text, text_rect)
             
@@ -102,9 +103,9 @@ class PowerUpRenderer:
                     transformed_points.append((center + ox * scale, center + oy * scale))
                     
                 if len(transformed_points) > 2:
-                    pygame.draw.polygon(surf, WHITE, transformed_points, 2)
+                    pygame.draw.polygon(surf, constants.WHITE, transformed_points, 2)
                 else:
-                    pygame.draw.lines(surf, WHITE, False, transformed_points, 2)
+                    pygame.draw.lines(surf, constants.WHITE, False, transformed_points, 2)
                     
             # Blit to screen
             screen.blit(surf, (powerup.x - center, powerup.y - center))
@@ -119,41 +120,41 @@ class PowerUpRenderer:
             if player_id < len(paddles):
                 paddle = paddles[player_id]
                 
-                if effect['type'] == POWERUP_PADDLE_SIZE:
+                if effect['type'] == constants.POWERUP_PADDLE_SIZE:
                     # Size effect - pulsing border
-                    color = NEON_PURPLE
+                    color = constants.NEON_PURPLE
                     alpha = 100 + 50 * math.sin(self.pulse_timer * 3)
                     effects_renderer.draw_paddle_effect(screen, paddle, color, alpha)
                     
-                elif effect['type'] == POWERUP_SHIELD:
+                elif effect['type'] == constants.POWERUP_SHIELD:
                     # Shield effect - protective barrier
                     self.render_shield(screen, paddle, effects_renderer)
                     
-                elif effect['type'] == POWERUP_MAGNETIZE:
+                elif effect['type'] == constants.POWERUP_MAGNETIZE:
                     # Magnetize effect - magnetic field
                     self.render_magnetic_field(screen, paddle, effects_renderer)
                     
         # Ball speed indicator
         for effect in active_effects:
-            if effect['type'] == POWERUP_BALL_SPEED and effect['duration'] > 0:
+            if effect['type'] == constants.POWERUP_BALL_SPEED and effect['duration'] > 0:
                 self.render_speed_indicator(screen, effect['variant'])
                 break
                 
         # Ghost ball indicator
         for effect in active_effects:
-            if effect['type'] == POWERUP_GHOST_BALL and effect['duration'] > 0:
+            if effect['type'] == constants.POWERUP_GHOST_BALL and effect['duration'] > 0:
                 self.render_ghost_ball_indicator(screen, effect['player_id'])
                 break
                 
         # Wild bounce indicator
         for effect in active_effects:
-            if effect['type'] == POWERUP_WILD_BOUNCE and effect['duration'] > 0:
+            if effect['type'] == constants.POWERUP_WILD_BOUNCE and effect['duration'] > 0:
                 self.render_wild_bounce_indicator(screen)
                 break
                 
         # Control scramble indicator
         for effect in active_effects:
-            if effect['type'] == POWERUP_CONTROL_SCRAMBLE and effect['duration'] > 0:
+            if effect['type'] == constants.POWERUP_CONTROL_SCRAMBLE and effect['duration'] > 0:
                 self.render_control_scramble_indicator(screen)
                 break
                 
@@ -186,7 +187,7 @@ class PowerUpRenderer:
     def render_speed_indicator(self, screen, variant):
         """Render ball speed indicator"""
         # Position in top-right corner
-        x = SCREEN_WIDTH - 100
+        x = constants.SCREEN_WIDTH - 100
         y = 20
         
         # Draw speed icon
@@ -197,7 +198,7 @@ class PowerUpRenderer:
             color = (255, 100, 100)
             text = "FAST"
             
-        font = pygame.font.Font(None, 24)
+        font = pygame.font.Font(None, int(24 * constants.SCALE_FACTOR))
         text_surf = font.render(text, True, color)
         text_rect = text_surf.get_rect(center=(x, y))
         
@@ -213,7 +214,7 @@ class PowerUpRenderer:
         # Create pulsing magnetic field visualization
         field_color = (255, 255, 0, 60)  # Yellow with transparency
         pulse_scale = 1.0 + 0.3 * math.sin(self.pulse_timer * 4)
-        field_radius = int(POWERUP_MAGNETIC_FIELD_RADIUS * pulse_scale)
+        field_radius = int(constants.POWERUP_MAGNETIC_FIELD_RADIUS * pulse_scale)
         
         paddle_center = paddle.get_center()
         
@@ -237,17 +238,17 @@ class PowerUpRenderer:
         """Render ghost ball effect indicator"""
         # Position in corner based on player
         if player_id == 0:  # Left player
-            x, y = 20, SCREEN_HEIGHT // 2
+            x, y = 20, constants.SCREEN_HEIGHT // 2
         elif player_id == 1:  # Right player
-            x, y = SCREEN_WIDTH - 20, SCREEN_HEIGHT // 2
+            x, y = constants.SCREEN_WIDTH - 20, constants.SCREEN_HEIGHT // 2
         elif player_id == 2:  # Top player
-            x, y = SCREEN_WIDTH // 2, 20
+            x, y = constants.SCREEN_WIDTH // 2, 20
         else:  # Bottom player
-            x, y = SCREEN_WIDTH // 2, SCREEN_HEIGHT - 20
+            x, y = constants.SCREEN_WIDTH // 2, constants.SCREEN_HEIGHT - 20
             
         # Draw ghost icon
         color = (0, 255, 255, 150)  # Semi-transparent cyan
-        font = pygame.font.Font(None, 24)
+        font = pygame.font.Font(None, int(24 * constants.SCALE_FACTOR))
         text = font.render("GHOST", True, color)
         text_rect = text.get_rect(center=(x, y))
         
@@ -261,12 +262,12 @@ class PowerUpRenderer:
     def render_wild_bounce_indicator(self, screen):
         """Render wild bounce effect indicator"""
         # Position in top-center
-        x = SCREEN_WIDTH // 2
+        x = constants.SCREEN_WIDTH // 2
         y = 20
         
         # Chaotic color effect
         color = (255, 50, 0)  # Bright red-orange
-        font = pygame.font.Font(None, 24)
+        font = pygame.font.Font(None, int(24 * constants.SCALE_FACTOR))
         text = font.render("WILD BOUNCE", True, color)
         text_rect = text.get_rect(center=(x, y))
         
@@ -289,12 +290,12 @@ class PowerUpRenderer:
     def render_control_scramble_indicator(self, screen):
         """Render control scramble effect indicator"""
         # Position in bottom-center
-        x = SCREEN_WIDTH // 2
-        y = SCREEN_HEIGHT - 30
+        x = constants.SCREEN_WIDTH // 2
+        y = constants.SCREEN_HEIGHT - 30
         
         # Scrambled color effect
         color = (100, 255, 100)  # Bright lime green
-        font = pygame.font.Font(None, 24)
+        font = pygame.font.Font(None, int(24 * constants.SCALE_FACTOR))
         text = font.render("CONTROLS SCRAMBLED", True, color)
         text_rect = text.get_rect(center=(x, y))
         
@@ -343,7 +344,7 @@ class PowerUpRenderer:
                             special_flags=pygame.BLEND_ALPHA_SDL2)
         
         # Draw main ball with transparency
-        main_color = (*WHITE, decoy_ball.alpha)
+        main_color = (*constants.WHITE, decoy_ball.alpha)
         pygame.draw.circle(ball_surface, main_color, 
                          (surf_center_x, surf_center_y), decoy_ball.size)
         
@@ -379,20 +380,20 @@ class PowerUpRenderer:
     def render_collection_effect(self, particle_system, x, y, powerup_type):
         """Create particle effect when power-up is collected"""
         # Choose color based on power-up type
-        if powerup_type == POWERUP_PADDLE_SWAP:
-            color = NEON_ORANGE
-        elif powerup_type == POWERUP_GHOST_BALL:
-            color = NEON_CYAN
-        elif powerup_type == POWERUP_MAGNETIZE:
-            color = NEON_YELLOW
-        elif powerup_type == POWERUP_DECOY_BALL:
+        if powerup_type == constants.POWERUP_PADDLE_SWAP:
+            color = constants.NEON_ORANGE
+        elif powerup_type == constants.POWERUP_GHOST_BALL:
+            color = constants.NEON_CYAN
+        elif powerup_type == constants.POWERUP_MAGNETIZE:
+            color = constants.NEON_YELLOW
+        elif powerup_type == constants.POWERUP_DECOY_BALL:
             color = (255, 100, 255)  # Bright magenta
-        elif powerup_type == POWERUP_WILD_BOUNCE:
+        elif powerup_type == constants.POWERUP_WILD_BOUNCE:
             color = (255, 50, 0)     # Bright red-orange
-        elif powerup_type == POWERUP_CONTROL_SCRAMBLE:
+        elif powerup_type == constants.POWERUP_CONTROL_SCRAMBLE:
             color = (100, 255, 100)  # Bright lime green
         else:
-            color = NEON_PURPLE  # Classic power-ups
+            color = constants.NEON_PURPLE  # Classic power-ups
             
         # Add burst of particles
         for i in range(20):

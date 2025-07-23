@@ -1,6 +1,6 @@
 import pygame
 import random
-from utils.constants import *
+from utils import constants
 
 
 class EffectsRenderer:
@@ -40,7 +40,7 @@ class EffectsRenderer:
 
     def apply_shake_to_surface(self, main_screen, game_surface):
         """Apply screen shake effect to a surface"""
-        main_screen.fill(BLACK)  # Clear the main screen
+        main_screen.fill(constants.BLACK)  # Clear the main screen
         main_screen.blit(game_surface, (self.shake_offset_x, self.shake_offset_y))
 
     def create_glow_surface(self, width, height, color, alpha, position=(0, 0)):

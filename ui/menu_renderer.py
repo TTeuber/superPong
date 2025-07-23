@@ -1,6 +1,6 @@
 import pygame
 import math
-from utils.constants import *
+from utils import constants
 
 
 class MenuRenderer:
@@ -15,7 +15,7 @@ class MenuRenderer:
     def draw_pause_overlay(self, screen, selected_option=0):
         """Draw navigable pause menu overlay with selection highlighting"""
         # Create semi-transparent overlay
-        overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+        overlay = pygame.Surface((constants.SCREEN_WIDTH, constants.SCREEN_HEIGHT), pygame.SRCALPHA)
         overlay.fill((0, 0, 0, 180))  # Semi-transparent black
         screen.blit(overlay, (0, 0))
         
@@ -25,15 +25,15 @@ class MenuRenderer:
         
         # Main PAUSED text
         pause_text = "PAUSED"
-        text_surface = self.ui_effects.font_large.render(pause_text, True, NEON_YELLOW)
-        text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 100))
+        text_surface = self.ui_effects.font_large.render(pause_text, True, constants.NEON_YELLOW)
+        text_rect = text_surface.get_rect(center=(constants.SCREEN_WIDTH // 2, constants.SCREEN_HEIGHT // 2 - 100))
         
         # Glow effect for pause text
         glow_size = 15
         glow_alpha = 80
         for i in range(3):
             glow_surface = pygame.Surface((text_rect.width + glow_size * 2, text_rect.height + glow_size * 2), pygame.SRCALPHA)
-            glow_color = (*NEON_YELLOW, glow_alpha // (i + 1))
+            glow_color = (*constants.NEON_YELLOW, glow_alpha // (i + 1))
             glow_text = self.ui_effects.font_large.render(pause_text, True, glow_color)
             glow_text_rect = glow_text.get_rect(center=(glow_surface.get_width() // 2, glow_surface.get_height() // 2))
             glow_surface.blit(glow_text, glow_text_rect)
@@ -43,36 +43,36 @@ class MenuRenderer:
         screen.blit(text_surface, text_rect)
         
         # Draw menu options
-        menu_start_y = SCREEN_HEIGHT // 2 - 20
+        menu_start_y = constants.SCREEN_HEIGHT // 2 - 20
         option_spacing = 50
         
-        for i, option_text in enumerate(PAUSE_MENU_OPTIONS):
+        for i, option_text in enumerate(constants.PAUSE_MENU_OPTIONS):
             y_pos = menu_start_y + i * option_spacing
             
             # Determine colors based on selection
             if i == selected_option:
                 # Selected option - bright with pulsing glow
-                text_color = NEON_GREEN
-                glow_color = NEON_GREEN
+                text_color = constants.NEON_GREEN
+                glow_color = constants.NEON_GREEN
                 glow_intensity = selected_glow_intensity
                 font_to_use = self.ui_effects.font_large
                 
                 # Draw selection arrow
                 arrow_text = "►"
-                arrow_surface = self.ui_effects.font_large.render(arrow_text, True, NEON_GREEN)
-                arrow_rect = arrow_surface.get_rect(center=(SCREEN_WIDTH // 2 - 120, y_pos))
+                arrow_surface = self.ui_effects.font_large.render(arrow_text, True, constants.NEON_GREEN)
+                arrow_rect = arrow_surface.get_rect(center=(constants.SCREEN_WIDTH // 2 - 120, y_pos))
                 screen.blit(arrow_surface, arrow_rect)
                 
             else:
                 # Unselected option - dimmed
-                text_color = NEON_BLUE
-                glow_color = NEON_BLUE
+                text_color = constants.NEON_BLUE
+                glow_color = constants.NEON_BLUE
                 glow_intensity = 0.3
                 font_to_use = self.ui_effects.font_medium
             
             # Create text surface
             text_surface = font_to_use.render(option_text, True, text_color)
-            text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, y_pos))
+            text_rect = text_surface.get_rect(center=(constants.SCREEN_WIDTH // 2, y_pos))
             
             # Draw glow effect for selected option
             if i == selected_option:
@@ -90,7 +90,7 @@ class MenuRenderer:
             screen.blit(text_surface, text_rect)
         
         # Instructions at bottom
-        instruction_y = SCREEN_HEIGHT // 2 + 200
+        instruction_y = constants.SCREEN_HEIGHT // 2 + 200
         instructions = [
             "Use ↑/↓ or Analog Stick to navigate",
             "Press A or ENTER to confirm",
@@ -99,13 +99,13 @@ class MenuRenderer:
         
         for i, instruction in enumerate(instructions):
             text_surface = self.ui_effects.font_small.render(instruction, True, (150, 150, 150))
-            text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, instruction_y + i * 20))
+            text_rect = text_surface.get_rect(center=(constants.SCREEN_WIDTH // 2, instruction_y + i * 20))
             screen.blit(text_surface, text_rect)
 
     def render_start_screen(self, screen, start_screen_system):
         """Render the start screen with title, demo game, and menu"""
         # Clear screen with black background
-        screen.fill(BLACK)
+        screen.fill(constants.BLACK)
         
         # Draw subtle background grid - delegate to ui_effects
         self.ui_effects.draw_background_grid(screen, self.frame_count)
@@ -115,7 +115,7 @@ class MenuRenderer:
         
         # Draw split title "SUPER" and "PONG"
         title_words = ["SUPER", "PONG"]
-        title_positions = [120, 280]  # Y positions for each word
+        title_positions = [int(120 * constants.SCALE_FACTOR), int(280 * constants.SCALE_FACTOR)]  # Y positions for each word
         
         # Pulsing animation calculations
         pulse_time = self.frame_count * 0.05  # Slower pulse
@@ -123,7 +123,7 @@ class MenuRenderer:
         color_cycle = self.frame_count * 0.02  # Color cycling
         
         # Create animated glow colors with rainbow effect
-        base_colors = [NEON_BLUE, NEON_PINK, NEON_GREEN, NEON_YELLOW, NEON_PURPLE]
+        base_colors = [constants.NEON_BLUE, constants.NEON_PINK, constants.NEON_GREEN, constants.NEON_YELLOW, constants.NEON_PURPLE]
         
         # Main title with color cycling
         title_color_index = int(color_cycle) % len(base_colors)
@@ -152,9 +152,9 @@ class MenuRenderer:
             # Draw multiple animated glow layers for this word
             for i, glow_color in enumerate(glow_colors):
                 glow_offset = math.sin(pulse_time + i * 0.5 + word_idx * 0.3) * 2  # Slight offset variation
-                glow_surface = pygame.Surface((SCREEN_WIDTH, 150), pygame.SRCALPHA)
+                glow_surface = pygame.Surface((constants.SCREEN_WIDTH, 150), pygame.SRCALPHA)
                 glow_text = self.ui_effects.font_retro_massive.render(word, True, glow_color[:3])
-                glow_rect = glow_text.get_rect(center=(SCREEN_WIDTH // 2 + glow_offset, 75))
+                glow_rect = glow_text.get_rect(center=(constants.SCREEN_WIDTH // 2 + glow_offset, 75))
                 glow_surface.blit(glow_text, glow_rect)
                 screen.blit(glow_surface, (0, y_pos - 75))
             
@@ -167,7 +167,7 @@ class MenuRenderer:
                               int(word_surface.get_height() * scale_factor))
                 word_surface = pygame.transform.scale(word_surface, scaled_size)
             
-            word_rect = word_surface.get_rect(center=(SCREEN_WIDTH // 2, y_pos))
+            word_rect = word_surface.get_rect(center=(constants.SCREEN_WIDTH // 2, y_pos))
             screen.blit(word_surface, word_rect)
         
         # Draw AI demo game at full screen scale (behind title and menu)
@@ -192,26 +192,26 @@ class MenuRenderer:
         # Draw ball glow
         glow_radius = int(ball.size * 2)
         glow_surface = pygame.Surface((glow_radius * 2, glow_radius * 2), pygame.SRCALPHA)
-        pygame.draw.circle(glow_surface, (*WHITE, 40), (glow_radius, glow_radius), glow_radius)
+        pygame.draw.circle(glow_surface, (*constants.WHITE, 40), (glow_radius, glow_radius), glow_radius)
         screen.blit(glow_surface, (ball.x - glow_radius, ball.y - glow_radius))
         
         # Draw main ball
-        pygame.draw.circle(screen, WHITE, (int(ball.x), int(ball.y)), int(ball.size))
+        pygame.draw.circle(screen, constants.WHITE, (int(ball.x), int(ball.y)), int(ball.size))
         
         # Draw menu options at bottom
-        menu_y = 580  # Moved down more for larger menu text
+        menu_y = int(580 * constants.SCALE_FACTOR)  # Moved down more for larger menu text
         selected_option = start_screen_system.get_selected_option()
         
-        for i, option in enumerate(START_MENU_OPTIONS):
+        for i, option in enumerate(constants.START_MENU_OPTIONS):
             is_selected = (i == selected_option)
             
             # Create text surface
             if is_selected:
-                text_surface = self.ui_effects.font_retro_large_menu.render(option, True, NEON_YELLOW)
+                text_surface = self.ui_effects.font_retro_large_menu.render(option, True, constants.NEON_YELLOW)
             else:
-                text_surface = self.ui_effects.font_retro_large_menu.render(option, True, WHITE)
+                text_surface = self.ui_effects.font_retro_large_menu.render(option, True, constants.WHITE)
             
-            text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, menu_y + i * 70))  # Increased spacing for larger text
+            text_rect = text_surface.get_rect(center=(constants.SCREEN_WIDTH // 2, menu_y + i * 70))  # Increased spacing for larger text
             
             # Draw glow for selected option
             if is_selected:
@@ -222,7 +222,7 @@ class MenuRenderer:
                 glow_size = 25  # Larger glow for larger text
                 glow_surface = pygame.Surface((text_rect.width + glow_size * 2, 
                                              text_rect.height + glow_size * 2), pygame.SRCALPHA)
-                glow_color = (*NEON_YELLOW, glow_alpha)
+                glow_color = (*constants.NEON_YELLOW, glow_alpha)
                 glow_text = self.ui_effects.font_retro_large_menu.render(option, True, glow_color)
                 glow_text_rect = glow_text.get_rect(center=(glow_surface.get_width() // 2, 
                                                           glow_surface.get_height() // 2))
@@ -233,7 +233,7 @@ class MenuRenderer:
             screen.blit(text_surface, text_rect)
         
         # Draw instructions at bottom
-        instruction_y = 720
+        instruction_y = int(720 * constants.SCALE_FACTOR)
         instructions = [
             "Use Up/Down or Analog Stick to navigate",
             "Press A or ENTER to select"
@@ -241,13 +241,13 @@ class MenuRenderer:
         
         for i, instruction in enumerate(instructions):
             text_surface = self.ui_effects.font_small.render(instruction, True, (150, 150, 150))
-            text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, instruction_y + i * 20))
+            text_rect = text_surface.get_rect(center=(constants.SCREEN_WIDTH // 2, instruction_y + i * 20))
             screen.blit(text_surface, text_rect)
 
     def render_game_over_screen(self, screen, game_over_system):
         """Render the game over screen with winner announcement and menu"""
         # Clear screen with black background
-        screen.fill(BLACK)
+        screen.fill(constants.BLACK)
         
         # Draw subtle background grid
         self.ui_effects.draw_background_grid(screen, self.frame_count)
@@ -260,7 +260,7 @@ class MenuRenderer:
         max_celebration_time = winner_info['max_celebration_time']
         
         # Draw "GAME OVER" title
-        game_over_y = 120
+        game_over_y = int(120 * constants.SCALE_FACTOR)
         game_over_text = "GAME OVER"
         
         # Create pulsing effect for title
@@ -269,28 +269,28 @@ class MenuRenderer:
         
         # Draw multiple glow layers for title
         glow_colors = [
-            (NEON_PURPLE[0] // 4, NEON_PURPLE[1] // 4, NEON_PURPLE[2] // 4),
-            (NEON_ORANGE[0] // 3, NEON_ORANGE[1] // 3, NEON_ORANGE[2] // 3),
+            (constants.NEON_PURPLE[0] // 4, constants.NEON_PURPLE[1] // 4, constants.NEON_PURPLE[2] // 4),
+            (constants.NEON_ORANGE[0] // 3, constants.NEON_ORANGE[1] // 3, constants.NEON_ORANGE[2] // 3),
         ]
         
         for i, glow_color in enumerate(glow_colors):
             glow_size = 8 + i * 4
-            glow_surface = pygame.Surface((SCREEN_WIDTH, 80), pygame.SRCALPHA)
+            glow_surface = pygame.Surface((constants.SCREEN_WIDTH, 80), pygame.SRCALPHA)
             glow_text = self.ui_effects.font_retro_large.render(game_over_text, True, (*glow_color, title_glow_alpha))
-            glow_rect = glow_text.get_rect(center=(SCREEN_WIDTH // 2, 40))
+            glow_rect = glow_text.get_rect(center=(constants.SCREEN_WIDTH // 2, 40))
             glow_surface.blit(glow_text, glow_rect)
             screen.blit(glow_surface, (0, game_over_y - 40))
         
         # Draw main title text
-        title_surface = self.ui_effects.font_retro_large.render(game_over_text, True, WHITE)
-        title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, game_over_y))
+        title_surface = self.ui_effects.font_retro_large.render(game_over_text, True, constants.WHITE)
+        title_rect = title_surface.get_rect(center=(constants.SCREEN_WIDTH // 2, game_over_y))
         screen.blit(title_surface, title_rect)
         
         # Draw winner announcement
-        winner_y = 240
+        winner_y = int(240 * constants.SCALE_FACTOR)
         if winner_id >= 0:
             # Get winner color
-            winner_color = PLAYER_COLORS[winner_id]
+            winner_color = constants.PLAYER_COLORS[winner_id]
             
             # Winner text with player color
             winner_text = f"PLAYER {winner_id + 1} WINS!"
@@ -301,33 +301,33 @@ class MenuRenderer:
             
             # Draw winner glow
             glow_size = 15
-            glow_surface = pygame.Surface((SCREEN_WIDTH, 100), pygame.SRCALPHA)
+            glow_surface = pygame.Surface((constants.SCREEN_WIDTH, 100), pygame.SRCALPHA)
             glow_text = self.ui_effects.font_retro_medium.render(winner_text, True, (*winner_color, celebration_glow_alpha))
-            glow_rect = glow_text.get_rect(center=(SCREEN_WIDTH // 2, 50))
+            glow_rect = glow_text.get_rect(center=(constants.SCREEN_WIDTH // 2, 50))
             glow_surface.blit(glow_text, glow_rect)
             screen.blit(glow_surface, (0, winner_y - 50))
             
             # Draw main winner text
             winner_surface = self.ui_effects.font_retro_medium.render(winner_text, True, winner_color)
-            winner_rect = winner_surface.get_rect(center=(SCREEN_WIDTH // 2, winner_y))
+            winner_rect = winner_surface.get_rect(center=(constants.SCREEN_WIDTH // 2, winner_y))
             screen.blit(winner_surface, winner_rect)
             
             # Draw lives remaining info
             lives_y = winner_y + 60
             lives_text = f"Lives Remaining: {winner_info['winner_lives']}"
             lives_surface = self.ui_effects.font_small.render(lives_text, True, (200, 200, 200))
-            lives_rect = lives_surface.get_rect(center=(SCREEN_WIDTH // 2, lives_y))
+            lives_rect = lives_surface.get_rect(center=(constants.SCREEN_WIDTH // 2, lives_y))
             screen.blit(lives_surface, lives_rect)
         else:
             # Draw tie/no winner message
             no_winner_text = "ALL PLAYERS ELIMINATED!"
-            no_winner_surface = self.ui_effects.font_retro_medium.render(no_winner_text, True, NEON_PURPLE)
-            no_winner_rect = no_winner_surface.get_rect(center=(SCREEN_WIDTH // 2, winner_y))
+            no_winner_surface = self.ui_effects.font_retro_medium.render(no_winner_text, True, constants.NEON_PURPLE)
+            no_winner_rect = no_winner_surface.get_rect(center=(constants.SCREEN_WIDTH // 2, winner_y))
             screen.blit(no_winner_surface, no_winner_rect)
         
         # Draw celebration particles area (visual placeholder)
         if celebration_timer > 0:
-            particle_area = pygame.Rect(200, 320, SCREEN_WIDTH - 400, 150)
+            particle_area = pygame.Rect(200, 320, constants.SCREEN_WIDTH - 400, 150)
             particle_alpha = int(celebration_intensity * 30)
             particle_surface = pygame.Surface((particle_area.width, particle_area.height), pygame.SRCALPHA)
             
@@ -336,26 +336,26 @@ class MenuRenderer:
             for _ in range(int(20 * celebration_intensity)):
                 x = random.randint(0, particle_area.width)
                 y = random.randint(0, particle_area.height)
-                color = random.choice(PLAYER_COLORS)
+                color = random.choice(constants.PLAYER_COLORS)
                 size = random.randint(2, 5)
                 pygame.draw.circle(particle_surface, (*color, particle_alpha), (x, y), size)
             
             screen.blit(particle_surface, particle_area.topleft)
         
         # Draw menu options at bottom
-        menu_y = 550
+        menu_y = int(550 * constants.SCALE_FACTOR)
         selected_option = game_over_system.get_selected_option()
         
-        for i, option in enumerate(GAME_OVER_MENU_OPTIONS):
+        for i, option in enumerate(constants.GAME_OVER_MENU_OPTIONS):
             is_selected = (i == selected_option)
             
             # Create text surface
             if is_selected:
-                text_surface = self.ui_effects.font_retro_medium.render(option, True, NEON_YELLOW)
+                text_surface = self.ui_effects.font_retro_medium.render(option, True, constants.NEON_YELLOW)
             else:
-                text_surface = self.ui_effects.font_retro_medium.render(option, True, WHITE)
+                text_surface = self.ui_effects.font_retro_medium.render(option, True, constants.WHITE)
             
-            text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, menu_y + i * 60))
+            text_rect = text_surface.get_rect(center=(constants.SCREEN_WIDTH // 2, menu_y + i * 60))
             
             # Draw glow for selected option
             if is_selected:
@@ -366,7 +366,7 @@ class MenuRenderer:
                 glow_size = 20
                 glow_surface = pygame.Surface((text_rect.width + glow_size * 2, 
                                              text_rect.height + glow_size * 2), pygame.SRCALPHA)
-                glow_color = (*NEON_YELLOW, glow_alpha)
+                glow_color = (*constants.NEON_YELLOW, glow_alpha)
                 glow_text = self.ui_effects.font_retro_medium.render(option, True, glow_color)
                 glow_text_rect = glow_text.get_rect(center=(glow_surface.get_width() // 2, 
                                                           glow_surface.get_height() // 2))
@@ -377,7 +377,7 @@ class MenuRenderer:
             screen.blit(text_surface, text_rect)
         
         # Draw instructions at bottom
-        instruction_y = 760
+        instruction_y = int(760 * constants.SCALE_FACTOR)
         instructions = [
             "Use ↑/↓ or Analog Stick to navigate",
             "Press A or ENTER to select"
@@ -385,13 +385,13 @@ class MenuRenderer:
         
         for i, instruction in enumerate(instructions):
             text_surface = self.ui_effects.font_small.render(instruction, True, (150, 150, 150))
-            text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, instruction_y + i * 20))
+            text_rect = text_surface.get_rect(center=(constants.SCREEN_WIDTH // 2, instruction_y + i * 20))
             screen.blit(text_surface, text_rect)
 
     def render_settings_screen(self, screen, settings_screen_system):
         """Render the settings screen with options and current values"""
         # Clear screen with black background
-        screen.fill(BLACK)
+        screen.fill(constants.BLACK)
         
         # Draw subtle background grid
         self.ui_effects.draw_background_grid(screen, self.frame_count)
@@ -407,30 +407,30 @@ class MenuRenderer:
         
         # Create multiple glow layers for title
         glow_colors = [
-            (NEON_GREEN[0] // 4, NEON_GREEN[1] // 4, NEON_GREEN[2] // 4),  # Dim green glow
-            (NEON_PURPLE[0] // 3, NEON_PURPLE[1] // 3, NEON_PURPLE[2] // 3),  # Dim purple glow
+            (constants.NEON_GREEN[0] // 4, constants.NEON_GREEN[1] // 4, constants.NEON_GREEN[2] // 4),  # Dim green glow
+            (constants.NEON_PURPLE[0] // 3, constants.NEON_PURPLE[1] // 3, constants.NEON_PURPLE[2] // 3),  # Dim purple glow
         ]
         
         # Draw multiple glow layers for title
         for i, glow_color in enumerate(glow_colors):
             glow_size = 8 + i * 4
-            glow_surface = pygame.Surface((SCREEN_WIDTH, 80), pygame.SRCALPHA)
+            glow_surface = pygame.Surface((constants.SCREEN_WIDTH, 80), pygame.SRCALPHA)
             glow_text = self.ui_effects.font_retro_large.render(title_text, True, glow_color)
-            glow_rect = glow_text.get_rect(center=(SCREEN_WIDTH // 2, 40))
+            glow_rect = glow_text.get_rect(center=(constants.SCREEN_WIDTH // 2, 40))
             glow_surface.blit(glow_text, glow_rect)
             screen.blit(glow_surface, (0, title_y - 40))
         
         # Draw main title text
-        title_surface = self.ui_effects.font_retro_large.render(title_text, True, WHITE)
-        title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, title_y))
+        title_surface = self.ui_effects.font_retro_large.render(title_text, True, constants.WHITE)
+        title_rect = title_surface.get_rect(center=(constants.SCREEN_WIDTH // 2, title_y))
         screen.blit(title_surface, title_rect)
         
         # Draw settings options
-        menu_start_y = 280
-        menu_spacing = 80
+        menu_start_y = int(280 * constants.SCALE_FACTOR)
+        menu_spacing = int(80 * constants.SCALE_FACTOR)
         selected_option = settings_screen_system.get_selected_option()
         
-        for i, option in enumerate(SETTINGS_MENU_OPTIONS):
+        for i, option in enumerate(constants.SETTINGS_MENU_OPTIONS):
             is_selected = (i == selected_option)
             current_y = menu_start_y + i * menu_spacing
             
@@ -440,25 +440,25 @@ class MenuRenderer:
             # Create option text
             option_text = option
             if is_selected:
-                option_surface = self.ui_effects.font_retro_medium.render(option_text, True, NEON_YELLOW)
+                option_surface = self.ui_effects.font_retro_medium.render(option_text, True, constants.NEON_YELLOW)
             else:
-                option_surface = self.ui_effects.font_retro_medium.render(option_text, True, WHITE)
+                option_surface = self.ui_effects.font_retro_medium.render(option_text, True, constants.WHITE)
             
             # Position option text on the left
             option_rect = option_surface.get_rect()
-            option_rect.right = SCREEN_WIDTH // 2 - 50
+            option_rect.right = constants.SCREEN_WIDTH // 2 - 50
             option_rect.centery = current_y
             
             # Create value text (except for Back option)
-            if i != SETTINGS_MENU_BACK:
+            if i != constants.SETTINGS_MENU_BACK:
                 if is_selected:
-                    value_surface = self.ui_effects.font_retro_medium.render(current_value, True, NEON_CYAN)
+                    value_surface = self.ui_effects.font_retro_medium.render(current_value, True, constants.NEON_CYAN)
                 else:
                     value_surface = self.ui_effects.font_retro_medium.render(current_value, True, (200, 200, 200))
                 
                 # Position value text on the right
                 value_rect = value_surface.get_rect()
-                value_rect.left = SCREEN_WIDTH // 2 + 50
+                value_rect.left = constants.SCREEN_WIDTH // 2 + 50
                 value_rect.centery = current_y
             
             # Draw glow for selected option
@@ -468,24 +468,24 @@ class MenuRenderer:
                 glow_alpha = int(80 + pulse * 40)
                 
                 # Create glow for the entire row
-                row_width = SCREEN_WIDTH - 200
+                row_width = constants.SCREEN_WIDTH - 200
                 row_height = 50
                 glow_surface = pygame.Surface((row_width, row_height), pygame.SRCALPHA)
                 
                 # Draw background glow
-                glow_color = (*NEON_YELLOW, int(glow_alpha * 0.3))
+                glow_color = (*constants.NEON_YELLOW, int(glow_alpha * 0.3))
                 pygame.draw.rect(glow_surface, glow_color, 
                                (0, 0, row_width, row_height), border_radius=10)
                 
-                glow_rect = glow_surface.get_rect(center=(SCREEN_WIDTH // 2, current_y))
+                glow_rect = glow_surface.get_rect(center=(constants.SCREEN_WIDTH // 2, current_y))
                 screen.blit(glow_surface, glow_rect)
                 
                 # Draw arrows for changeable values (not for Back option)
-                if i != SETTINGS_MENU_BACK:
+                if i != constants.SETTINGS_MENU_BACK:
                     # Left arrow
-                    left_arrow_x = SCREEN_WIDTH // 2 + 20
+                    left_arrow_x = constants.SCREEN_WIDTH // 2 + 20
                     arrow_y = current_y
-                    arrow_color = NEON_YELLOW if is_selected else (100, 100, 100)
+                    arrow_color = constants.NEON_YELLOW if is_selected else (100, 100, 100)
                     
                     # Draw left arrow
                     arrow_points = [
@@ -508,11 +508,11 @@ class MenuRenderer:
             screen.blit(option_surface, option_rect)
             
             # Draw value text (except for Back option)
-            if i != SETTINGS_MENU_BACK:
+            if i != constants.SETTINGS_MENU_BACK:
                 screen.blit(value_surface, value_rect)
         
         # Draw instructions at bottom
-        instruction_y = 720
+        instruction_y = int(720 * constants.SCALE_FACTOR)
         instructions = [
             "Use ↑/↓ to navigate • Use ←/→ to change values",
             "Press ENTER to select • Press ESC to go back"
@@ -520,13 +520,13 @@ class MenuRenderer:
         
         for i, instruction in enumerate(instructions):
             text_surface = self.ui_effects.font_small.render(instruction, True, (150, 150, 150))
-            text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, instruction_y + i * 25))
+            text_rect = text_surface.get_rect(center=(constants.SCREEN_WIDTH // 2, instruction_y + i * 25))
             screen.blit(text_surface, text_rect)
     
     def draw_player_count_screen(self, screen, player_count_system, mouse_pos=None):
         """Draw player count selection screen"""
         # Draw background
-        screen.fill(BLACK)
+        screen.fill(constants.BLACK)
         self.ui_effects.draw_background_grid(screen, self.frame_count)
         
         # Get current menu state
@@ -536,26 +536,26 @@ class MenuRenderer:
         description = player_count_system.get_selection_description()
         
         # Draw title
-        title_surface = self.ui_effects.font_title.render(title, True, NEON_YELLOW)
-        title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, 120))
+        title_surface = self.ui_effects.font_title.render(title, True, constants.NEON_YELLOW)
+        title_rect = title_surface.get_rect(center=(constants.SCREEN_WIDTH // 2, 120))
         
         # Title glow effect
-        self._draw_text_glow(screen, title, self.ui_effects.font_title, NEON_YELLOW, title_rect, glow_size=20)
+        self._draw_text_glow(screen, title, self.ui_effects.font_title, constants.NEON_YELLOW, title_rect, glow_size=20)
         screen.blit(title_surface, title_rect)
         
         # Draw description
         if description:
-            desc_surface = self.ui_effects.font_small.render(description, True, NEON_CYAN)
-            desc_rect = desc_surface.get_rect(center=(SCREEN_WIDTH // 2, 170))
+            desc_surface = self.ui_effects.font_small.render(description, True, constants.NEON_CYAN)
+            desc_rect = desc_surface.get_rect(center=(constants.SCREEN_WIDTH // 2, 170))
             screen.blit(desc_surface, desc_rect)
         
         # Draw menu options
-        menu_start_y = SCREEN_HEIGHT // 2 - 50
+        menu_start_y = constants.SCREEN_HEIGHT // 2 - 50
         option_spacing = 80
         
         for i, option_text in enumerate(menu_options):
             y_pos = menu_start_y + i * option_spacing
-            option_rect = (SCREEN_WIDTH // 2 - 150, y_pos - 25, 300, 50)
+            option_rect = (constants.SCREEN_WIDTH // 2 - 150, y_pos - 25, 300, 50)
             
             # Check for mouse hover
             is_hovered = mouse_pos and self._is_point_in_rect(mouse_pos, option_rect)
@@ -563,7 +563,7 @@ class MenuRenderer:
             
             if is_selected:
                 # Selected/hovered option
-                text_color = NEON_GREEN
+                text_color = constants.NEON_GREEN
                 font_to_use = self.ui_effects.font_large
                 
                 # Calculate pulsing effect
@@ -572,23 +572,23 @@ class MenuRenderer:
                 
                 # Draw selection arrow
                 arrow_text = "►"
-                arrow_surface = self.ui_effects.font_large.render(arrow_text, True, NEON_GREEN)
-                arrow_rect = arrow_surface.get_rect(center=(SCREEN_WIDTH // 2 - 180, y_pos))
+                arrow_surface = self.ui_effects.font_large.render(arrow_text, True, constants.NEON_GREEN)
+                arrow_rect = arrow_surface.get_rect(center=(constants.SCREEN_WIDTH // 2 - 180, y_pos))
                 screen.blit(arrow_surface, arrow_rect)
                 
             else:
                 # Unselected option
-                text_color = NEON_BLUE
+                text_color = constants.NEON_BLUE
                 font_to_use = self.ui_effects.font_medium
                 glow_intensity = 0.3
             
             # Create text surface
             text_surface = font_to_use.render(option_text, True, text_color)
-            text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, y_pos))
+            text_rect = text_surface.get_rect(center=(constants.SCREEN_WIDTH // 2, y_pos))
             
             # Draw glow effect for selected option
             if is_selected:
-                self._draw_text_glow(screen, option_text, font_to_use, NEON_GREEN, text_rect, 
+                self._draw_text_glow(screen, option_text, font_to_use, constants.NEON_GREEN, text_rect, 
                                    glow_size=int(15 * glow_intensity), glow_alpha=int(100 * glow_intensity))
             
             # Draw main text
@@ -600,46 +600,46 @@ class MenuRenderer:
             "ESC/B to go back"
         ]
         
-        instruction_y = SCREEN_HEIGHT - 80
+        instruction_y = constants.SCREEN_HEIGHT - 80
         for i, instruction in enumerate(instructions):
-            instruction_surface = self.ui_effects.font_small.render(instruction, True, NEON_CYAN)
-            instruction_rect = instruction_surface.get_rect(center=(SCREEN_WIDTH // 2, instruction_y + i * 25))
+            instruction_surface = self.ui_effects.font_small.render(instruction, True, constants.NEON_CYAN)
+            instruction_rect = instruction_surface.get_rect(center=(constants.SCREEN_WIDTH // 2, instruction_y + i * 25))
             screen.blit(instruction_surface, instruction_rect)
     
     def draw_controller_setup_screen(self, screen, controller_setup_system, mouse_pos=None):
         """Draw controller setup screen with readiness indicators"""
         # Draw background
-        screen.fill(BLACK)
+        screen.fill(constants.BLACK)
         self.ui_effects.draw_background_grid(screen, self.frame_count)
         
         # Title
         title = "CONTROLLER SETUP"
-        title_surface = self.ui_effects.font_title.render(title, True, NEON_YELLOW)
-        title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, 80))
-        self._draw_text_glow(screen, title, self.ui_effects.font_title, NEON_YELLOW, title_rect, glow_size=20)
+        title_surface = self.ui_effects.font_title.render(title, True, constants.NEON_YELLOW)
+        title_rect = title_surface.get_rect(center=(constants.SCREEN_WIDTH // 2, 80))
+        self._draw_text_glow(screen, title, self.ui_effects.font_title, constants.NEON_YELLOW, title_rect, glow_size=20)
         screen.blit(title_surface, title_rect)
         
         # Status text
         ready_count = controller_setup_system.get_ready_count()
         required_count = controller_setup_system.get_required_players()
         status_text = f"Players Ready: {ready_count}/{required_count}"
-        status_surface = self.ui_effects.font_medium.render(status_text, True, NEON_CYAN)
-        status_rect = status_surface.get_rect(center=(SCREEN_WIDTH // 2, 130))
+        status_surface = self.ui_effects.font_medium.render(status_text, True, constants.NEON_CYAN)
+        status_rect = status_surface.get_rect(center=(constants.SCREEN_WIDTH // 2, 130))
         screen.blit(status_surface, status_rect)
         
         # Warning if insufficient controllers
         warning = controller_setup_system.get_insufficient_controllers_warning()
         if warning:
-            warning_surface = self.ui_effects.font_small.render(warning, True, NEON_ORANGE)
-            warning_rect = warning_surface.get_rect(center=(SCREEN_WIDTH // 2, 160))
+            warning_surface = self.ui_effects.font_small.render(warning, True, constants.NEON_ORANGE)
+            warning_rect = warning_surface.get_rect(center=(constants.SCREEN_WIDTH // 2, 160))
             screen.blit(warning_surface, warning_rect)
         
         # Player readiness indicators
         player_positions = [
-            (SCREEN_WIDTH // 4, SCREEN_HEIGHT // 2),      # Player 1 - Left
-            (3 * SCREEN_WIDTH // 4, SCREEN_HEIGHT // 2),  # Player 2 - Right  
-            (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 4),      # Player 3 - Top
-            (SCREEN_WIDTH // 2, 3 * SCREEN_HEIGHT // 4)   # Player 4 - Bottom
+            (constants.SCREEN_WIDTH // 4, constants.SCREEN_HEIGHT // 2),      # Player 1 - Left
+            (3 * constants.SCREEN_WIDTH // 4, constants.SCREEN_HEIGHT // 2),  # Player 2 - Right  
+            (constants.SCREEN_WIDTH // 2, constants.SCREEN_HEIGHT // 4),      # Player 3 - Top
+            (constants.SCREEN_WIDTH // 2, 3 * constants.SCREEN_HEIGHT // 4)   # Player 4 - Bottom
         ]
         
         for player_id in range(required_count):
@@ -649,7 +649,7 @@ class MenuRenderer:
                                                 controller_setup_system)
         
         # Instructions
-        instruction_y = SCREEN_HEIGHT - 100
+        instruction_y = constants.SCREEN_HEIGHT - 100
         instructions = [
             "Press A on your controller to toggle ready status",
             "All players must be ready to start the game",
@@ -657,13 +657,13 @@ class MenuRenderer:
         ]
         
         for i, instruction in enumerate(instructions):
-            instruction_surface = self.ui_effects.font_small.render(instruction, True, NEON_CYAN)
-            instruction_rect = instruction_surface.get_rect(center=(SCREEN_WIDTH // 2, instruction_y + i * 25))
+            instruction_surface = self.ui_effects.font_small.render(instruction, True, constants.NEON_CYAN)
+            instruction_rect = instruction_surface.get_rect(center=(constants.SCREEN_WIDTH // 2, instruction_y + i * 25))
             screen.blit(instruction_surface, instruction_rect)
 
     def _draw_player_ready_indicator(self, screen, player_id, pos_x, pos_y, controller_setup_system):
         """Draw a ready indicator for a specific player"""
-        player_colors = [NEON_BLUE, NEON_PINK, NEON_GREEN, NEON_YELLOW]
+        player_colors = [constants.NEON_BLUE, constants.NEON_PINK, constants.NEON_GREEN, constants.NEON_YELLOW]
         player_color = player_colors[player_id % len(player_colors)]
         
         # Get player info
@@ -679,7 +679,7 @@ class MenuRenderer:
         
         # Draw controller name if available
         if controller_name:
-            controller_surface = self.ui_effects.font_small.render(controller_name[:20], True, NEON_CYAN)
+            controller_surface = self.ui_effects.font_small.render(controller_name[:20], True, constants.NEON_CYAN)
             controller_rect = controller_surface.get_rect(center=(pos_x, pos_y - 35))
             screen.blit(controller_surface, controller_rect)
         else:
@@ -688,8 +688,8 @@ class MenuRenderer:
             screen.blit(no_controller_surface, no_controller_rect)
         
         # Draw ready circle
-        circle_radius = CONTROLLER_READY_CIRCLE_SIZE // 2
-        circle_thickness = CONTROLLER_READY_CIRCLE_THICKNESS
+        circle_radius = constants.CONTROLLER_READY_CIRCLE_SIZE // 2
+        circle_thickness = constants.CONTROLLER_READY_CIRCLE_THICKNESS
         
         # Outer circle (border)
         pygame.draw.circle(screen, player_color, (int(pos_x), int(pos_y)), 
@@ -709,7 +709,7 @@ class MenuRenderer:
         
         # Ready status text
         status_text = "READY!" if is_ready else "Press A"
-        status_color = NEON_GREEN if is_ready else NEON_CYAN
+        status_color = constants.NEON_GREEN if is_ready else constants.NEON_CYAN
         status_surface = self.ui_effects.font_small.render(status_text, True, status_color)
         status_rect = status_surface.get_rect(center=(pos_x, pos_y + 60))
         
@@ -721,7 +721,7 @@ class MenuRenderer:
             
             for i in range(2):
                 glow_surface = pygame.Surface((status_rect.width + 20, status_rect.height + 10), pygame.SRCALPHA)
-                glow_color = (*NEON_GREEN, glow_alpha // (i + 1))
+                glow_color = (*constants.NEON_GREEN, glow_alpha // (i + 1))
                 glow_text = self.ui_effects.font_small.render(status_text, True, glow_color)
                 glow_text_rect = glow_text.get_rect(center=(glow_surface.get_width() // 2, glow_surface.get_height() // 2))
                 glow_surface.blit(glow_text, glow_text_rect)

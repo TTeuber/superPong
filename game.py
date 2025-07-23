@@ -17,12 +17,37 @@ from systems.player_count_system import PlayerCountSystem
 from systems.controller_setup_system import ControllerSetupSystem
 from systems.powerup_system import PowerUpSystem
 from systems.powerup_renderer import PowerUpRenderer
-from utils.constants import *
+from utils import constants
 
 class Game:
     def __init__(self):
         pygame.init()
-        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        
+        # Initialize settings system first to get screen scale
+        self.settings_system = SettingsSystem()
+        screen_scale = self.settings_system.get_setting('screen_scale')
+        
+        # Get monitor info and calculate appropriate screen size
+        info = pygame.display.Info()
+        self.monitor_width = info.current_w
+        self.monitor_height = info.current_h
+        
+        # Store monitor available size for consistent scaling
+        self.monitor_available_size = min(self.monitor_width, self.monitor_height)
+        
+        # Calculate default size based on monitor and scale setting
+        # Use the smaller dimension to maintain square aspect ratio
+        available_size = self.monitor_available_size
+        target_size = int(available_size * screen_scale)
+        
+        # Clamp to min/max sizes
+        target_size = max(constants.MIN_SCREEN_SIZE, min(constants.MAX_SCREEN_SIZE, target_size))
+        
+        # Update global screen dimensions
+        constants.update_screen_dimensions(target_size, target_size)
+        
+        # Create resizable window
+        self.screen = pygame.display.set_mode((target_size, target_size), pygame.RESIZABLE)
         pygame.display.set_caption("4-Player Neon Pong")
         self.clock = pygame.time.Clock()
         self.running = True
@@ -35,8 +60,7 @@ class Game:
         self.menu_system = MenuSystem()
         self.aiming_system = AimingSystem()
         self.collision_system = CollisionSystem()
-        # Initialize settings system first to get settings
-        self.settings_system = SettingsSystem()
+        # Settings system already initialized above
         self.powerup_system = PowerUpSystem(self.settings_system)
         self.powerup_renderer = PowerUpRenderer()
         
@@ -50,7 +74,7 @@ class Game:
         self.player_manager = PlayerManager(ai_difficulty=ai_difficulty)
         
         # Apply controller sensitivity if it's different from default
-        if controller_sensitivity != CONTROLLER_SENSITIVITY:
+        if controller_sensitivity != constants.CONTROLLER_SENSITIVITY:
             print(f"Applying controller sensitivity: {controller_sensitivity}")
         self.start_screen_system = StartScreenSystem()
         self.game_over_system = GameOverSystem()
@@ -59,7 +83,7 @@ class Game:
         self.controller_setup_system = ControllerSetupSystem(self.input_handler)
         
         # Initialize game entities
-        self.ball = Ball(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+        self.ball = Ball(constants.SCREEN_WIDTH // 2, constants.SCREEN_HEIGHT // 2)
         
         # Set up menu callbacks
         self.menu_system.set_callbacks(
@@ -91,11 +115,11 @@ class Game:
         # Pause input handling
         self.pause_key_pressed = False  # Track pause key state for single-press detection
         self.pause_cooldown_frames = 0  # Prevent rapid pause/unpause cycles
-        self.PAUSE_COOLDOWN_FRAMES = 15  # Quarter second at 60 FPS
+        self.PAUSE_COOLDOWN_FRAMES = 15  # Quarter second at 60 constants.FPS
         
         # Initialization debouncing
         self.initialization_frames = 0  # Prevent input for a few frames after startup
-        self.INPUT_DEBOUNCE_FRAMES = 30  # Half second at 60 FPS
+        self.INPUT_DEBOUNCE_FRAMES = 30  # Half second at 60 constants.FPS
         
         # CRITICAL: Reset all input states to prevent auto-triggering during startup
         self.input_handler.reset_input_states()
@@ -122,7 +146,7 @@ class Game:
         self.pause_key_pressed = False
         
         # Now set state to start screen
-        self.state_manager.set_state(GAME_STATE_START_SCREEN)
+        self.state_manager.set_state(constants.GAME_STATE_START_SCREEN)
         self.start_screen_system.reset()
         
         # IMPORTANT: Force the start screen to ignore the current confirm input
@@ -201,6 +225,9 @@ class Game:
         # Load current settings into the settings screen system
         self.settings_screen_system.load_current_settings(self.settings_system)
         
+        # Synchronize screen scale to ensure UI shows correct current value
+        self.settings_screen_system.sync_screen_scale(self.settings_system)
+        
         # Enter settings state
         self.state_manager.enter_settings()
         print("Entering settings screen")
@@ -226,7 +253,85 @@ class Game:
             # so it will take effect on the next input reading
         elif setting_key == 'sound_enabled':
             print(f"Sound setting updated to: {setting_value}")
+        elif setting_key == 'screen_scale':
+            print(f"[DEBUG] Screen scale setting changed: {setting_value}")
+            print(f"[DEBUG] Current SCALE_FACTOR before change: {constants.SCALE_FACTOR}")
+            # Apply the new screen scale immediately using stored monitor dimensions
+            available_size = self.monitor_available_size
+            target_size = int(available_size * setting_value)
+            target_size = max(constants.MIN_SCREEN_SIZE, min(constants.MAX_SCREEN_SIZE, target_size))
+            print(f"[DEBUG] Calculated target_size: {target_size} (monitor_available: {available_size}, scale: {setting_value})")
+            
+            # Update screen dimensions
+            constants.update_screen_dimensions(target_size, target_size)
+            print(f"[DEBUG] New SCALE_FACTOR after update: {constants.SCALE_FACTOR}")
+            
+            # Recreate the display
+            self.screen = pygame.display.set_mode((target_size, target_size), pygame.RESIZABLE)
+            self.renderer.screen = self.screen
+            # Update UI fonts for new scale
+            self.renderer.ui_effects.update_fonts()
+            
+            # Apply scale changes to all existing entities
+            self.apply_scale_changes()
             # Note: Sound system will be implemented in future
+            
+    def apply_scale_changes(self):
+        """Apply scale changes to all existing entities"""
+        print(f"[DEBUG] apply_scale_changes called with constants.SCALE_FACTOR: {constants.SCALE_FACTOR}")
+        
+        # Update main game ball
+        if hasattr(self, 'ball') and self.ball:
+            old_size = self.ball.size
+            self.ball.recreate_with_scale()
+            print(f"[DEBUG] Main ball: size {old_size} -> {self.ball.size}")
+        else:
+            print(f"[DEBUG] Main ball: NOT FOUND (hasattr: {hasattr(self, 'ball')}, ball exists: {getattr(self, 'ball', None) is not None})")
+        
+        # Update demo ball in start screen
+        if hasattr(self, 'start_screen_system') and hasattr(self.start_screen_system, 'demo_ball') and self.start_screen_system.demo_ball:
+            old_size = self.start_screen_system.demo_ball.size
+            self.start_screen_system.demo_ball.recreate_with_scale()
+            print(f"[DEBUG] Demo ball: size {old_size} -> {self.start_screen_system.demo_ball.size}")
+        else:
+            print(f"[DEBUG] Demo ball: NOT FOUND")
+        
+        # Update all active powerups
+        if hasattr(self, 'powerup_system') and self.powerup_system:
+            powerups = self.powerup_system.get_powerups()
+            print(f"[DEBUG] Found {len(powerups)} powerups to update")
+            for i, powerup in enumerate(powerups):
+                old_size = powerup.size
+                powerup.recreate_with_scale()
+                print(f"[DEBUG] Powerup {i}: size {old_size} -> {powerup.size}")
+        else:
+            print(f"[DEBUG] PowerUp system: NOT FOUND")
+        
+        # Update paddles in all systems that have them
+        if hasattr(self, 'player_manager'):
+            paddles = self.player_manager.get_paddles()
+            print(f"[DEBUG] Found {len(paddles)} game paddles to update")
+            for i, paddle in enumerate(paddles):
+                if paddle:
+                    old_width, old_height = paddle.width, paddle.height
+                    paddle.recreate_with_scale()
+                    print(f"[DEBUG] Game paddle {i}: size {old_width}x{old_height} -> {paddle.width}x{paddle.height}")
+        else:
+            print(f"[DEBUG] Player manager: NOT FOUND")
+        
+        # Update demo paddles in start screen
+        if hasattr(self, 'start_screen_system') and hasattr(self.start_screen_system, 'demo_paddles'):
+            demo_paddles = self.start_screen_system.demo_paddles
+            print(f"[DEBUG] Found {len(demo_paddles)} demo paddles to update")
+            for i, paddle in enumerate(demo_paddles):
+                if paddle:
+                    old_width, old_height = paddle.width, paddle.height
+                    paddle.recreate_with_scale()
+                    print(f"[DEBUG] Demo paddle {i}: size {old_width}x{old_height} -> {paddle.width}x{paddle.height}")
+        else:
+            print(f"[DEBUG] Start screen demo paddles: NOT FOUND")
+        
+        print(f"[DEBUG] apply_scale_changes completed")
         
     def restart_game(self):
         """Restart the game from game over screen"""
@@ -274,6 +379,33 @@ class Game:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_r:
                     self.reset_game()
+            elif event.type == pygame.VIDEORESIZE:
+                # Handle window resize - maintain square aspect ratio
+                new_size = min(event.w, event.h)
+                new_size = max(constants.MIN_SCREEN_SIZE, min(constants.MAX_SCREEN_SIZE, new_size))
+                
+                # Update global screen dimensions
+                constants.update_screen_dimensions(new_size, new_size)
+                
+                # Recreate the display surface with new size
+                self.screen = pygame.display.set_mode((new_size, new_size), pygame.RESIZABLE)
+                
+                # Update renderer with new screen
+                self.renderer.screen = self.screen
+                # Update UI fonts for new scale
+                self.renderer.ui_effects.update_fonts()
+                
+                # Apply scale changes to all existing entities
+                self.apply_scale_changes()
+                
+                # Update screen scale in settings based on monitor dimensions
+                available_size = self.monitor_available_size
+                new_scale = new_size / available_size
+                new_scale = max(0.5, min(1.5, new_scale))  # Clamp to valid range
+                self.settings_system.set_setting('screen_scale', new_scale)
+                
+                # Sync the settings screen system with the new scale
+                self.settings_screen_system.sync_screen_scale(self.settings_system)
 
         # Update input handler
         self.input_handler.handle_events(events)
@@ -556,7 +688,7 @@ class Game:
         if result['eliminated']:
             # Add dramatic elimination particle effect
             self.particle_system.add_elimination_effect(
-                SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, PLAYER_COLORS[player_id])
+                constants.SCREEN_WIDTH // 2, constants.SCREEN_HEIGHT // 2, constants.PLAYER_COLORS[player_id])
             
             # Strong screen shake for elimination
             self.renderer.add_screen_shake(10, 20)
@@ -590,7 +722,7 @@ class Game:
         if winner_info['winner'] >= 0:
             # Add victory celebration
             self.particle_system.add_victory_celebration(
-                SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, PLAYER_COLORS[winner_info['winner']])
+                constants.SCREEN_WIDTH // 2, constants.SCREEN_HEIGHT // 2, constants.PLAYER_COLORS[winner_info['winner']])
         
         # Enter game over state instead of resetting immediately
         self.state_manager.enter_game_over()
@@ -649,7 +781,7 @@ class Game:
             self.handle_events()
             self.update()
             self.render()
-            self.clock.tick(FPS)
+            self.clock.tick(constants.FPS)
 
         pygame.quit()
         
@@ -676,10 +808,10 @@ class Game:
         
         # Add visual effect
         self.particle_system.add_particle(
-            player_paddle.x, player_paddle.y, 0, 0, NEON_ORANGE, 60
+            player_paddle.x, player_paddle.y, 0, 0, constants.NEON_ORANGE, 60
         )
         self.particle_system.add_particle(
-            opponent_paddle.x, opponent_paddle.y, 0, 0, NEON_ORANGE, 60
+            opponent_paddle.x, opponent_paddle.y, 0, 0, constants.NEON_ORANGE, 60
         )
         
         print(f"Player {player_id} swapped with Player {opponent_id}")

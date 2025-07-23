@@ -1,4 +1,4 @@
-from utils.constants import *
+from utils import constants
 
 class ControllerSetupSystem:
     """Manages controller assignment and readiness tracking for multiplayer games"""

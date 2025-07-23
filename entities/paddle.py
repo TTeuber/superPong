@@ -1,20 +1,20 @@
 import pygame
-from utils.constants import *
+from utils import constants
 from utils.math_utils import clamp
 
 class Paddle:
     def __init__(self, x, y, player_id, orientation='vertical'):
         self.player_id = player_id
         self.orientation = orientation  # 'vertical' or 'horizontal'
-        self.color = PLAYER_COLORS[player_id]
+        self.color = constants.PLAYER_COLORS[player_id]
 
         # Set dimensions based on orientation
         if orientation == 'vertical':
-            self.base_width = PADDLE_WIDTH
-            self.base_height = PADDLE_HEIGHT
+            self.base_width = int(constants.PADDLE_WIDTH * constants.SCALE_FACTOR)
+            self.base_height = int(constants.PADDLE_HEIGHT * constants.SCALE_FACTOR)
         else:  # horizontal
-            self.base_width = H_PADDLE_WIDTH
-            self.base_height = H_PADDLE_HEIGHT
+            self.base_width = int(constants.H_PADDLE_WIDTH * constants.SCALE_FACTOR)
+            self.base_height = int(constants.H_PADDLE_HEIGHT * constants.SCALE_FACTOR)
             
         # Current dimensions (can be modified by power-ups)
         self.width = self.base_width
@@ -23,7 +23,7 @@ class Paddle:
 
         self.x = x
         self.y = y
-        self.speed = PADDLE_SPEED
+        self.speed = constants.PADDLE_SPEED * constants.SCALE_FACTOR
 
         # Movement flags
         self.moving_up = False
@@ -32,6 +32,26 @@ class Paddle:
         self.moving_right = False
 
         # Create pygame rect for collision detection
+        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        
+    def recreate_with_scale(self):
+        """Update paddle dimensions with current scale factor"""
+        # Update dimensions based on current scale factor
+        if self.orientation == 'vertical':
+            self.base_width = int(constants.PADDLE_WIDTH * constants.SCALE_FACTOR)
+            self.base_height = int(constants.PADDLE_HEIGHT * constants.SCALE_FACTOR)
+        else:  # horizontal
+            self.base_width = int(constants.H_PADDLE_WIDTH * constants.SCALE_FACTOR)
+            self.base_height = int(constants.H_PADDLE_HEIGHT * constants.SCALE_FACTOR)
+            
+        # Update current dimensions (maintaining size modifier from power-ups)
+        self.width = int(self.base_width * self.size_modifier)
+        self.height = int(self.base_height * self.size_modifier)
+        
+        # Update speed
+        self.speed = constants.PADDLE_SPEED * constants.SCALE_FACTOR
+        
+        # Update collision rect
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
 
     def update(self):
@@ -44,8 +64,8 @@ class Paddle:
                 self.y += self.speed
 
             # Clamp to screen boundaries
-            self.y = clamp(self.y, BOUNDARY_THICKNESS,
-                           SCREEN_HEIGHT - BOUNDARY_THICKNESS - self.height)
+            self.y = clamp(self.y, constants.BOUNDARY_THICKNESS,
+                           constants.SCREEN_HEIGHT - constants.BOUNDARY_THICKNESS - self.height)
 
         else:  # horizontal
             # Horizontal paddles move left/right
@@ -55,8 +75,8 @@ class Paddle:
                 self.x += self.speed
 
             # Clamp to screen boundaries
-            self.x = clamp(self.x, BOUNDARY_THICKNESS,
-                           SCREEN_WIDTH - BOUNDARY_THICKNESS - self.width)
+            self.x = clamp(self.x, constants.BOUNDARY_THICKNESS,
+                           constants.SCREEN_WIDTH - constants.BOUNDARY_THICKNESS - self.width)
 
         # Update rect position
         self.rect.x = self.x
@@ -98,12 +118,12 @@ class Paddle:
         # Adjust position to keep center point
         if self.orientation == 'vertical':
             self.y = old_rect.centery - self.height // 2
-            self.y = clamp(self.y, BOUNDARY_THICKNESS,
-                          SCREEN_HEIGHT - BOUNDARY_THICKNESS - self.height)
+            self.y = clamp(self.y, constants.BOUNDARY_THICKNESS,
+                          constants.SCREEN_HEIGHT - constants.BOUNDARY_THICKNESS - self.height)
         else:
             self.x = old_rect.centerx - self.width // 2
-            self.x = clamp(self.x, BOUNDARY_THICKNESS,
-                          SCREEN_WIDTH - BOUNDARY_THICKNESS - self.width)
+            self.x = clamp(self.x, constants.BOUNDARY_THICKNESS,
+                          constants.SCREEN_WIDTH - constants.BOUNDARY_THICKNESS - self.width)
                           
         # Update rect with new position
         self.rect.x = self.x

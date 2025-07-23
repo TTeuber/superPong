@@ -2,5 +2,6 @@
   "ai_difficulty": 0.6,
   "sound_enabled": true,
   "controller_sensitivity": 1.0,
-  "powerups_enabled": true
+  "powerups_enabled": false,
+  "screen_scale": 0.84
 }

@@ -1,34 +1,68 @@
 import pygame
 import math
-from utils.constants import *
+from utils import constants
 
 
 class UIEffects:
     def __init__(self):
-        # Initialize fonts
+        # Initialize fonts with scaled sizes
         pygame.font.init()
-        self.font_title = pygame.font.Font(None, 72)
-        self.font_large = pygame.font.Font(None, 48)
-        self.font_medium = pygame.font.Font(None, 32)
-        self.font_small = pygame.font.Font(None, 24)
+        self.font_title = pygame.font.Font(None, int(72 * constants.SCALE_FACTOR))
+        self.font_large = pygame.font.Font(None, int(48 * constants.SCALE_FACTOR))
+        self.font_medium = pygame.font.Font(None, int(32 * constants.SCALE_FACTOR))
+        self.font_small = pygame.font.Font(None, int(24 * constants.SCALE_FACTOR))
         
-        # Load retro font for start screen
+        # Load retro font for start screen with scaled sizes
         try:
-            self.font_retro_super_massive = pygame.font.Font("assets/PressStart2P-Regular.ttf", 128)  # For split title
-            self.font_retro_massive = pygame.font.Font("assets/PressStart2P-Regular.ttf", 96)  # For split title
-            self.font_retro_huge = pygame.font.Font("assets/PressStart2P-Regular.ttf", 72)  # For main title
-            self.font_retro_large = pygame.font.Font("assets/PressStart2P-Regular.ttf", 48)
-            self.font_retro_large_menu = pygame.font.Font("assets/PressStart2P-Regular.ttf", 40)  # For menu options
-            self.font_retro_medium = pygame.font.Font("assets/PressStart2P-Regular.ttf", 32)
-            self.font_retro_small = pygame.font.Font("assets/PressStart2P-Regular.ttf", 16)
+            self.font_retro_super_massive = pygame.font.Font("assets/PressStart2P-Regular.ttf", int(128 * constants.SCALE_FACTOR))  # For split title
+            self.font_retro_massive = pygame.font.Font("assets/PressStart2P-Regular.ttf", int(96 * constants.SCALE_FACTOR))  # For split title
+            self.font_retro_huge = pygame.font.Font("assets/PressStart2P-Regular.ttf", int(72 * constants.SCALE_FACTOR))  # For main title
+            self.font_retro_large = pygame.font.Font("assets/PressStart2P-Regular.ttf", int(48 * constants.SCALE_FACTOR))
+            self.font_retro_large_menu = pygame.font.Font("assets/PressStart2P-Regular.ttf", int(40 * constants.SCALE_FACTOR))  # For menu options
+            self.font_retro_medium = pygame.font.Font("assets/PressStart2P-Regular.ttf", int(32 * constants.SCALE_FACTOR))
+            self.font_retro_small = pygame.font.Font("assets/PressStart2P-Regular.ttf", int(16 * constants.SCALE_FACTOR))
         except:
             # Fallback to default fonts if retro font fails to load
-            self.font_retro_super_massive = pygame.font.Font(None, 128)
-            self.font_retro_massive = pygame.font.Font(None, 96)
-            self.font_retro_huge = pygame.font.Font(None, 72)
+            self.font_retro_super_massive = pygame.font.Font(None, int(128 * constants.SCALE_FACTOR))
+            self.font_retro_massive = pygame.font.Font(None, int(96 * constants.SCALE_FACTOR))
+            self.font_retro_huge = pygame.font.Font(None, int(72 * constants.SCALE_FACTOR))
             self.font_retro_large = self.font_large
-            self.font_retro_large_menu = pygame.font.Font(None, 40)
-            self.font_retro_medium = pygame.font.Font(None, 32)
+            self.font_retro_large_menu = pygame.font.Font(None, int(40 * constants.SCALE_FACTOR))
+            self.font_retro_medium = pygame.font.Font(None, int(32 * constants.SCALE_FACTOR))
+            self.font_retro_small = self.font_small
+            
+    def update_fonts(self):
+        """Update font sizes when screen size changes"""
+        print(f"[DEBUG] UIEffects.update_fonts: constants.SCALE_FACTOR={constants.SCALE_FACTOR}")
+        # Reinitialize fonts with new scaled sizes
+        title_size = int(72 * constants.SCALE_FACTOR)
+        large_size = int(48 * constants.SCALE_FACTOR)
+        medium_size = int(32 * constants.SCALE_FACTOR)
+        small_size = int(24 * constants.SCALE_FACTOR)
+        print(f"[DEBUG] Font sizes: title={title_size}, large={large_size}, medium={medium_size}, small={small_size}")
+        
+        self.font_title = pygame.font.Font(None, title_size)
+        self.font_large = pygame.font.Font(None, large_size)
+        self.font_medium = pygame.font.Font(None, medium_size)
+        self.font_small = pygame.font.Font(None, small_size)
+        
+        # Reload retro fonts with new sizes
+        try:
+            self.font_retro_super_massive = pygame.font.Font("assets/PressStart2P-Regular.ttf", int(128 * constants.SCALE_FACTOR))
+            self.font_retro_massive = pygame.font.Font("assets/PressStart2P-Regular.ttf", int(96 * constants.SCALE_FACTOR))
+            self.font_retro_huge = pygame.font.Font("assets/PressStart2P-Regular.ttf", int(72 * constants.SCALE_FACTOR))
+            self.font_retro_large = pygame.font.Font("assets/PressStart2P-Regular.ttf", int(48 * constants.SCALE_FACTOR))
+            self.font_retro_large_menu = pygame.font.Font("assets/PressStart2P-Regular.ttf", int(40 * constants.SCALE_FACTOR))
+            self.font_retro_medium = pygame.font.Font("assets/PressStart2P-Regular.ttf", int(32 * constants.SCALE_FACTOR))
+            self.font_retro_small = pygame.font.Font("assets/PressStart2P-Regular.ttf", int(16 * constants.SCALE_FACTOR))
+        except:
+            # Fallback to default fonts
+            self.font_retro_super_massive = pygame.font.Font(None, int(128 * constants.SCALE_FACTOR))
+            self.font_retro_massive = pygame.font.Font(None, int(96 * constants.SCALE_FACTOR))
+            self.font_retro_huge = pygame.font.Font(None, int(72 * constants.SCALE_FACTOR))
+            self.font_retro_large = self.font_large
+            self.font_retro_large_menu = pygame.font.Font(None, int(40 * constants.SCALE_FACTOR))
+            self.font_retro_medium = pygame.font.Font(None, int(32 * constants.SCALE_FACTOR))
             self.font_retro_small = self.font_small
 
     def draw_background_grid(self, screen, frame_count):
@@ -39,20 +73,20 @@ class UIEffects:
         grid_intensity = int(base_intensity + pulse * 20)
         
         grid_color = (0, grid_intensity, grid_intensity)
-        grid_spacing = 50
+        grid_spacing = int(50 * constants.SCALE_FACTOR)
         
         # Moving grid offset for subtle animation
         offset = int(frame_count * 0.2) % grid_spacing
 
         # Vertical lines with movement
-        for x in range(-offset, SCREEN_WIDTH + grid_spacing, grid_spacing):
-            if 0 <= x <= SCREEN_WIDTH:
-                pygame.draw.line(screen, grid_color, (x, 0), (x, SCREEN_HEIGHT), 1)
+        for x in range(-offset, constants.SCREEN_WIDTH + grid_spacing, grid_spacing):
+            if 0 <= x <= constants.SCREEN_WIDTH:
+                pygame.draw.line(screen, grid_color, (x, 0), (x, constants.SCREEN_HEIGHT), 1)
 
         # Horizontal lines with movement
-        for y in range(-offset, SCREEN_HEIGHT + grid_spacing, grid_spacing):
-            if 0 <= y <= SCREEN_HEIGHT:
-                pygame.draw.line(screen, grid_color, (0, y), (SCREEN_WIDTH, y), 1)
+        for y in range(-offset, constants.SCREEN_HEIGHT + grid_spacing, grid_spacing):
+            if 0 <= y <= constants.SCREEN_HEIGHT:
+                pygame.draw.line(screen, grid_color, (0, y), (constants.SCREEN_WIDTH, y), 1)
 
         # Center lines with enhanced pulsing
         center_pulse = (math.sin(frame_count * 0.12) + 1) * 0.5
@@ -60,17 +94,17 @@ class UIEffects:
         center_color = (0, center_intensity, center_intensity)
         
         pygame.draw.line(screen, center_color,
-                         (SCREEN_WIDTH // 2, 0), (SCREEN_WIDTH // 2, SCREEN_HEIGHT), 2)
+                         (constants.SCREEN_WIDTH // 2, 0), (constants.SCREEN_WIDTH // 2, constants.SCREEN_HEIGHT), 2)
         pygame.draw.line(screen, center_color,
-                         (0, SCREEN_HEIGHT // 2), (SCREEN_WIDTH, SCREEN_HEIGHT // 2), 2)
+                         (0, constants.SCREEN_HEIGHT // 2), (constants.SCREEN_WIDTH, constants.SCREEN_HEIGHT // 2), 2)
         
         # Grid intersection highlights
-        for x in range(0, SCREEN_WIDTH, grid_spacing * 2):
-            for y in range(0, SCREEN_HEIGHT, grid_spacing * 2):
+        for x in range(0, constants.SCREEN_WIDTH, grid_spacing * 2):
+            for y in range(0, constants.SCREEN_HEIGHT, grid_spacing * 2):
                 highlight_alpha = int(30 * pulse)
                 if highlight_alpha > 0:
                     highlight_surface = pygame.Surface((6, 6), pygame.SRCALPHA)
-                    highlight_color = (*NEON_BLUE, highlight_alpha)
+                    highlight_color = (*constants.NEON_BLUE, highlight_alpha)
                     pygame.draw.circle(highlight_surface, highlight_color, (3, 3), 3)
                     screen.blit(highlight_surface, (x - 3, y - 3))
 
@@ -99,14 +133,14 @@ class UIEffects:
         
         return self.create_glow_effect(screen, text, font, color, position, glow_size, glow_alpha)
 
-    def draw_menu_selection_indicator(self, screen, position, color=NEON_GREEN, size=20):
+    def draw_menu_selection_indicator(self, screen, position, color=constants.NEON_GREEN, size=20):
         """Draw a selection arrow indicator"""
         arrow_text = "►"
         arrow_surface = self.font_large.render(arrow_text, True, color)
         arrow_rect = arrow_surface.get_rect(center=position)
         screen.blit(arrow_surface, arrow_rect)
 
-    def draw_setting_arrows(self, screen, left_pos, right_pos, color=NEON_YELLOW):
+    def draw_setting_arrows(self, screen, left_pos, right_pos, color=constants.NEON_YELLOW):
         """Draw left and right arrows for settings navigation"""
         # Left arrow
         left_arrow_points = [
@@ -128,7 +162,7 @@ class UIEffects:
         """Create and render instruction text at the bottom of screens"""
         for i, instruction in enumerate(instructions):
             text_surface = self.font_small.render(instruction, True, color)
-            text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, start_y + i * spacing))
+            text_rect = text_surface.get_rect(center=(constants.SCREEN_WIDTH // 2, start_y + i * spacing))
             screen.blit(text_surface, text_rect)
 
     def create_overlay(self, size, alpha=180):

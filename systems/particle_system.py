@@ -1,7 +1,7 @@
 import pygame
 import random
 import math
-from utils.constants import *
+from utils import constants
 
 class Particle:
     def __init__(self, x, y, velocity_x, velocity_y, color, size, lifetime):
@@ -59,7 +59,7 @@ class ParticleSystem:
             velocity_x = math.cos(angle) * speed
             velocity_y = math.sin(angle) * speed
             
-            spark_color = NEON_BLUE
+            spark_color = constants.NEON_BLUE
             size = random.uniform(1, 2)
             lifetime = random.randint(10, 20)
             

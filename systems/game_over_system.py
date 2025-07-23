@@ -1,11 +1,11 @@
-from utils.constants import *
+from utils import constants
 
 class GameOverSystem:
     """Manages the game over screen with winner display and menu navigation"""
     
     def __init__(self):
         # Menu state
-        self.game_over_menu_selected = GAME_OVER_RESTART
+        self.game_over_menu_selected = constants.GAME_OVER_RESTART
         self.menu_nav_pressed = False
         self.menu_confirm_pressed = False
         
@@ -56,13 +56,13 @@ class GameOverSystem:
         mouse_pos = input_handler.get_mouse_pos()
         
         # Define button positions (centered)
-        button_y_start = SCREEN_HEIGHT // 2 + 100
+        button_y_start = constants.SCREEN_HEIGHT // 2 + 100
         button_height = 40
         button_width = 250
-        button_x = SCREEN_WIDTH // 2 - button_width // 2
+        button_x = constants.SCREEN_WIDTH // 2 - button_width // 2
         
         # Check mouse hover and clicks
-        for i, option in enumerate(GAME_OVER_MENU_OPTIONS):
+        for i, option in enumerate(constants.GAME_OVER_MENU_OPTIONS):
             button_y = button_y_start + i * 60
             button_rect = (button_x, button_y, button_width, button_height)
             
@@ -71,7 +71,7 @@ class GameOverSystem:
                 
                 # Check for click
                 if input_handler.is_mouse_clicked():
-                    print(f"Game Over: Selected '{GAME_OVER_MENU_OPTIONS[i]}'")
+                    print(f"Game Over: Selected '{constants.GAME_OVER_MENU_OPTIONS[i]}'")
                     self.execute_menu_action(i)
                     return
         
@@ -81,8 +81,8 @@ class GameOverSystem:
             if not self.menu_nav_pressed:
                 old_selection = self.game_over_menu_selected
                 # Navigate menu
-                self.game_over_menu_selected = (self.game_over_menu_selected + nav_direction) % len(GAME_OVER_MENU_OPTIONS)
-                print(f"Game Over Menu: {GAME_OVER_MENU_OPTIONS[old_selection]} -> {GAME_OVER_MENU_OPTIONS[self.game_over_menu_selected]}")
+                self.game_over_menu_selected = (self.game_over_menu_selected + nav_direction) % len(constants.GAME_OVER_MENU_OPTIONS)
+                print(f"Game Over Menu: {constants.GAME_OVER_MENU_OPTIONS[old_selection]} -> {constants.GAME_OVER_MENU_OPTIONS[self.game_over_menu_selected]}")
                 self.menu_nav_pressed = True
         else:
             self.menu_nav_pressed = False
@@ -90,7 +90,7 @@ class GameOverSystem:
         # Check for confirmation input
         if input_handler.is_menu_confirm_pressed():
             if not self.menu_confirm_pressed:
-                print(f"Game Over: Selected '{GAME_OVER_MENU_OPTIONS[self.game_over_menu_selected]}'")
+                print(f"Game Over: Selected '{constants.GAME_OVER_MENU_OPTIONS[self.game_over_menu_selected]}'")
                 self.execute_menu_action(self.game_over_menu_selected)
                 self.menu_confirm_pressed = True
         else:
@@ -98,13 +98,13 @@ class GameOverSystem:
             
     def execute_menu_action(self, action):
         """Execute the selected menu action"""
-        if action == GAME_OVER_RESTART:
+        if action == constants.GAME_OVER_RESTART:
             if self.on_restart:
                 self.on_restart()
-        elif action == GAME_OVER_MAIN_MENU:
+        elif action == constants.GAME_OVER_MAIN_MENU:
             if self.on_main_menu:
                 self.on_main_menu()
-        elif action == GAME_OVER_QUIT:
+        elif action == constants.GAME_OVER_QUIT:
             if self.on_quit:
                 self.on_quit()
                 
@@ -115,7 +115,7 @@ class GameOverSystem:
             
     def reset(self):
         """Reset game over system"""
-        self.game_over_menu_selected = GAME_OVER_RESTART
+        self.game_over_menu_selected = constants.GAME_OVER_RESTART
         self.menu_nav_pressed = False
         self.menu_confirm_pressed = False
         self.winner_id = -1

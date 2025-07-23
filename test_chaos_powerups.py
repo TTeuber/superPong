@@ -14,7 +14,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from utils.constants import *
+from utils import constants
 from systems.powerup_system import PowerUpSystem
 from systems.settings_system import SettingsSystem
 from entities.ball import Ball
@@ -30,20 +30,20 @@ def test_chaos_constants():
     assert hasattr(sys.modules['utils.constants'], 'POWERUP_CONTROL_SCRAMBLE')
     
     # Test chaos types are in all types
-    assert POWERUP_DECOY_BALL in POWERUP_ALL_TYPES
-    assert POWERUP_WILD_BOUNCE in POWERUP_ALL_TYPES
-    assert POWERUP_CONTROL_SCRAMBLE in POWERUP_ALL_TYPES
+    assert constants.POWERUP_DECOY_BALL in constants.POWERUP_ALL_TYPES
+    assert constants.POWERUP_WILD_BOUNCE in constants.POWERUP_ALL_TYPES
+    assert constants.POWERUP_CONTROL_SCRAMBLE in constants.POWERUP_ALL_TYPES
     
     # Test chaos category exists
-    assert "Chaos" in POWERUP_CATEGORIES
-    assert POWERUP_DECOY_BALL in POWERUP_CATEGORIES["Chaos"]
-    assert POWERUP_WILD_BOUNCE in POWERUP_CATEGORIES["Chaos"]
-    assert POWERUP_CONTROL_SCRAMBLE in POWERUP_CATEGORIES["Chaos"]
+    assert "Chaos" in constants.POWERUP_CATEGORIES
+    assert constants.POWERUP_DECOY_BALL in constants.POWERUP_CATEGORIES["Chaos"]
+    assert constants.POWERUP_WILD_BOUNCE in constants.POWERUP_CATEGORIES["Chaos"]
+    assert constants.POWERUP_CONTROL_SCRAMBLE in constants.POWERUP_CATEGORIES["Chaos"]
     
     # Test descriptions exist
-    assert POWERUP_DECOY_BALL in POWERUP_DESCRIPTIONS
-    assert POWERUP_WILD_BOUNCE in POWERUP_DESCRIPTIONS
-    assert POWERUP_CONTROL_SCRAMBLE in POWERUP_DESCRIPTIONS
+    assert constants.POWERUP_DECOY_BALL in constants.POWERUP_DESCRIPTIONS
+    assert constants.POWERUP_WILD_BOUNCE in constants.POWERUP_DESCRIPTIONS
+    assert constants.POWERUP_CONTROL_SCRAMBLE in constants.POWERUP_DESCRIPTIONS
     
     print("✓ All chaos power-up constants defined correctly")
 
@@ -52,7 +52,7 @@ def test_powerup_entity():
     print("Testing PowerUp entity with chaos variants...")
     
     # Test each chaos power-up type
-    chaos_types = [POWERUP_DECOY_BALL, POWERUP_WILD_BOUNCE, POWERUP_CONTROL_SCRAMBLE]
+    chaos_types = [constants.POWERUP_DECOY_BALL, constants.POWERUP_WILD_BOUNCE, constants.POWERUP_CONTROL_SCRAMBLE]
     
     for powerup_type in chaos_types:
         powerup = PowerUp(100, 100, powerup_type)
@@ -86,7 +86,7 @@ def test_ball_entity():
     # Test decoy ball
     decoy_ball = Ball(100, 100, is_decoy=True)
     assert decoy_ball.is_decoy
-    assert decoy_ball.lifetime == POWERUP_DURATION_DECOY_BALL
+    assert decoy_ball.lifetime == constants.POWERUP_DURATION_DECOY_BALL
     assert decoy_ball.alpha < 255  # Transparent
     assert not decoy_ball.causes_life_loss()
     assert not decoy_ball.is_expired()  # Not expired initially
@@ -134,10 +134,10 @@ def test_settings_integration():
     
     # Test chaos power-ups can be toggled
     original_count = len(enabled)
-    was_enabled = POWERUP_DECOY_BALL in enabled
+    was_enabled = constants.POWERUP_DECOY_BALL in enabled
     
     # Try to toggle a chaos power-up
-    success = settings_system.toggle_powerup(POWERUP_DECOY_BALL)
+    success = settings_system.toggle_powerup(constants.POWERUP_DECOY_BALL)
     new_enabled = settings_system.get_enabled_powerups()
     
     if was_enabled:
@@ -145,20 +145,20 @@ def test_settings_integration():
         if original_count > 1:
             assert success
             assert len(new_enabled) == original_count - 1
-            assert POWERUP_DECOY_BALL not in new_enabled
+            assert constants.POWERUP_DECOY_BALL not in new_enabled
         else:
             # Can't disable last power-up
             assert not success
             assert len(new_enabled) == original_count
-            assert POWERUP_DECOY_BALL in new_enabled
+            assert constants.POWERUP_DECOY_BALL in new_enabled
     else:
         # Was disabled, should now be enabled
         assert success
         assert len(new_enabled) == original_count + 1
-        assert POWERUP_DECOY_BALL in new_enabled
+        assert constants.POWERUP_DECOY_BALL in new_enabled
     
     # Toggle back to restore original state
-    settings_system.toggle_powerup(POWERUP_DECOY_BALL)
+    settings_system.toggle_powerup(constants.POWERUP_DECOY_BALL)
     
     print("✓ Settings system integrates with chaos power-ups correctly")
 
@@ -175,9 +175,9 @@ def test_chaos_effects():
     
     # Add wild bounce effect manually
     effect_data = {
-        'type': POWERUP_WILD_BOUNCE,
+        'type': constants.POWERUP_WILD_BOUNCE,
         'player_id': 0,
-        'duration': POWERUP_DURATION_WILD_BOUNCE,
+        'duration': constants.POWERUP_DURATION_WILD_BOUNCE,
         'variant': 'wild'
     }
     powerup_system.apply_effect(effect_data)
@@ -187,9 +187,9 @@ def test_chaos_effects():
     
     # Test control scramble effect
     scramble_effect_data = {
-        'type': POWERUP_CONTROL_SCRAMBLE,
+        'type': constants.POWERUP_CONTROL_SCRAMBLE,
         'player_id': 0,
-        'duration': POWERUP_DURATION_CONTROL_SCRAMBLE,
+        'duration': constants.POWERUP_DURATION_CONTROL_SCRAMBLE,
         'variant': 'scramble'
     }
     powerup_system.apply_effect(scramble_effect_data)

@@ -1,4 +1,4 @@
-from utils.constants import *
+from utils import constants
 
 class PlayerCountSystem:
     """Manages player count selection (single vs multiplayer) and multiplayer count selection"""
@@ -29,8 +29,8 @@ class PlayerCountSystem:
     def get_menu_options(self):
         """Get the current menu options list"""
         if self.in_multiplayer_selection:
-            return MULTIPLAYER_COUNT_OPTIONS
-        return PLAYER_COUNT_MENU_OPTIONS
+            return constants.MULTIPLAYER_COUNT_OPTIONS
+        return constants.PLAYER_COUNT_MENU_OPTIONS
     
     def navigate_up(self):
         """Navigate up in the menu"""
@@ -42,10 +42,10 @@ class PlayerCountSystem:
     def navigate_down(self):
         """Navigate down in the menu"""
         if self.in_multiplayer_selection:
-            max_index = len(MULTIPLAYER_COUNT_OPTIONS) - 1
+            max_index = len(constants.MULTIPLAYER_COUNT_OPTIONS) - 1
             self.selected_multiplayer_count = min(max_index, self.selected_multiplayer_count + 1)
         else:
-            max_index = len(PLAYER_COUNT_MENU_OPTIONS) - 1
+            max_index = len(constants.PLAYER_COUNT_MENU_OPTIONS) - 1
             self.selected_option = min(max_index, self.selected_option + 1)
     
     def update(self):
@@ -75,11 +75,11 @@ class PlayerCountSystem:
             
         if self.in_multiplayer_selection:
             # Convert multiplayer selection to player count
-            if self.selected_multiplayer_count == MULTIPLAYER_2_PLAYERS:
+            if self.selected_multiplayer_count == constants.MULTIPLAYER_2_PLAYERS:
                 self.player_count = 2
-            elif self.selected_multiplayer_count == MULTIPLAYER_3_PLAYERS:
+            elif self.selected_multiplayer_count == constants.MULTIPLAYER_3_PLAYERS:
                 self.player_count = 3
-            elif self.selected_multiplayer_count == MULTIPLAYER_4_PLAYERS:
+            elif self.selected_multiplayer_count == constants.MULTIPLAYER_4_PLAYERS:
                 self.player_count = 4
             
             self.is_single_player = False
@@ -87,11 +87,11 @@ class PlayerCountSystem:
             
         else:
             # Main menu selection
-            if self.selected_option == PLAYER_COUNT_SINGLE:
+            if self.selected_option == constants.PLAYER_COUNT_SINGLE:
                 self.player_count = 1
                 self.is_single_player = True
                 return "start_single_player"  # Signal to start single player game
-            elif self.selected_option == PLAYER_COUNT_MULTI:
+            elif self.selected_option == constants.PLAYER_COUNT_MULTI:
                 self.in_multiplayer_selection = True
                 return "enter_multiplayer_selection"  # Signal to enter multiplayer count selection
         
@@ -124,7 +124,7 @@ class PlayerCountSystem:
         if self.in_multiplayer_selection:
             return "Choose how many human players will participate"
         else:
-            if self.selected_option == PLAYER_COUNT_SINGLE:
+            if self.selected_option == constants.PLAYER_COUNT_SINGLE:
                 return "Play against AI opponents"
             else:
                 return "Play with friends using controllers"

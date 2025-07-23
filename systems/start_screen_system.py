@@ -1,14 +1,14 @@
 from entities.ball import Ball
 from entities.paddle import Paddle
 from systems.ai import AIPlayer
-from utils.constants import *
+from utils import constants
 
 class StartScreenSystem:
     """Manages the start screen with AI demo and menu navigation"""
     
     def __init__(self):
         # Menu state
-        self.start_menu_selected = START_MENU_PLAY
+        self.start_menu_selected = constants.START_MENU_PLAY
         self.menu_nav_pressed = False
         self.menu_confirm_pressed = False
         
@@ -17,7 +17,7 @@ class StartScreenSystem:
         self.on_settings = None
         
         # AI demo game state
-        self.demo_ball = Ball(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+        self.demo_ball = Ball(constants.SCREEN_WIDTH // 2, constants.SCREEN_HEIGHT // 2)
         self.demo_paddles = []
         self.demo_ai_players = []
         self.demo_frame_count = 0
@@ -36,9 +36,12 @@ class StartScreenSystem:
         self.demo_ai_players = []
         
         # Create two paddles for demo - left and right
-        left_paddle = Paddle(PADDLE_MARGIN, SCREEN_HEIGHT // 2 - PADDLE_HEIGHT // 2, 0, 'vertical')
-        right_paddle = Paddle(SCREEN_WIDTH - PADDLE_MARGIN - PADDLE_WIDTH, 
-                             SCREEN_HEIGHT // 2 - PADDLE_HEIGHT // 2, 1, 'vertical')
+        paddle_margin = int(constants.PADDLE_MARGIN * constants.SCALE_FACTOR)
+        paddle_width = int(constants.PADDLE_WIDTH * constants.SCALE_FACTOR)
+        paddle_height = int(constants.PADDLE_HEIGHT * constants.SCALE_FACTOR)
+        left_paddle = Paddle(paddle_margin, constants.SCREEN_HEIGHT // 2 - paddle_height // 2, 0, 'vertical')
+        right_paddle = Paddle(constants.SCREEN_WIDTH - paddle_margin - paddle_width, 
+                             constants.SCREEN_HEIGHT // 2 - paddle_height // 2, 1, 'vertical')
         
         self.demo_paddles = [left_paddle, right_paddle]
         
@@ -49,8 +52,8 @@ class StartScreenSystem:
         ]
         
         # Set initial ball velocity
-        self.demo_ball.velocity.x = BALL_SPEED * 0.8
-        self.demo_ball.velocity.y = BALL_SPEED * 0.3
+        self.demo_ball.velocity.x = constants.BALL_SPEED * 0.8
+        self.demo_ball.velocity.y = constants.BALL_SPEED * 0.3
         
     def get_selected_option(self):
         """Get the currently selected menu option"""
@@ -73,10 +76,10 @@ class StartScreenSystem:
         button_y_start = 580  # Matches menu_y in menu_renderer.py
         button_height = 40
         button_width = 200
-        button_x = SCREEN_WIDTH // 2 - button_width // 2
+        button_x = constants.SCREEN_WIDTH // 2 - button_width // 2
         
         # Check mouse hover
-        for i, option in enumerate(START_MENU_OPTIONS):
+        for i, option in enumerate(constants.START_MENU_OPTIONS):
             button_y = button_y_start + i * 70  # Matches spacing in menu_renderer.py
             button_rect = (button_x, button_y, button_width, button_height)
             
@@ -93,7 +96,7 @@ class StartScreenSystem:
         if nav_direction != 0:
             if not self.menu_nav_pressed:
                 # Navigate menu
-                self.start_menu_selected = (self.start_menu_selected + nav_direction) % len(START_MENU_OPTIONS)
+                self.start_menu_selected = (self.start_menu_selected + nav_direction) % len(constants.START_MENU_OPTIONS)
                 self.menu_nav_pressed = True
         else:
             self.menu_nav_pressed = False
@@ -108,10 +111,10 @@ class StartScreenSystem:
             
     def execute_menu_action(self, action):
         """Execute the selected menu action"""
-        if action == START_MENU_PLAY:
+        if action == constants.START_MENU_PLAY:
             if self.on_play:
                 self.on_play()
-        elif action == START_MENU_SETTINGS:
+        elif action == constants.START_MENU_SETTINGS:
             if self.on_settings:
                 self.on_settings()
                 
@@ -143,14 +146,14 @@ class StartScreenSystem:
         reset_needed = False
         
         # Check left/right boundaries (reset ball)
-        if (self.demo_ball.x <= BOUNDARY_THICKNESS or 
-            self.demo_ball.x >= SCREEN_WIDTH - BOUNDARY_THICKNESS):
+        if (self.demo_ball.x <= constants.BOUNDARY_THICKNESS or 
+            self.demo_ball.x >= constants.SCREEN_WIDTH - constants.BOUNDARY_THICKNESS):
             reset_needed = True
             
         # Check top/bottom boundaries (bounce)
-        if self.demo_ball.y <= BOUNDARY_THICKNESS:
+        if self.demo_ball.y <= constants.BOUNDARY_THICKNESS:
             self.demo_ball.bounce_off_wall("top")
-        elif self.demo_ball.y >= SCREEN_HEIGHT - BOUNDARY_THICKNESS:
+        elif self.demo_ball.y >= constants.SCREEN_HEIGHT - constants.BOUNDARY_THICKNESS:
             self.demo_ball.bounce_off_wall("bottom")
             
         # Reset ball if it went out of bounds
@@ -158,14 +161,14 @@ class StartScreenSystem:
             self.demo_ball.reset_position()
             # Vary the starting velocity for interesting gameplay
             import random
-            speed_x = BALL_SPEED * random.choice([-0.8, 0.8])
-            speed_y = BALL_SPEED * random.uniform(-0.5, 0.5)
+            speed_x = constants.BALL_SPEED * random.choice([-0.8, 0.8])
+            speed_y = constants.BALL_SPEED * random.uniform(-0.5, 0.5)
             self.demo_ball.velocity.x = speed_x
             self.demo_ball.velocity.y = speed_y
             
     def reset(self):
         """Reset start screen system"""
-        self.start_menu_selected = START_MENU_PLAY
+        self.start_menu_selected = constants.START_MENU_PLAY
         self.menu_nav_pressed = False
         self.menu_confirm_pressed = False
         self.demo_frame_count = 0

@@ -1,4 +1,4 @@
-from utils.constants import *
+from utils import constants
 
 class CollisionSystem:
     """Manages all collision detection and handling"""
@@ -43,7 +43,8 @@ class CollisionSystem:
         }
         
         # Check left boundary
-        if ball.x <= BOUNDARY_THICKNESS:
+        boundary_thickness = int(constants.BOUNDARY_THICKNESS * constants.SCALE_FACTOR)
+        if ball.x <= boundary_thickness:
             collision_info['collision_occurred'] = True
             collision_info['player_hit'] = 0
             if force_bounce or not alive_players[0]:  # Force bounce for decoy balls or dead player
@@ -73,7 +74,7 @@ class CollisionSystem:
                         collision_info['bounced'] = True
 
         # Check right boundary
-        elif ball.x >= SCREEN_WIDTH - BOUNDARY_THICKNESS:
+        elif ball.x >= constants.SCREEN_WIDTH - boundary_thickness:
             collision_info['collision_occurred'] = True
             collision_info['player_hit'] = 1
             if force_bounce or not alive_players[1]:  # Force bounce for decoy balls or dead player
@@ -103,7 +104,7 @@ class CollisionSystem:
                         collision_info['bounced'] = True
 
         # Check top boundary
-        elif ball.y <= BOUNDARY_THICKNESS:
+        elif ball.y <= boundary_thickness:
             collision_info['collision_occurred'] = True
             collision_info['player_hit'] = 2
             if force_bounce or not alive_players[2]:  # Force bounce for decoy balls or dead player
@@ -133,7 +134,7 @@ class CollisionSystem:
                         collision_info['bounced'] = True
 
         # Check bottom boundary
-        elif ball.y >= SCREEN_HEIGHT - BOUNDARY_THICKNESS:
+        elif ball.y >= constants.SCREEN_HEIGHT - boundary_thickness:
             collision_info['collision_occurred'] = True
             collision_info['player_hit'] = 3
             if force_bounce or not alive_players[3]:  # Force bounce for decoy balls or dead player

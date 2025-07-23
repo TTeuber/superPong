@@ -1,6 +1,6 @@
 import pygame
 import math
-from utils.constants import *
+from utils import constants
 
 
 class CoreGameRenderer:
@@ -19,14 +19,15 @@ class CoreGameRenderer:
         pulse = (math.sin(self.frame_count * 0.08) + 1) * 0.5  # Slower pulse than paddles
         glow_intensity = 0.8 + pulse * 0.2
         
-        boundary_color = NEON_BLUE
+        boundary_color = constants.NEON_BLUE
         glow_alpha = int(80 * glow_intensity)
         
+        boundary_thickness = int(constants.BOUNDARY_THICKNESS * constants.SCALE_FACTOR)
         boundaries = [
-            (0, 0, SCREEN_WIDTH, BOUNDARY_THICKNESS),  # Top
-            (0, SCREEN_HEIGHT - BOUNDARY_THICKNESS, SCREEN_WIDTH, BOUNDARY_THICKNESS),  # Bottom
-            (0, 0, BOUNDARY_THICKNESS, SCREEN_HEIGHT),  # Left
-            (SCREEN_WIDTH - BOUNDARY_THICKNESS, 0, BOUNDARY_THICKNESS, SCREEN_HEIGHT)  # Right
+            (0, 0, constants.SCREEN_WIDTH, boundary_thickness),  # Top
+            (0, constants.SCREEN_HEIGHT - boundary_thickness, constants.SCREEN_WIDTH, boundary_thickness),  # Bottom
+            (0, 0, boundary_thickness, constants.SCREEN_HEIGHT),  # Left
+            (constants.SCREEN_WIDTH - boundary_thickness, 0, boundary_thickness, constants.SCREEN_HEIGHT)  # Right
         ]
         
         for boundary in boundaries:
@@ -88,7 +89,7 @@ class CoreGameRenderer:
         )
         
         # Main ball
-        pygame.draw.circle(screen, WHITE, (int(ball.x), int(ball.y)), ball.size // 2)
+        pygame.draw.circle(screen, constants.WHITE, (int(ball.x), int(ball.y)), ball.size // 2)
 
         # Bright inner core with paddle color
         core_color = tuple(min(255, int(c * 0.7 + 255 * 0.3)) for c in ball.last_hit_color)
@@ -107,14 +108,14 @@ class CoreGameRenderer:
         """Draw player lives in corners"""
         lives_positions = [
             (50, 50),                                    # Player 1 (top-left)
-            (SCREEN_WIDTH - 150, 50),                    # Player 2 (top-right)
-            (SCREEN_WIDTH // 2 - 50, 30),               # Player 3 (top-center)
-            (SCREEN_WIDTH // 2 - 50, SCREEN_HEIGHT - 60) # Player 4 (bottom-center)
+            (constants.SCREEN_WIDTH - 150, 50),                    # Player 2 (top-right)
+            (constants.SCREEN_WIDTH // 2 - 50, 30),               # Player 3 (top-center)
+            (constants.SCREEN_WIDTH // 2 - 50, constants.SCREEN_HEIGHT - 60) # Player 4 (bottom-center)
         ]
 
         for i in range(4):
             x, y = lives_positions[i]
-            color = PLAYER_COLORS[i] if alive_players[i] else tuple(int(c * 0.3) for c in PLAYER_COLORS[i])
+            color = constants.PLAYER_COLORS[i] if alive_players[i] else tuple(int(c * 0.3) for c in constants.PLAYER_COLORS[i])
             
             if alive_players[i]:
                 # Show lives for alive players
@@ -144,7 +145,7 @@ class CoreGameRenderer:
         arrow_end_y = arrow_start_y + math.sin(angle_rad) * arrow_length
         
         # Draw arrow shaft
-        arrow_color = PLAYER_COLORS[aiming_player]
+        arrow_color = constants.PLAYER_COLORS[aiming_player]
         pygame.draw.line(screen, arrow_color, 
                         (arrow_start_x, arrow_start_y), (arrow_end_x, arrow_end_y), 4)
         
@@ -166,7 +167,7 @@ class CoreGameRenderer:
         
         # Draw "AIMING" text with angle information
         aiming_text = self.ui_effects.font_medium.render(f"Player {aiming_player + 1} AIMING ({aiming_angle:.1f}°)", True, arrow_color)
-        text_x = SCREEN_WIDTH // 2 - aiming_text.get_width() // 2
+        text_x = constants.SCREEN_WIDTH // 2 - aiming_text.get_width() // 2
         text_y = 100
         screen.blit(aiming_text, (text_x, text_y))
         
@@ -177,14 +178,14 @@ class CoreGameRenderer:
             instruction = f"AI Player {aiming_player + 1} is aiming..."
         
         instr_text = self.ui_effects.font_small.render(instruction, True, (200, 200, 200))
-        instr_x = SCREEN_WIDTH // 2 - instr_text.get_width() // 2
+        instr_x = constants.SCREEN_WIDTH // 2 - instr_text.get_width() // 2
         instr_y = 130
         screen.blit(instr_text, (instr_x, instr_y))
         
         # Show countdown timer (calculate remaining time)
         remaining_time = max(0, int(aiming_timer / 60) + 1)
         timer_text = self.ui_effects.font_small.render(f"Auto-launch in: {remaining_time}s", True, (255, 255, 100))
-        timer_x = SCREEN_WIDTH // 2 - timer_text.get_width() // 2
+        timer_x = constants.SCREEN_WIDTH // 2 - timer_text.get_width() // 2
         timer_y = 155
         screen.blit(timer_text, (timer_x, timer_y))
 
@@ -194,11 +195,11 @@ class CoreGameRenderer:
             "P1: W/S", "P2: up/down", "P3: J/L", "P4: NUM4/6"
         ]
 
-        y_offset = SCREEN_HEIGHT - 120
+        y_offset = constants.SCREEN_HEIGHT - 120
         x_offset = 0
         for i, control in enumerate(controls):
             if alive_players[i]:  # Only show controls for alive players
-                color = PLAYER_COLORS[i]
+                color = constants.PLAYER_COLORS[i]
                 text = self.ui_effects.font_small.render(control, True, color)
                 x_pos = 20 + x_offset * 150
                 screen.blit(text, (x_pos, y_offset))
@@ -209,7 +210,7 @@ class CoreGameRenderer:
                            powerup_system=None, powerup_renderer=None):
         """Render all core game elements"""
         # Clear screen with black background
-        screen.fill(BLACK)
+        screen.fill(constants.BLACK)
 
         # Draw background grid (delegate to ui_effects)
         self.ui_effects.draw_background_grid(screen, self.frame_count)
@@ -249,7 +250,7 @@ class CoreGameRenderer:
         self.draw_lives(screen, lives, alive_players)
 
         # Draw aiming system if in aiming mode
-        if game_state == GAME_STATE_AIMING and aiming_player >= 0:
+        if game_state == constants.GAME_STATE_AIMING and aiming_player >= 0:
             self.draw_aiming_system(screen, ball, aiming_player, aiming_angle, aiming_timer)
         
         # Draw controls info (uncomment if needed)

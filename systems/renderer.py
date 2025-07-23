@@ -1,5 +1,5 @@
 import pygame
-from utils.constants import *
+from utils import constants
 from ui.ui_effects import UIEffects
 from ui.menu_renderer import MenuRenderer
 from systems.game_renderer import CoreGameRenderer
@@ -30,7 +30,7 @@ class GameRenderer:
         self.effects_renderer.update_screen_shake()
         
         # Create a surface for the main game content
-        game_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+        game_surface = pygame.Surface((constants.SCREEN_WIDTH, constants.SCREEN_HEIGHT))
         
         # Render game elements to the game surface
         self.game_renderer.render_game_elements(
@@ -40,7 +40,7 @@ class GameRenderer:
         )
         
         # Draw pause overlay if paused
-        if game_state == GAME_STATE_PAUSED:
+        if game_state == constants.GAME_STATE_PAUSED:
             self.menu_renderer.draw_pause_overlay(game_surface, pause_menu_selected)
         
         # Apply screen shake and blit to main screen

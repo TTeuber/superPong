@@ -2,9 +2,27 @@
 import pygame
 
 # Screen dimensions
-SCREEN_WIDTH = 850
-SCREEN_HEIGHT = 850
+BASE_SCREEN_SIZE = 850  # Original reference size for scaling
+MIN_SCREEN_SIZE = 600   # Minimum allowed screen size
+MAX_SCREEN_SIZE = 1600  # Maximum allowed screen size
+DEFAULT_SCREEN_SCALE = 0.75  # Default to 75% of available screen
+
+# Dynamic screen dimensions (will be set at runtime)
+SCREEN_WIDTH = BASE_SCREEN_SIZE
+SCREEN_HEIGHT = BASE_SCREEN_SIZE
 FPS = 60
+
+# Scaling factor (will be updated when screen size changes)
+SCALE_FACTOR = 1.0
+
+def update_screen_dimensions(width, height):
+    """Update global screen dimensions and scaling factor"""
+    global SCREEN_WIDTH, SCREEN_HEIGHT, SCALE_FACTOR, POWERUP_SPAWN_POSITIONS
+    SCREEN_WIDTH = width
+    SCREEN_HEIGHT = height
+    SCALE_FACTOR = min(width, height) / BASE_SCREEN_SIZE
+    # Update power-up spawn positions
+    POWERUP_SPAWN_POSITIONS = get_powerup_spawn_positions(width, height)
 
 # Colors (Retro Neon Theme)
 BLACK = (0, 0, 0)
@@ -76,12 +94,13 @@ GAME_OVER_MAIN_MENU = 1
 GAME_OVER_QUIT = 2
 
 # Settings menu
-SETTINGS_MENU_OPTIONS = ["Difficulty", "Sound", "Controller Sensitivity", "Power-ups", "Back"]
+SETTINGS_MENU_OPTIONS = ["Difficulty", "Sound", "Controller Sensitivity", "Power-ups", "Screen Size", "Back"]
 SETTINGS_MENU_DIFFICULTY = 0
 SETTINGS_MENU_SOUND = 1
 SETTINGS_MENU_CONTROLLER = 2
 SETTINGS_MENU_POWERUPS = 3
-SETTINGS_MENU_BACK = 4
+SETTINGS_MENU_SCREEN_SIZE = 4
+SETTINGS_MENU_BACK = 5
 
 # Player count selection menu
 PLAYER_COUNT_MENU_OPTIONS = ["Single Player", "Multiplayer"]
@@ -235,10 +254,16 @@ POWERUP_WILD_BOUNCE_MIN_INTERVAL = 90  # Minimum interval (1.5 seconds)
 POWERUP_DECOY_BALL_TRANSPARENCY = 0.9  # Slight transparency to hint it's fake
 
 # Power-up Spawn Positions (center area variations)
-POWERUP_SPAWN_POSITIONS = [
-    (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2),  # Center
-    (SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2),  # Left of center
-    (SCREEN_WIDTH // 2 + 100, SCREEN_HEIGHT // 2),  # Right of center
-    (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 100),  # Above center
-    (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 100),  # Below center
-]
+# These will be calculated dynamically based on screen size
+def get_powerup_spawn_positions(screen_width, screen_height):
+    offset = int(100 * (min(screen_width, screen_height) / BASE_SCREEN_SIZE))
+    return [
+        (screen_width // 2, screen_height // 2),  # Center
+        (screen_width // 2 - offset, screen_height // 2),  # Left of center
+        (screen_width // 2 + offset, screen_height // 2),  # Right of center
+        (screen_width // 2, screen_height // 2 - offset),  # Above center
+        (screen_width // 2, screen_height // 2 + offset),  # Below center
+    ]
+
+# Default positions for initialization
+POWERUP_SPAWN_POSITIONS = get_powerup_spawn_positions(SCREEN_WIDTH, SCREEN_HEIGHT)

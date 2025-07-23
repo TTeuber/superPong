@@ -1,6 +1,6 @@
 import math
 import random
-from utils.constants import *
+from utils import constants
 
 class AimingSystem:
     """Manages aiming mode for both human and AI players"""
@@ -35,7 +35,7 @@ class AimingSystem:
         """Enter aiming mode for the specified player"""
         if alive_players[losing_player]:
             self.aiming_player = losing_player
-            self.aiming_timer = AIMING_TIME
+            self.aiming_timer = constants.AIMING_TIME
             
             # Reset AI aiming state
             self.ai_aiming_started = False
@@ -44,20 +44,20 @@ class AimingSystem:
             # Position ball closer to losing player's side
             margin = 120  # Distance from boundary
             if losing_player == 0:  # Left player
-                ball.x = BOUNDARY_THICKNESS + margin
-                ball.y = SCREEN_HEIGHT // 2
+                ball.x = constants.BOUNDARY_THICKNESS + margin
+                ball.y = constants.SCREEN_HEIGHT // 2
                 self.aiming_angle = 0  # Start aiming straight right
             elif losing_player == 1:  # Right player
-                ball.x = SCREEN_WIDTH - BOUNDARY_THICKNESS - margin
-                ball.y = SCREEN_HEIGHT // 2
+                ball.x = constants.SCREEN_WIDTH - constants.BOUNDARY_THICKNESS - margin
+                ball.y = constants.SCREEN_HEIGHT // 2
                 self.aiming_angle = 180  # Start aiming straight left
             elif losing_player == 2:  # Top player
-                ball.x = SCREEN_WIDTH // 2
-                ball.y = BOUNDARY_THICKNESS + margin
+                ball.x = constants.SCREEN_WIDTH // 2
+                ball.y = constants.BOUNDARY_THICKNESS + margin
                 self.aiming_angle = 90  # Start aiming straight down
             elif losing_player == 3:  # Bottom player
-                ball.x = SCREEN_WIDTH // 2
-                ball.y = SCREEN_HEIGHT - BOUNDARY_THICKNESS - margin
+                ball.x = constants.SCREEN_WIDTH // 2
+                ball.y = constants.SCREEN_HEIGHT - constants.BOUNDARY_THICKNESS - margin
                 self.aiming_angle = 270  # Start aiming straight up
             
             ball.velocity.x = 0
@@ -96,25 +96,25 @@ class AimingSystem:
         # Convert paddle position to angle based on which player is aiming
         if self.aiming_player == 0:  # Left player
             # Paddle Y position controls angle from straight right
-            normalized_pos = (paddle_center[1] - SCREEN_HEIGHT // 2) / (SCREEN_HEIGHT // 2)
+            normalized_pos = (paddle_center[1] - constants.SCREEN_HEIGHT // 2) / (constants.SCREEN_HEIGHT // 2)
             # Clamp normalized position to avoid extreme angles
             normalized_pos = max(-1, min(1, normalized_pos))
-            self.aiming_angle = -normalized_pos * AIMING_ANGLE_RANGE  # Negative for upward
+            self.aiming_angle = -normalized_pos * constants.AIMING_ANGLE_RANGE  # Negative for upward
             
         elif self.aiming_player == 1:  # Right player  
-            normalized_pos = (paddle_center[1] - SCREEN_HEIGHT // 2) / (SCREEN_HEIGHT // 2)
+            normalized_pos = (paddle_center[1] - constants.SCREEN_HEIGHT // 2) / (constants.SCREEN_HEIGHT // 2)
             normalized_pos = max(-1, min(1, normalized_pos))
-            self.aiming_angle = 180 + normalized_pos * AIMING_ANGLE_RANGE
+            self.aiming_angle = 180 + normalized_pos * constants.AIMING_ANGLE_RANGE
             
         elif self.aiming_player == 2:  # Top player
-            normalized_pos = (paddle_center[0] - SCREEN_WIDTH // 2) / (SCREEN_WIDTH // 2)
+            normalized_pos = (paddle_center[0] - constants.SCREEN_WIDTH // 2) / (constants.SCREEN_WIDTH // 2)
             normalized_pos = max(-1, min(1, normalized_pos))
-            self.aiming_angle = 90 + normalized_pos * AIMING_ANGLE_RANGE
+            self.aiming_angle = 90 + normalized_pos * constants.AIMING_ANGLE_RANGE
             
         elif self.aiming_player == 3:  # Bottom player
-            normalized_pos = (paddle_center[0] - SCREEN_WIDTH // 2) / (SCREEN_WIDTH // 2)
+            normalized_pos = (paddle_center[0] - constants.SCREEN_WIDTH // 2) / (constants.SCREEN_WIDTH // 2)
             normalized_pos = max(-1, min(1, normalized_pos))
-            self.aiming_angle = 270 - normalized_pos * AIMING_ANGLE_RANGE
+            self.aiming_angle = 270 - normalized_pos * constants.AIMING_ANGLE_RANGE
             
     def auto_aim_for_ai(self):
         """AI automatically aims with smooth animation"""
@@ -150,7 +150,7 @@ class AimingSystem:
         """Launch the ball with the current aiming angle"""
         # Convert angle to velocity
         angle_rad = math.radians(self.aiming_angle)
-        speed = BALL_SPEED
+        speed = constants.BALL_SPEED
         
         ball.velocity.x = math.cos(angle_rad) * speed
         ball.velocity.y = math.sin(angle_rad) * speed

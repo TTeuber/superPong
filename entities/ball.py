@@ -1,15 +1,15 @@
 import pygame
 import random
 import math
-from utils.constants import *
+from utils import constants
 from utils.math_utils import Vector2, clamp
 
 class Ball:
     def __init__(self, x, y, is_decoy=False):
         self.x = x
         self.y = y
-        self.size = BALL_SIZE
-        self.base_speed = BALL_SPEED
+        self.size = int(constants.BALL_SIZE * constants.SCALE_FACTOR)
+        self.base_speed = constants.BALL_SPEED * constants.SCALE_FACTOR
         self.speed = self.base_speed
         self.speed_modifier = 1.0
         self.is_decoy = is_decoy  # Flag to indicate if this is a decoy ball
@@ -22,10 +22,11 @@ class Ball:
         )
 
         # Ensure minimum speed in both directions to avoid getting stuck
-        if abs(self.velocity.x) < 2:
-            self.velocity.x = 2 if self.velocity.x >= 0 else -2
-        if abs(self.velocity.y) < 2:
-            self.velocity.y = 2 if self.velocity.y >= 0 else -2
+        min_speed = 2 * constants.SCALE_FACTOR
+        if abs(self.velocity.x) < min_speed:
+            self.velocity.x = min_speed if self.velocity.x >= 0 else -min_speed
+        if abs(self.velocity.y) < min_speed:
+            self.velocity.y = min_speed if self.velocity.y >= 0 else -min_speed
 
         self.rect = pygame.Rect(self.x - self.size//2, self.y - self.size//2,
                                 self.size, self.size)
@@ -33,7 +34,7 @@ class Ball:
         # Visual effects
         self.trail_positions = []
         self.max_trail_length = 15
-        self.last_hit_color = NEON_BLUE  # Color from last paddle hit
+        self.last_hit_color = constants.NEON_BLUE  # Color from last paddle hit
         self.glow_intensity = 1.0
         
         # Power-up collection tracking
@@ -41,13 +42,42 @@ class Ball:
         
         # Decoy ball specific properties
         if self.is_decoy:
-            self.lifetime = POWERUP_DURATION_DECOY_BALL  # 8 seconds
-            self.alpha = int(255 * POWERUP_DECOY_BALL_TRANSPARENCY)  # Slightly transparent
+            self.lifetime = constants.POWERUP_DURATION_DECOY_BALL  # 8 seconds
+            self.alpha = int(255 * constants.POWERUP_DECOY_BALL_TRANSPARENCY)  # Slightly transparent
             self.trail_color = (255, 100, 255)  # Magenta trail for decoy
         else:
             self.lifetime = -1  # Infinite for real ball
             self.alpha = 255  # Fully opaque
             self.trail_color = None  # Use default trail color
+            
+    def recreate_with_scale(self):
+        """Update ball dimensions and speed with current scale factor"""
+        print(f"[DEBUG] Ball.recreate_with_scale: SCALE_FACTOR={constants.SCALE_FACTOR}, old_size={self.size}")
+        # Update size and speed based on current scale factor
+        self.size = int(constants.BALL_SIZE * constants.SCALE_FACTOR)
+        self.base_speed = constants.BALL_SPEED * constants.SCALE_FACTOR
+        print(f"[DEBUG] Ball.recreate_with_scale: new_size={self.size}, new_base_speed={self.base_speed}")
+        
+        # Preserve the current velocity direction but update magnitude
+        current_speed = (self.velocity.x ** 2 + self.velocity.y ** 2) ** 0.5
+        if current_speed > 0:
+            # Calculate speed ratio to maintain current relative speed
+            speed_ratio = self.base_speed / (constants.BALL_SPEED * (current_speed / constants.BALL_SPEED))
+            self.velocity.x *= speed_ratio
+            self.velocity.y *= speed_ratio
+        
+        self.speed = self.base_speed
+        
+        # Update collision rect
+        self.rect = pygame.Rect(self.x - self.size//2, self.y - self.size//2,
+                                self.size, self.size)
+        
+        # Ensure minimum speed in both directions
+        min_speed = 2 * constants.SCALE_FACTOR
+        if abs(self.velocity.x) < min_speed:
+            self.velocity.x = min_speed if self.velocity.x >= 0 else -min_speed
+        if abs(self.velocity.y) < min_speed:
+            self.velocity.y = min_speed if self.velocity.y >= 0 else -min_speed
 
     def update(self):
         """Update ball position and handle wall collisions"""
@@ -66,7 +96,7 @@ class Ball:
             # Fade out in last second
             if self.lifetime < 60:  # Last second at 60 FPS
                 fade_factor = self.lifetime / 60.0
-                self.alpha = int(255 * POWERUP_DECOY_BALL_TRANSPARENCY * fade_factor)
+                self.alpha = int(255 * constants.POWERUP_DECOY_BALL_TRANSPARENCY * fade_factor)
 
         # Update position
         self.x += self.velocity.x
@@ -97,10 +127,11 @@ class Ball:
             self.velocity.y = relative_intersect_y * self.speed * 0.7
 
             # Move ball away from paddle to prevent sticking
-            if paddle.x < SCREEN_WIDTH // 2:  # Left paddle
-                self.x = paddle.x + paddle.width + self.size//2 + 5
+            offset = max(5, int(5 * constants.SCALE_FACTOR))
+            if paddle.x < constants.SCREEN_WIDTH // 2:  # Left paddle
+                self.x = paddle.x + paddle.width + self.size//2 + offset
             else:  # Right paddle
-                self.x = paddle.x - self.size//2 - 5
+                self.x = paddle.x - self.size//2 - offset
 
         else:  # horizontal paddle
             relative_intersect_x = (self.x - paddle_center[0]) / (paddle.width / 2)
@@ -111,13 +142,14 @@ class Ball:
             self.velocity.x = relative_intersect_x * self.speed * 0.7
 
             # Move ball away from paddle to prevent sticking
-            if paddle.y < SCREEN_HEIGHT // 2:  # Top paddle
-                self.y = paddle.y + paddle.height + self.size//2 + 5
+            offset = max(5, int(5 * constants.SCALE_FACTOR))
+            if paddle.y < constants.SCREEN_HEIGHT // 2:  # Top paddle
+                self.y = paddle.y + paddle.height + self.size//2 + offset
             else:  # Bottom paddle
-                self.y = paddle.y - self.size//2 - 5
+                self.y = paddle.y - self.size//2 - offset
 
         # Apply optional speed boost on paddle hit
-        target_speed = self.speed * (1.0 + BALL_SPEED_BOOST)
+        target_speed = self.speed * (1.0 + constants.BALL_SPEED_BOOST)
         
         # Normalize velocity to maintain constant speed
         self.normalize_velocity(target_speed)
@@ -134,16 +166,16 @@ class Ball:
     def bounce_off_wall(self, wall_side):
         """Bounce ball off a wall (for dead player boundaries)"""
         if wall_side == "left":
-            self.x = BOUNDARY_THICKNESS + self.size//2
+            self.x = constants.BOUNDARY_THICKNESS + self.size//2
             self.velocity.x = abs(self.velocity.x)  # Ensure rightward velocity
         elif wall_side == "right":
-            self.x = SCREEN_WIDTH - BOUNDARY_THICKNESS - self.size//2
+            self.x = constants.SCREEN_WIDTH - constants.BOUNDARY_THICKNESS - self.size//2
             self.velocity.x = -abs(self.velocity.x)  # Ensure leftward velocity
         elif wall_side == "top":
-            self.y = BOUNDARY_THICKNESS + self.size//2
+            self.y = constants.BOUNDARY_THICKNESS + self.size//2
             self.velocity.y = abs(self.velocity.y)  # Ensure downward velocity
         elif wall_side == "bottom":
-            self.y = SCREEN_HEIGHT - BOUNDARY_THICKNESS - self.size//2
+            self.y = constants.SCREEN_HEIGHT - constants.BOUNDARY_THICKNESS - self.size//2
             self.velocity.y = -abs(self.velocity.y)  # Ensure upward velocity
         
         # Update collision rect
@@ -152,8 +184,8 @@ class Ball:
 
     def reset_position(self):
         """Reset ball to center with random direction"""
-        self.x = SCREEN_WIDTH // 2
-        self.y = SCREEN_HEIGHT // 2
+        self.x = constants.SCREEN_WIDTH // 2
+        self.y = constants.SCREEN_HEIGHT // 2
         self.trail_positions.clear()
 
         # Random starting direction
@@ -164,7 +196,7 @@ class Ball:
         )
         
         # Reset visual effects
-        self.last_hit_color = NEON_BLUE
+        self.last_hit_color = constants.NEON_BLUE
         self.glow_intensity = 1.0
         
         # Reset power-up collection tracking

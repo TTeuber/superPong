@@ -6,6 +6,7 @@ A retro-style Pong game featuring 4 players, neon visual effects, Nintendo Switc
 
 - **1-4 Player Multiplayer**: Support for 1-4 human players with AI filling remaining slots
 - **Multi-Controller Support**: Up to 4 Nintendo Switch controllers with automatic assignment
+- **Resizable Window**: Dynamic scaling system with monitor-relative sizing (50%-150%)
 - **Player Count Selection**: Choose 2-4 player games with controller setup screen
 - **Retro Neon Aesthetic**: Glowing paddles, ball trails, and grid backgrounds
 - **AI Opponents**: Smart AI with configurable difficulty levels (Easy, Medium, Hard)
@@ -37,6 +38,7 @@ A retro-style Pong game featuring 4 players, neon visual effects, Nintendo Switc
 - **Settings Menu**: Navigate with analog stick/arrow keys, change values with left/right, back with B/ESC, or use mouse hover/click on arrows
 - **Pause Menu**: Navigate with analog stick/arrow keys, confirm with A/ENTER, cancel with B/ESC, or use mouse hover/click
 - **Game Over Screen**: Navigate with analog stick/arrow keys, select with A/ENTER, or use mouse hover/click
+- **Window Resize**: Drag window corners to resize, scale automatically saved to settings
 - **R**: Reset game
 - **ESC**: Pause game (no longer quits)
 
@@ -149,6 +151,15 @@ superPong/
 - **Input processing fixes**: All human players now receive proper controller/keyboard input during gameplay
 - **Critical multiplayer bugs**: Fixed game auto-start, pause menu flashing, menu navigation speed, and Player 2+ input issues
 
+### ✅ Phase 2.9 Complete: Resizable Window System
+- **Dynamic scaling architecture**: All game elements scale proportionally with window size
+- **Monitor-relative sizing**: Window size calculated as percentage of available screen space (50%-150%)
+- **Square aspect ratio preservation**: Always maintains 1:1 ratio regardless of monitor size
+- **Settings integration**: Screen scale persisted in settings.json with real-time updates
+- **Manual window resize**: Drag window corners to resize, settings automatically update
+- **Universal scaling**: Fonts, sprites, positions, speeds, and collision boxes all scale-aware
+- **Import architecture fixes**: Resolved scaling import caching issues for consistent behavior
+
 ### 🚧 Phase 3 Next: Power-ups System
 - Paddle size modifiers (grow/shrink)
 - Multi-ball power-up with chaos effects
@@ -203,13 +214,16 @@ The AI players use an advanced multi-layer difficulty system:
 
 ### In-Game Settings (settings.json)
 - **AI Difficulty**: Easy, Medium, Hard levels with comprehensive AI behavior changes
+- **Screen Scale**: Window size as percentage of monitor (50%-150%, default 75%)
 - **Sound**: Enable/disable sound effects (when implemented)
 - **Controller Sensitivity**: Analog stick sensitivity adjustment
 - **Powerups**: Simple on/off toggle for powerup system (paddle size, shield, decoy ball)
 
 ### Developer Settings (utils/constants.py)
-- Screen dimensions (850x850)
-- Paddle sizes and speeds
+- Base screen dimensions (850x850 reference size)
+- Dynamic scaling system with SCALE_FACTOR applied to all elements
+- Window size constraints (600-1600px with square aspect ratio)
+- Paddle sizes and speeds (scale-aware)
 - Ball physics parameters
 - Color scheme (neon theme)
 - AI prediction and strategy parameters
@@ -234,6 +248,8 @@ The AI players use an advanced multi-layer difficulty system:
 - **Menu navigation speed**: Added single-press detection to prevent skipping menu options
 - **Multiplayer controller support**: Fixed controller input only working for Player 1, now supports all players
 - **Aiming mode for multiplayer**: Fixed Player 2+ getting AI auto-aiming instead of manual control
+- **Scale calculation bug**: Fixed cumulative scaling issue where changes applied to current size instead of base monitor size
+- **PowerUp AttributeErrors**: Fixed missing movement_timer and variant attributes causing game crashes during power-up collection
 
 ## 🤝 Contributing
 

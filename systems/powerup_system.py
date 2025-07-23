@@ -2,7 +2,7 @@ import random
 import math
 from entities.powerup import PowerUp
 from entities.ball import Ball
-from utils.constants import *
+from utils import constants
 
 class PowerUpSystem:
     """Manages power-up spawning, collection, and active effects"""
@@ -10,7 +10,7 @@ class PowerUpSystem:
     def __init__(self, settings_system=None):
         self.powerups = []  # Active power-ups in the game
         self.active_effects = []  # Currently active power-up effects
-        self.spawn_timer = random.randint(POWERUP_SPAWN_MIN_TIME, POWERUP_SPAWN_MAX_TIME)
+        self.spawn_timer = random.randint(constants.POWERUP_SPAWN_MIN_TIME, constants.POWERUP_SPAWN_MAX_TIME)
         self.next_spawn_position = None
         self.settings_system = settings_system
         
@@ -53,14 +53,14 @@ class PowerUpSystem:
         enabled_types = self.get_enabled_powerup_types()
         if not enabled_types:
             # Fallback to classic types if no types enabled
-            enabled_types = POWERUP_CLASSIC_TYPES
+            enabled_types = constants.POWERUP_CLASSIC_TYPES
             
         # Generate truly random position in center area (avoiding edges where paddles are)
         margin = 150  # Keep away from paddle areas
         min_x = margin
-        max_x = SCREEN_WIDTH - margin
+        max_x = constants.SCREEN_WIDTH - margin
         min_y = margin
-        max_y = SCREEN_HEIGHT - margin
+        max_y = constants.SCREEN_HEIGHT - margin
         
         x = random.randint(min_x, max_x)
         y = random.randint(min_y, max_y)
@@ -73,7 +73,7 @@ class PowerUpSystem:
         self.powerups.append(powerup)
         
         # Reset spawn timer
-        self.spawn_timer = random.randint(POWERUP_SPAWN_MIN_TIME, POWERUP_SPAWN_MAX_TIME)
+        self.spawn_timer = random.randint(constants.POWERUP_SPAWN_MIN_TIME, constants.POWERUP_SPAWN_MAX_TIME)
         
     def get_enabled_powerup_types(self):
         """Get list of enabled power-up types from settings"""
@@ -81,7 +81,7 @@ class PowerUpSystem:
             return self.settings_system.get_enabled_powerups()
         else:
             # Default to classic types if no settings system
-            return POWERUP_CLASSIC_TYPES
+            return constants.POWERUP_CLASSIC_TYPES
         
     def check_ball_collection(self, ball, alive_players):
         """Check if ball collected a power-up"""
@@ -91,7 +91,7 @@ class PowerUpSystem:
                 
             # Check collision using distance between ball and power-up
             distance = ((ball.x - powerup.x) ** 2 + (ball.y - powerup.y) ** 2) ** 0.5
-            if distance <= POWERUP_COLLECT_RADIUS:
+            if distance <= constants.POWERUP_COLLECT_RADIUS * constants.SCALE_FACTOR:
                 # Get the player who last hit the ball
                 player_id = ball.last_hit_player_id
                 
@@ -113,16 +113,16 @@ class PowerUpSystem:
     def apply_effect(self, effect_data):
         """Apply a power-up effect"""
         # Handle instant effects
-        if effect_data['type'] == POWERUP_PADDLE_SWAP:
+        if effect_data['type'] == constants.POWERUP_PADDLE_SWAP:
             self.execute_paddle_swap(effect_data['player_id'])
             return  # Don't add to active effects list (instant effect)
-        elif effect_data['type'] == POWERUP_DECOY_BALL:
+        elif effect_data['type'] == constants.POWERUP_DECOY_BALL:
             self.spawn_decoy_ball()
             return  # Don't add to active effects list (instant effect)
-        elif effect_data['type'] == POWERUP_CONTROL_SCRAMBLE:
+        elif effect_data['type'] == constants.POWERUP_CONTROL_SCRAMBLE:
             self.scramble_controls()
             # Add to active effects for duration tracking
-        elif effect_data['type'] == POWERUP_WILD_BOUNCE:
+        elif effect_data['type'] == constants.POWERUP_WILD_BOUNCE:
             self.initialize_wild_bounce()
             # Add to active effects for duration tracking
             
@@ -150,7 +150,7 @@ class PowerUpSystem:
         """Check if player has an active shield"""
         for effect in self.active_effects:
             if (effect['player_id'] == player_id and 
-                effect['type'] == POWERUP_SHIELD):
+                effect['type'] == constants.POWERUP_SHIELD):
                 return True
         return False
         
@@ -158,7 +158,7 @@ class PowerUpSystem:
         """Use up a player's shield"""
         for effect in self.active_effects[:]:
             if (effect['player_id'] == player_id and 
-                effect['type'] == POWERUP_SHIELD):
+                effect['type'] == constants.POWERUP_SHIELD):
                 self.active_effects.remove(effect)
                 return True
         return False
@@ -168,16 +168,16 @@ class PowerUpSystem:
         modifier = 1.0
         
         for effect in self.active_effects:
-            if effect['type'] == POWERUP_PADDLE_SIZE:
+            if effect['type'] == constants.POWERUP_PADDLE_SIZE:
                 if effect['variant'] == "increase_self" and effect['player_id'] == player_id:
-                    modifier *= POWERUP_PADDLE_SIZE_INCREASE
+                    modifier *= constants.POWERUP_PADDLE_SIZE_INCREASE
                 elif effect['variant'] == "decrease_enemies" and effect['player_id'] != player_id:
                     # Only apply if the effect owner is the one checking
                     for pid in all_player_ids:
                         if pid == effect['player_id']:
                             continue
                         if pid == player_id:
-                            modifier *= POWERUP_PADDLE_SIZE_DECREASE
+                            modifier *= constants.POWERUP_PADDLE_SIZE_DECREASE
                             
         return modifier
         
@@ -187,11 +187,11 @@ class PowerUpSystem:
         
         # Find the most recent ball speed effect
         for effect in reversed(self.active_effects):
-            if effect['type'] == POWERUP_BALL_SPEED:
+            if effect['type'] == constants.POWERUP_BALL_SPEED:
                 if effect['variant'] == "slow":
-                    return POWERUP_BALL_SPEED_SLOW
+                    return constants.POWERUP_BALL_SPEED_SLOW
                 elif effect['variant'] == "fast":
-                    return POWERUP_BALL_SPEED_FAST
+                    return constants.POWERUP_BALL_SPEED_FAST
                     
         return modifier
         
@@ -199,7 +199,7 @@ class PowerUpSystem:
         """Clear all power-ups and effects"""
         self.powerups.clear()
         self.active_effects.clear()
-        self.spawn_timer = random.randint(POWERUP_SPAWN_MIN_TIME, POWERUP_SPAWN_MAX_TIME)
+        self.spawn_timer = random.randint(constants.POWERUP_SPAWN_MIN_TIME, constants.POWERUP_SPAWN_MAX_TIME)
         
     def get_powerups(self):
         """Get list of active power-ups"""
@@ -219,7 +219,7 @@ class PowerUpSystem:
     def has_ghost_ball(self):
         """Check if ghost ball effect is active"""
         for effect in self.active_effects:
-            if effect['type'] == POWERUP_GHOST_BALL:
+            if effect['type'] == constants.POWERUP_GHOST_BALL:
                 return True, effect['player_id']
         return False, -1
         
@@ -227,7 +227,7 @@ class PowerUpSystem:
         """Check if player has magnetize effect active"""
         for effect in self.active_effects:
             if (effect['player_id'] == player_id and 
-                effect['type'] == POWERUP_MAGNETIZE):
+                effect['type'] == constants.POWERUP_MAGNETIZE):
                 return True
         return False
         
@@ -242,7 +242,7 @@ class PowerUpSystem:
     def apply_magnetic_force(self, ball, paddles):
         """Apply magnetic force to ball from magnetized paddles"""
         for effect in self.active_effects:
-            if effect['type'] == POWERUP_MAGNETIZE:
+            if effect['type'] == constants.POWERUP_MAGNETIZE:
                 player_id = effect['player_id']
                 if player_id < len(paddles):
                     paddle = paddles[player_id]
@@ -257,9 +257,9 @@ class PowerUpSystem:
         distance = (dx * dx + dy * dy) ** 0.5
         
         # Only apply force if within magnetic field radius
-        if distance < POWERUP_MAGNETIC_FIELD_RADIUS and distance > 0:
+        if distance < constants.POWERUP_MAGNETIC_FIELD_RADIUS and distance > 0:
             # Calculate magnetic force (stronger when closer)
-            force_strength = POWERUP_MAGNETIC_FORCE * (1.0 - distance / POWERUP_MAGNETIC_FIELD_RADIUS)
+            force_strength = constants.POWERUP_MAGNETIC_FORCE * (1.0 - distance / constants.POWERUP_MAGNETIC_FIELD_RADIUS)
             
             # Normalize direction vector
             dx_norm = dx / distance
@@ -274,8 +274,8 @@ class PowerUpSystem:
         """Spawn a decoy ball that doesn't cause life loss"""
         # Spawn decoy ball near center with random direction
         margin = 100
-        x = random.randint(margin, SCREEN_WIDTH - margin)
-        y = random.randint(margin, SCREEN_HEIGHT - margin)
+        x = random.randint(margin, constants.SCREEN_WIDTH - margin)
+        y = random.randint(margin, constants.SCREEN_HEIGHT - margin)
         
         decoy_ball = Ball(x, y, is_decoy=True)
         self.decoy_balls.append(decoy_ball)
@@ -283,14 +283,14 @@ class PowerUpSystem:
     def initialize_wild_bounce(self):
         """Initialize wild bounce effect"""
         # Set timer for first wild bounce
-        self.wild_bounce_timer = random.randint(POWERUP_WILD_BOUNCE_MIN_INTERVAL, POWERUP_WILD_BOUNCE_INTERVAL)
+        self.wild_bounce_timer = random.randint(constants.POWERUP_WILD_BOUNCE_MIN_INTERVAL, constants.POWERUP_WILD_BOUNCE_INTERVAL)
         
     def apply_wild_bounce(self, ball):
         """Apply wild bounce effect to the ball"""
         # Check if it's time for a wild bounce
         if self.wild_bounce_timer <= 0 and self.has_wild_bounce():
             # Apply random direction change
-            angle_change = random.uniform(-POWERUP_WILD_BOUNCE_ANGLE_RANGE, POWERUP_WILD_BOUNCE_ANGLE_RANGE)
+            angle_change = random.uniform(-constants.POWERUP_WILD_BOUNCE_ANGLE_RANGE, constants.POWERUP_WILD_BOUNCE_ANGLE_RANGE)
             angle_radians = math.radians(angle_change)
             
             # Calculate current velocity magnitude
@@ -303,7 +303,7 @@ class PowerUpSystem:
             ball.velocity.y = math.sin(new_angle) * velocity_magnitude
             
             # Reset timer for next wild bounce
-            self.wild_bounce_timer = random.randint(POWERUP_WILD_BOUNCE_MIN_INTERVAL, POWERUP_WILD_BOUNCE_INTERVAL)
+            self.wild_bounce_timer = random.randint(constants.POWERUP_WILD_BOUNCE_MIN_INTERVAL, constants.POWERUP_WILD_BOUNCE_INTERVAL)
             return True  # Indicates a wild bounce occurred
         return False
         
@@ -328,14 +328,14 @@ class PowerUpSystem:
     def has_wild_bounce(self):
         """Check if wild bounce effect is active"""
         for effect in self.active_effects:
-            if effect['type'] == POWERUP_WILD_BOUNCE:
+            if effect['type'] == constants.POWERUP_WILD_BOUNCE:
                 return True
         return False
         
     def has_control_scramble(self):
         """Check if control scramble effect is active"""
         for effect in self.active_effects:
-            if effect['type'] == POWERUP_CONTROL_SCRAMBLE:
+            if effect['type'] == constants.POWERUP_CONTROL_SCRAMBLE:
                 return True
         return False
         

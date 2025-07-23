@@ -1,6 +1,6 @@
 from entities.paddle import Paddle
 from systems.ai import AIPlayer
-from utils.constants import *
+from utils import constants
 
 class PlayerManager:
     """Manages player state, lives, and eliminations"""
@@ -16,7 +16,7 @@ class PlayerManager:
         # Game state - lives system (only for active players)
         self.lives = []
         self.alive_players = []
-        self.starting_lives = STARTING_LIVES
+        self.starting_lives = constants.STARTING_LIVES
         
         # Initialize based on configuration
         self.paddles = []
@@ -43,7 +43,7 @@ class PlayerManager:
         
         for player_id, config in enumerate(self.player_config):
             if config['active']:
-                self.lives.append(STARTING_LIVES)
+                self.lives.append(constants.STARTING_LIVES)
                 self.alive_players.append(True)
                 if config['is_human']:
                     self.human_players.append(player_id)
@@ -60,17 +60,27 @@ class PlayerManager:
                 continue
                 
             if player_id == 0:  # Left paddle
-                paddle = Paddle(PADDLE_MARGIN, SCREEN_HEIGHT // 2 - PADDLE_HEIGHT // 2,
+                paddle_margin = int(constants.PADDLE_MARGIN * constants.SCALE_FACTOR)
+                paddle_height = int(constants.PADDLE_HEIGHT * constants.SCALE_FACTOR)
+                paddle = Paddle(paddle_margin, constants.SCREEN_HEIGHT // 2 - paddle_height // 2,
                                player_id, 'vertical')
             elif player_id == 1:  # Right paddle
-                paddle = Paddle(SCREEN_WIDTH - PADDLE_MARGIN - PADDLE_WIDTH,
-                               SCREEN_HEIGHT // 2 - PADDLE_HEIGHT // 2, player_id, 'vertical')
+                paddle_margin = int(constants.PADDLE_MARGIN * constants.SCALE_FACTOR)
+                paddle_width = int(constants.PADDLE_WIDTH * constants.SCALE_FACTOR)
+                paddle_height = int(constants.PADDLE_HEIGHT * constants.SCALE_FACTOR)
+                paddle = Paddle(constants.SCREEN_WIDTH - paddle_margin - paddle_width,
+                               constants.SCREEN_HEIGHT // 2 - paddle_height // 2, player_id, 'vertical')
             elif player_id == 2:  # Top paddle
-                paddle = Paddle(SCREEN_WIDTH // 2 - H_PADDLE_WIDTH // 2, PADDLE_MARGIN,
+                paddle_margin = int(constants.PADDLE_MARGIN * constants.SCALE_FACTOR)
+                h_paddle_width = int(constants.H_PADDLE_WIDTH * constants.SCALE_FACTOR)
+                paddle = Paddle(constants.SCREEN_WIDTH // 2 - h_paddle_width // 2, paddle_margin,
                                player_id, 'horizontal')
             elif player_id == 3:  # Bottom paddle
-                paddle = Paddle(SCREEN_WIDTH // 2 - H_PADDLE_WIDTH // 2,
-                               SCREEN_HEIGHT - PADDLE_MARGIN - H_PADDLE_HEIGHT,
+                paddle_margin = int(constants.PADDLE_MARGIN * constants.SCALE_FACTOR)
+                h_paddle_width = int(constants.H_PADDLE_WIDTH * constants.SCALE_FACTOR)
+                h_paddle_height = int(constants.H_PADDLE_HEIGHT * constants.SCALE_FACTOR)
+                paddle = Paddle(constants.SCREEN_WIDTH // 2 - h_paddle_width // 2,
+                               constants.SCREEN_HEIGHT - paddle_margin - h_paddle_height,
                                player_id, 'horizontal')
             else:
                 continue  # Skip invalid player IDs
