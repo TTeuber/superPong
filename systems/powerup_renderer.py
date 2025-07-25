@@ -117,7 +117,7 @@ class PowerUpRenderer:
                 continue
                 
             player_id = effect['player_id']
-            if player_id < len(paddles):
+            if player_id < len(paddles) and paddles[player_id] is not None:
                 paddle = paddles[player_id]
                 
                 if effect['type'] == constants.POWERUP_PADDLE_SIZE:

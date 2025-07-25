@@ -18,7 +18,7 @@ class CollisionSystem:
             has_ghost, ghost_player_id = self.powerup_system.has_ghost_ball()
         
         for i, paddle in enumerate(paddles):
-            if alive_players[i] and ball.rect.colliderect(paddle.rect):
+            if paddle is not None and alive_players[i] and ball.rect.colliderect(paddle.rect):
                 # Ghost ball passes through enemy paddles
                 if has_ghost and i != ghost_player_id:
                     # Ball passes through - add ghost effect particles

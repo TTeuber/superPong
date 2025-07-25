@@ -94,13 +94,14 @@ GAME_OVER_MAIN_MENU = 1
 GAME_OVER_QUIT = 2
 
 # Settings menu
-SETTINGS_MENU_OPTIONS = ["Difficulty", "Sound", "Controller Sensitivity", "Power-ups", "Screen Size", "Back"]
+SETTINGS_MENU_OPTIONS = ["Difficulty", "Sound", "Controller Sensitivity", "Power-ups", "MP Bots", "Screen Size", "Back"]
 SETTINGS_MENU_DIFFICULTY = 0
 SETTINGS_MENU_SOUND = 1
 SETTINGS_MENU_CONTROLLER = 2
 SETTINGS_MENU_POWERUPS = 3
-SETTINGS_MENU_SCREEN_SIZE = 4
-SETTINGS_MENU_BACK = 5
+SETTINGS_MENU_MULTIPLAYER_BOTS = 4
+SETTINGS_MENU_SCREEN_SIZE = 5
+SETTINGS_MENU_BACK = 6
 
 # Player count selection menu
 PLAYER_COUNT_MENU_OPTIONS = ["Single Player", "Multiplayer"]

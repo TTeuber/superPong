@@ -5,9 +5,10 @@ from utils import constants
 class PlayerManager:
     """Manages player state, lives, and eliminations"""
     
-    def __init__(self, ai_difficulty=0.6, player_config=None):
+    def __init__(self, ai_difficulty=0.6, player_config=None, settings_system=None):
         # Store AI difficulty for creating AI players
         self.ai_difficulty = ai_difficulty
+        self.settings_system = settings_system
         
         # Player configuration (which players are human vs AI)
         self.player_config = player_config or self._get_default_config()
@@ -89,17 +90,35 @@ class PlayerManager:
         
     def init_ai_players(self):
         """Initialize AI players for non-human active players"""
+        # Clear existing AI players first
         self.ai_players = []
+        
+        # Check if we're in multiplayer mode
+        human_count = sum(1 for p in self.player_config if p['active'] and p['is_human'])
+        is_multiplayer = human_count > 1
+        
+        # Check if multiplayer bots are enabled
+        multiplayer_bots_enabled = True
+        if self.settings_system:
+            multiplayer_bots_enabled = self.settings_system.get_setting('multiplayer_bots_enabled')
         
         for player_id, config in enumerate(self.player_config):
             if config['active'] and not config['is_human'] and self.paddles[player_id]:
-                ai_player = AIPlayer(self.paddles[player_id], difficulty=self.ai_difficulty)
-                self.ai_players.append(ai_player)
-                print(f"Created AI player for Player {player_id + 1}")
+                # Skip bot creation in multiplayer if bots are disabled
+                if is_multiplayer and not multiplayer_bots_enabled:
+                    # Mark this player as inactive and remove paddle since we're not creating a bot
+                    self.lives[player_id] = 0
+                    self.alive_players[player_id] = False
+                    self.paddles[player_id] = None  # Remove paddle so slot appears empty
+                    print(f"Skipping AI player for Player {player_id + 1} (multiplayer bots disabled)")
+                else:
+                    ai_player = AIPlayer(self.paddles[player_id], difficulty=self.ai_difficulty)
+                    self.ai_players.append(ai_player)
+                    print(f"Created AI player for Player {player_id + 1}")
         
     def get_paddles(self):
-        """Get all active paddles (filtering out None values)"""
-        return [paddle for paddle in self.paddles if paddle is not None]
+        """Get all paddles (including None for empty slots to maintain indexing)"""
+        return self.paddles
     
     def get_paddle(self, player_id):
         """Get paddle for specific player"""

@@ -3,7 +3,7 @@
 This document provides essential context for continuing development of the 4-Player Neon Pong game.
 
 ## 🎯 Project Overview
-w
+
 A complete 4-player Pong game with these core features:
 - **1-4 player multiplayer** with AI filling remaining slots
 - **Multi-controller support** (up to 4 Nintendo Switch controllers)

@@ -71,7 +71,7 @@ class Game:
         ai_difficulty = self.settings_system.get_setting('ai_difficulty')
         controller_sensitivity = self.settings_system.get_setting('controller_sensitivity')
         
-        self.player_manager = PlayerManager(ai_difficulty=ai_difficulty)
+        self.player_manager = PlayerManager(ai_difficulty=ai_difficulty, settings_system=self.settings_system)
         
         # Apply controller sensitivity if it's different from default
         if controller_sensitivity != constants.CONTROLLER_SENSITIVITY:
@@ -145,6 +145,12 @@ class Game:
         self.menu_system.reset_menu()
         self.pause_key_pressed = False
         
+        # Clear all player-controller assignments
+        self.input_handler.clear_player_assignments()
+        
+        # Reset player manager to default single-player configuration
+        self.player_manager.update_player_configuration(self.player_manager._get_default_config())
+        
         # Now set state to start screen
         self.state_manager.set_state(constants.GAME_STATE_START_SCREEN)
         self.start_screen_system.reset()
@@ -169,6 +175,26 @@ class Game:
         self.menu_system.reset_menu()
         self.pause_key_pressed = False
         
+        # Auto-assign controller 0 to player 0 in single player mode
+        # Check if this is single player mode (default configuration)
+        player_config = self.player_manager.player_config
+        human_count = sum(1 for p in player_config if p['active'] and p['is_human'])
+        
+        if human_count == 1:
+            # Find the human player
+            human_player_id = None
+            for i, config in enumerate(player_config):
+                if config['active'] and config['is_human']:
+                    human_player_id = i
+                    break
+            
+            # Assign first available controller to the human player
+            if human_player_id is not None and self.input_handler.controllers:
+                # Get the first available controller
+                first_controller = min(self.input_handler.controllers.keys())
+                self.input_handler.assign_player_to_controller(human_player_id, first_controller)
+                print(f"Auto-assigned controller {first_controller} to player {human_player_id}")
+        
         # Now enter the game state
         self.state_manager.enter_game()
         print("Starting game")
@@ -191,6 +217,9 @@ class Game:
         # Get player configuration from controller setup
         assignments = self.controller_setup_system.get_controller_assignments()
         
+        # Check if multiplayer bots are enabled
+        multiplayer_bots_enabled = self.settings_system.get_setting('multiplayer_bots_enabled')
+        
         # Create player configuration for PlayerManager
         player_config = []
         for player_id in range(4):  # Always 4 slots, but not all active
@@ -202,12 +231,21 @@ class Game:
                     'controller_index': config['controller_index']
                 })
             else:
-                # Inactive player slot
-                player_config.append({
-                    'active': False,
-                    'is_human': False,
-                    'controller_index': None
-                })
+                # Check if we should fill this slot with a bot
+                if multiplayer_bots_enabled:
+                    # Active bot player slot
+                    player_config.append({
+                        'active': True,
+                        'is_human': False,
+                        'controller_index': None
+                    })
+                else:
+                    # Inactive player slot
+                    player_config.append({
+                        'active': False,
+                        'is_human': False,
+                        'controller_index': None
+                    })
         
         # Apply controller assignments to input handler
         for player_id, config in enumerate(player_config):
@@ -253,6 +291,9 @@ class Game:
             # so it will take effect on the next input reading
         elif setting_key == 'sound_enabled':
             print(f"Sound setting updated to: {setting_value}")
+        elif setting_key == 'multiplayer_bots_enabled':
+            print(f"Multiplayer bots setting updated to: {setting_value}")
+            # Note: This will take effect on the next multiplayer game
         elif setting_key == 'screen_scale':
             print(f"[DEBUG] Screen scale setting changed: {setting_value}")
             print(f"[DEBUG] Current SCALE_FACTOR before change: {constants.SCALE_FACTOR}")
@@ -362,6 +403,12 @@ class Game:
         self.game_over_system.reset()
         self.start_screen_system.reset()
         self.pause_key_pressed = False
+        
+        # Clear all player-controller assignments
+        self.input_handler.clear_player_assignments()
+        
+        # Reset player manager to default single-player configuration
+        self.player_manager.update_player_configuration(self.player_manager._get_default_config())
         
         # CRITICAL: Reset input handler to prevent input leakage
         # This prevents the Enter press from game over menu being processed again on start screen
@@ -564,13 +611,13 @@ class Game:
         human_paddles = []
         
         for player_id in human_players:
-            if player_id < len(paddles) and alive_players[player_id]:
+            if player_id < len(paddles) and alive_players[player_id] and paddles[player_id] is not None:
                 # Apply control scrambling if active (for now, only affects original Player 0)
                 if player_id == 0:
                     target_player_id = self.powerup_system.get_scrambled_player_id(0)
-                    if target_player_id < len(paddles):
+                    if target_player_id < len(paddles) and paddles[target_player_id] is not None:
                         human_paddles.append(paddles[target_player_id])
-                    else:
+                    elif paddles[player_id] is not None:
                         human_paddles.append(paddles[player_id])
                 else:
                     # Other human players get normal input (no scrambling for now)
@@ -601,8 +648,9 @@ class Game:
             
         # Apply power-up effects to paddles
         for i, paddle in enumerate(paddles):
-            size_modifier = self.powerup_system.get_paddle_size_modifier(i, list(range(4)))
-            paddle.apply_size_modifier(size_modifier)
+            if paddle is not None:
+                size_modifier = self.powerup_system.get_paddle_size_modifier(i, list(range(4)))
+                paddle.apply_size_modifier(size_modifier)
             
         # Apply power-up effects to ball
         ball_speed_modifier = self.powerup_system.get_ball_speed_modifier()
@@ -800,6 +848,10 @@ class Game:
         paddles = self.player_manager.get_paddles()
         player_paddle = paddles[player_id]
         opponent_paddle = paddles[opponent_id]
+        
+        # Make sure both paddles exist
+        if player_paddle is None or opponent_paddle is None:
+            return
         
         # Swap positions
         temp_x, temp_y = player_paddle.x, player_paddle.y

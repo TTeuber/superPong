@@ -1,7 +1,8 @@
 {
   "ai_difficulty": 0.6,
-  "sound_enabled": true,
+  "sound_enabled": false,
   "controller_sensitivity": 1.0,
   "powerups_enabled": false,
-  "screen_scale": 0.84
+  "screen_scale": 0.84,
+  "multiplayer_bots_enabled": false
 }

@@ -14,7 +14,8 @@ class SettingsSystem:
             'sound_enabled': True,
             'controller_sensitivity': constants.CONTROLLER_SENSITIVITY,
             'powerups_enabled': True,  # Simple on/off toggle for powerups
-            'screen_scale': constants.DEFAULT_SCREEN_SCALE  # Screen size scale factor
+            'screen_scale': constants.DEFAULT_SCREEN_SCALE,  # Screen size scale factor
+            'multiplayer_bots_enabled': True  # Whether to fill empty slots with bots in multiplayer
         }
         
         # Current settings (will be loaded from file or set to defaults)
@@ -75,7 +76,7 @@ class SettingsSystem:
                             else:
                                 print(f"Invalid screen scale value {value}, using default")
                         # Validate boolean settings
-                        elif key in ['sound_enabled', 'powerups_enabled']:
+                        elif key in ['sound_enabled', 'powerups_enabled', 'multiplayer_bots_enabled']:
                             if isinstance(value, bool):
                                 self.settings[key] = value
                             else:

@@ -244,7 +244,7 @@ class PowerUpSystem:
         for effect in self.active_effects:
             if effect['type'] == constants.POWERUP_MAGNETIZE:
                 player_id = effect['player_id']
-                if player_id < len(paddles):
+                if player_id < len(paddles) and paddles[player_id] is not None:
                     paddle = paddles[player_id]
                     self.apply_magnetism(ball, paddle)
                     

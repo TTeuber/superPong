@@ -114,6 +114,10 @@ class CoreGameRenderer:
         ]
 
         for i in range(4):
+            # Skip rendering for players that were never active (empty slots)
+            if i >= len(lives) or (lives[i] == 0 and not alive_players[i]):
+                continue
+                
             x, y = lives_positions[i]
             color = constants.PLAYER_COLORS[i] if alive_players[i] else tuple(int(c * 0.3) for c in constants.PLAYER_COLORS[i])
             
@@ -123,7 +127,7 @@ class CoreGameRenderer:
                 text = self.ui_effects.font_medium.render(lives_text, True, color)
                 screen.blit(text, (x, y))
             else:
-                # Show "ELIMINATED" for dead players
+                # Show "ELIMINATED" for dead players (only if they had lives initially)
                 elim_text = "ELIMINATED"
                 text = self.ui_effects.font_medium.render(elim_text, True, (100, 100, 100))
                 screen.blit(text, (x, y))
@@ -236,7 +240,9 @@ class CoreGameRenderer:
 
         # Draw paddles (only alive players, or dimmed for dead players)
         for i, paddle in enumerate(paddles):
-            self.draw_paddle(screen, paddle, alive_players[i])
+            # Skip rendering for empty slots (no paddle object)
+            if paddle is not None:
+                self.draw_paddle(screen, paddle, alive_players[i])
             
         # Draw active power-up effects on paddles
         if powerup_system and powerup_renderer:

@@ -19,6 +19,7 @@ class SettingsScreenSystem:
         self.current_sound_enabled = True
         self.current_controller_sensitivity = 1.0
         self.current_powerups_enabled = True
+        self.current_multiplayer_bots_enabled = True
         self.current_screen_scale = 1.0  # Will be properly loaded in load_current_settings
         
     def set_callbacks(self, on_back=None, on_setting_changed=None):
@@ -39,6 +40,7 @@ class SettingsScreenSystem:
             self.current_sound_enabled = settings_system.get_setting('sound_enabled')
             self.current_controller_sensitivity = settings_system.get_setting('controller_sensitivity')
             self.current_powerups_enabled = settings_system.get_setting('powerups_enabled')
+            self.current_multiplayer_bots_enabled = settings_system.get_setting('multiplayer_bots_enabled')
             self.current_screen_scale = settings_system.get_setting('screen_scale')
             
     def sync_screen_scale(self, settings_system):
@@ -63,6 +65,8 @@ class SettingsScreenSystem:
             return f"{self.current_controller_sensitivity:.1f}"
         elif option == constants.SETTINGS_MENU_POWERUPS:
             return "On" if self.current_powerups_enabled else "Off"
+        elif option == constants.SETTINGS_MENU_MULTIPLAYER_BOTS:
+            return "On" if self.current_multiplayer_bots_enabled else "Off"
         elif option == constants.SETTINGS_MENU_SCREEN_SIZE:
             # Show as percentage
             return f"{int(self.current_screen_scale * 100)}%"
@@ -98,6 +102,9 @@ class SettingsScreenSystem:
                         self.execute_menu_action(option)
                         return
                     elif option == constants.SETTINGS_MENU_POWERUPS:
+                        self.execute_menu_action(option)
+                        return
+                    elif option == constants.SETTINGS_MENU_MULTIPLAYER_BOTS:
                         self.execute_menu_action(option)
                         return
                         
@@ -180,6 +187,14 @@ class SettingsScreenSystem:
             if self.on_setting_changed:
                 self.on_setting_changed('powerups_enabled', self.current_powerups_enabled)
                 
+        elif setting_option == constants.SETTINGS_MENU_MULTIPLAYER_BOTS:
+            # Toggle multiplayer bots on/off
+            self.current_multiplayer_bots_enabled = not self.current_multiplayer_bots_enabled
+            
+            # Notify settings changed
+            if self.on_setting_changed:
+                self.on_setting_changed('multiplayer_bots_enabled', self.current_multiplayer_bots_enabled)
+                
         elif setting_option == constants.SETTINGS_MENU_SCREEN_SIZE:
             # Change screen scale in 5% increments between 50% and 150%
             increment = 0.05 * direction
@@ -201,6 +216,9 @@ class SettingsScreenSystem:
         elif action == constants.SETTINGS_MENU_POWERUPS:
             # Just toggle powerups
             self.change_setting_value(constants.SETTINGS_MENU_POWERUPS, 0)
+        elif action == constants.SETTINGS_MENU_MULTIPLAYER_BOTS:
+            # Just toggle multiplayer bots
+            self.change_setting_value(constants.SETTINGS_MENU_MULTIPLAYER_BOTS, 0)
 
     def reset(self):
         """Reset settings screen system"""

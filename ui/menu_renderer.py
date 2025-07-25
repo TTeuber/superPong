@@ -678,14 +678,14 @@ class MenuRenderer:
         screen.blit(label_surface, label_rect)
         
         # Draw controller name if available
-        if controller_name:
-            controller_surface = self.ui_effects.font_small.render(controller_name[:20], True, constants.NEON_CYAN)
-            controller_rect = controller_surface.get_rect(center=(pos_x, pos_y - 35))
-            screen.blit(controller_surface, controller_rect)
-        else:
-            no_controller_surface = self.ui_effects.font_small.render("Keyboard", True, (150, 150, 150))
-            no_controller_rect = no_controller_surface.get_rect(center=(pos_x, pos_y - 35))
-            screen.blit(no_controller_surface, no_controller_rect)
+        # if controller_name:
+        #     controller_surface = self.ui_effects.font_small.render(controller_name[:20], True, constants.NEON_CYAN)
+        #     controller_rect = controller_surface.get_rect(center=(pos_x, pos_y - 35))
+        #     screen.blit(controller_surface, controller_rect)
+        # else:
+        #     no_controller_surface = self.ui_effects.font_small.render("Keyboard", True, (150, 150, 150))
+        #     no_controller_rect = no_controller_surface.get_rect(center=(pos_x, pos_y - 35))
+        #     screen.blit(no_controller_surface, no_controller_rect)
         
         # Draw ready circle
         circle_radius = constants.CONTROLLER_READY_CIRCLE_SIZE // 2
